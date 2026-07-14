@@ -1,3 +1,11 @@
+export 'data/models/bom_line_dto.dart';
+export 'data/models/ingredient_dto.dart';
+export 'data/models/pantry_item_dto.dart';
+export 'data/models/plan_entry_dto.dart';
+export 'data/models/presentation_dto.dart';
+export 'data/models/quantity_dto.dart';
+export 'data/models/recipe_dto.dart';
+export 'data/models/week_plan_dto.dart';
 export 'domain/entities/bom_line.dart';
 export 'domain/entities/ingredient.dart';
 export 'domain/entities/pantry_item.dart';
