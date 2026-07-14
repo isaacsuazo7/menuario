@@ -1,4 +1,4 @@
-package com.example.menuario
+package com.isaacsuazo.menuario
 
 import io.flutter.embedding.android.FlutterActivity
 
