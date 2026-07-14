@@ -58,6 +58,27 @@ class Failure {
     );
   }
 
+  /// A consumption and stock `Quantity` pair for the same ingredient carry
+  /// different units and cannot be safely subtracted.
+  factory Failure.unitMismatch({
+    required String ingredientName,
+    required String consumptionUnit,
+    required String stockUnit,
+  }) {
+    return Failure(
+      message:
+          'No se puede calcular el faltante de "$ingredientName": '
+          'el consumo está en "$consumptionUnit" y el stock en '
+          '"$stockUnit".',
+      code: 'unitMismatch',
+      metadata: {
+        'ingredientName': ingredientName,
+        'consumptionUnit': consumptionUnit,
+        'stockUnit': stockUnit,
+      },
+    );
+  }
+
   /// An operation attempted to mutate an existing, immutable `BomLine`.
   factory Failure.mutateBom() {
     return const Failure(
