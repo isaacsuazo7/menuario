@@ -11,6 +11,10 @@ import 'package:menuario/src/shared/shared.dart';
 
 /// The "Recetario" tab: a 2-column grid of recipes, filterable by
 /// [MealType], with loading/error/empty states.
+///
+/// Rendered inside the shell's single [AppBar]; keeps its own [Scaffold]
+/// (without an `appBar`) purely to provide the [Material] ancestor its
+/// [ChoiceChip]/[Card] descendants require.
 class RecipesScreen extends ConsumerWidget {
   const RecipesScreen({super.key});
 
@@ -19,7 +23,6 @@ class RecipesScreen extends ConsumerWidget {
     final filteredRecipes = ref.watch(filteredRecipesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Recetario')),
       body: Column(
         children: [
           const _MealFilterChips(),

@@ -74,7 +74,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TodayScreen), findsOneWidget);
-    expect(find.text('Hoy'), findsWidgets);
+    // Exactly one AppBar for the whole shell — the active tab's title lives
+    // there only, never duplicated inside the tab screen itself.
+    expect(find.byType(AppBar), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(AppBar), matching: find.text('Hoy')),
+      findsOneWidget,
+    );
     expect(find.text('Semana'), findsOneWidget);
     expect(find.text('Abastecer'), findsOneWidget);
     expect(find.text('Recetario'), findsOneWidget);
@@ -98,6 +104,15 @@ void main() {
       // The previous branch's widget stays in the tree (not disposed) —
       // this is exactly what StatefulShellRoute.indexedStack guarantees.
       expect(find.byType(TodayScreen, skipOffstage: false), findsOneWidget);
+      // The shell's single AppBar title switched to the new active tab.
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.text('Abastecer'),
+        ),
+        findsOneWidget,
+      );
     },
   );
 
