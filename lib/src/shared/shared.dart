@@ -5,6 +5,7 @@ export 'domain/entities/plan_entry.dart';
 export 'domain/entities/recipe.dart';
 export 'domain/entities/week_plan.dart';
 export 'domain/services/measurement_converter.dart';
+export 'domain/services/provisioning_calculator.dart';
 export 'domain/value_objects/category.dart';
 export 'domain/value_objects/day_of_week.dart';
 export 'domain/value_objects/meal_slot.dart';
