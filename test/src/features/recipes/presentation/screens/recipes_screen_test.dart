@@ -48,6 +48,19 @@ void main() {
     bomLines: [],
   );
 
+  testWidgets('renders as body content without its own AppBar', (
+    tester,
+  ) async {
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppBar), findsNothing);
+  });
+
   testWidgets('shows a loading indicator while the list loads', (tester) async {
     final completer = Completer<Either<Failure, List<Recipe>>>();
     addTearDown(() {
