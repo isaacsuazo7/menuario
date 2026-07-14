@@ -35,3 +35,4 @@ export 'domain/value_objects/presentation.dart';
 export 'domain/value_objects/purchase_quantity.dart';
 export 'domain/value_objects/quantity.dart';
 export 'domain/value_objects/unit.dart';
+export 'presentation/widgets/app_async_value_widget.dart';

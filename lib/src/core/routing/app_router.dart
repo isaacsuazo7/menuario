@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/auth/auth_providers.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
+import 'package:menuario/src/core/routing/navigator_keys.dart';
 import 'package:menuario/src/core/routing/branches/provisioning_branch.dart';
 import 'package:menuario/src/core/routing/branches/recipes_branch.dart';
 import 'package:menuario/src/core/routing/branches/today_branch.dart';
@@ -60,6 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   });
 
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: SplashRoutes.splash,
     refreshListenable: refreshStream,
     routes: [
