@@ -9,6 +9,7 @@ abstract class Recipe with _$Recipe {
   const factory Recipe({
     required String id,
     required String name,
+    String? emoji,
     required List<BomLine> bomLines,
   }) = _Recipe;
 }

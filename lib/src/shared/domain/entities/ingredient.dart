@@ -17,6 +17,7 @@ abstract class Ingredient with _$Ingredient {
   const factory Ingredient({
     required String id,
     required String name,
+    String? emoji,
     required Category category,
     required MeasurementKind measurementKind,
     required bool booleanTracked,

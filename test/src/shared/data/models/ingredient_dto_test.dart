@@ -12,6 +12,7 @@ void main() {
       const entity = Ingredient(
         id: 'ingredient-avena',
         name: 'Avena',
+        emoji: '🌾',
         category: Category.cereal,
         measurementKind: MeasurementKind.bulk,
         booleanTracked: false,
@@ -26,6 +27,7 @@ void main() {
 
       // Assert
       expect(result, entity);
+      expect(result.emoji, '🌾');
       expect(json.containsKey('id'), isFalse);
       expect(json['category'], 'cereal');
       expect(json['measurementKind'], 'bulk');
@@ -51,6 +53,7 @@ void main() {
 
       // Assert
       expect(result, entity);
+      expect(result.emoji, isNull);
       expect(json['conversionFactor'], isNull);
       expect(json['booleanTracked'], isTrue);
     });

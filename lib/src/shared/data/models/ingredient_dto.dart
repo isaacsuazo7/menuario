@@ -14,6 +14,7 @@ part 'ingredient_dto.g.dart';
 abstract class IngredientDTO with _$IngredientDTO {
   const factory IngredientDTO({
     required String name,
+    String? emoji,
     required String category,
     required String measurementKind,
     required bool booleanTracked,
@@ -29,6 +30,7 @@ abstract class IngredientDTO with _$IngredientDTO {
   static IngredientDTO fromEntity(Ingredient entity) {
     return IngredientDTO(
       name: entity.name,
+      emoji: entity.emoji,
       category: entity.category.name,
       measurementKind: entity.measurementKind.name,
       booleanTracked: entity.booleanTracked,
@@ -45,6 +47,7 @@ extension IngredientDTOX on IngredientDTO {
     return Ingredient(
       id: id,
       name: name,
+      emoji: emoji,
       category: Category.values.byName(category),
       measurementKind: MeasurementKind.values.byName(measurementKind),
       booleanTracked: booleanTracked,
