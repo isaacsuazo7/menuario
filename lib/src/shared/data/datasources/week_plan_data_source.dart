@@ -49,7 +49,9 @@ class WeekPlanDataSourceImpl implements WeekPlanDataSource {
       }
       return Right(WeekPlanDTO.fromJson(data));
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -65,7 +67,9 @@ class WeekPlanDataSourceImpl implements WeekPlanDataSource {
       await _doc(uid).set(dto.toJson());
       return const Right(null);
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     }
   }
 }

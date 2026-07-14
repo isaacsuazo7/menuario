@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 
@@ -101,45 +100,37 @@ void main() {
         expect(failure.metadata, isNull);
       });
 
-      test(
-        'firestore should carry the FirebaseException code, message and '
-        'the original exception',
-        () {
-          // Arrange
-          final exception = FirebaseException(
-            plugin: 'firestore',
-            code: 'permission-denied',
-            message: 'Missing or insufficient permissions.',
-          );
+      test('firestore should carry the given code and message, '
+          'Firebase-agnostically', () {
+        // Act
+        final failure = Failure.firestore(
+          code: 'permission-denied',
+          message: 'Missing or insufficient permissions.',
+        );
 
-          // Act
-          final failure = Failure.firestore(exception);
+        // Assert
+        expect(failure.code, 'permission-denied');
+        expect(failure.message, 'Missing or insufficient permissions.');
+      });
 
-          // Assert
-          expect(failure.code, 'permission-denied');
-          expect(failure.message, 'Missing or insufficient permissions.');
-          expect(failure.exception, exception);
-        },
-      );
+      test('firestore should fall back to a default message when none is '
+          'given', () {
+        // Act
+        final failure = Failure.firestore(code: 'unavailable');
 
-      test(
-        'firestore should fall back to a default message when the '
-        'FirebaseException carries none',
-        () {
-          // Arrange
-          final exception = FirebaseException(
-            plugin: 'firestore',
-            code: 'unavailable',
-          );
+        // Assert
+        expect(failure.code, 'unavailable');
+        expect(failure.message, isNotEmpty);
+      });
 
-          // Act
-          final failure = Failure.firestore(exception);
+      test('firestore should allow a null code', () {
+        // Act
+        final failure = Failure.firestore(message: 'Unknown error.');
 
-          // Assert
-          expect(failure.code, 'unavailable');
-          expect(failure.message, isNotEmpty);
-        },
-      );
+        // Assert
+        expect(failure.code, isNull);
+        expect(failure.message, 'Unknown error.');
+      });
 
       test('unauthenticated should carry a fixed code without metadata', () {
         // Act
@@ -151,36 +142,30 @@ void main() {
         expect(failure.metadata, isNull);
       });
 
-      test(
-        'malformedData should carry a fixed code, the offending error in '
-        'metadata and the given stackTrace',
-        () {
-          // Arrange
-          final error = ArgumentError('Unknown Category: "unknown".');
-          final stackTrace = StackTrace.current;
+      test('malformedData should carry a fixed code, the offending error in '
+          'metadata and the given stackTrace', () {
+        // Arrange
+        final error = ArgumentError('Unknown Category: "unknown".');
+        final stackTrace = StackTrace.current;
 
-          // Act
-          final failure = Failure.malformedData(error, stackTrace);
+        // Act
+        final failure = Failure.malformedData(error, stackTrace);
 
-          // Assert
-          expect(failure.code, 'malformedData');
-          expect(failure.message, contains('Unknown Category'));
-          expect(failure.stackTrace, stackTrace);
-          expect(failure.metadata?['error'], error.toString());
-        },
-      );
+        // Assert
+        expect(failure.code, 'malformedData');
+        expect(failure.message, contains('Unknown Category'));
+        expect(failure.stackTrace, stackTrace);
+        expect(failure.metadata?['error'], error.toString());
+      });
 
-      test(
-        'malformedData should allow a null stackTrace',
-        () {
-          // Act
-          final failure = Failure.malformedData(TypeError());
+      test('malformedData should allow a null stackTrace', () {
+        // Act
+        final failure = Failure.malformedData(TypeError());
 
-          // Assert
-          expect(failure.code, 'malformedData');
-          expect(failure.stackTrace, isNull);
-        },
-      );
+        // Assert
+        expect(failure.code, 'malformedData');
+        expect(failure.stackTrace, isNull);
+      });
     });
 
     group('toString', () {

@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 /// Represents a domain-level failure carried end-to-end through
 /// `Either<Failure, T>` pipelines.
 ///
@@ -101,14 +99,13 @@ class Failure {
     );
   }
 
-  /// A Firestore/platform operation threw a [FirebaseException]. Never
-  /// rethrown by a datasource — always mapped to this factory instead.
-  factory Failure.firestore(FirebaseException exception) {
-    return Failure(
-      message: exception.message ?? 'Error de Firestore.',
-      code: exception.code,
-      exception: exception,
-    );
+  /// A Firestore/platform operation threw a platform exception. Firebase-
+  /// agnostic on purpose: keeps `core/error` free of any Firebase import.
+  /// Callers in `shared/data` extract [code]/[message] from the original
+  /// (e.g. `FirebaseException`) before calling this factory — never
+  /// rethrown by a datasource.
+  factory Failure.firestore({String? code, String? message}) {
+    return Failure(message: message ?? 'Error de Firestore.', code: code);
   }
 
   /// A Firestore repository/datasource operation was invoked without a

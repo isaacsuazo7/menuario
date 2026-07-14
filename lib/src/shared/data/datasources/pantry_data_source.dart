@@ -55,7 +55,9 @@ class PantryDataSourceImpl implements PantryDataSource {
       }
       return Right(PantryItemDTO.fromJson(data));
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -75,7 +77,9 @@ class PantryDataSourceImpl implements PantryDataSource {
             .toList(),
       );
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -94,7 +98,9 @@ class PantryDataSourceImpl implements PantryDataSource {
       await _collection(uid).doc(ingredientId).set(dto.toJson());
       return const Right(null);
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     }
   }
 }
