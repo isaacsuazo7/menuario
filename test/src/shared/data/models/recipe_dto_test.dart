@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/shared/data/models/recipe_dto.dart';
 import 'package:menuario/src/shared/domain/entities/bom_line.dart';
 import 'package:menuario/src/shared/domain/entities/recipe.dart';
+import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
@@ -55,6 +56,50 @@ void main() {
       expect(result, entity);
       expect(result.bomLines, isEmpty);
       expect(result.emoji, isNull);
+    });
+
+    test('a recipe with a mealType survives '
+        'fromEntity->toJson->fromJson->toEntity', () {
+      // Arrange
+      const entity = Recipe(
+        id: 'recipe-1',
+        name: 'Avena con leche',
+        bomLines: [],
+        mealType: MealType.desayuno,
+      );
+
+      // Act
+      final json = RecipeDTO.fromEntity(entity).toJson();
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result.mealType, MealType.desayuno);
+      expect(json['mealType'], 'desayuno');
+    });
+
+    test('a recipe with no mealType preserves null through the round-trip',
+        () {
+      // Arrange
+      const entity = Recipe(id: 'recipe-1', name: 'Vacía', bomLines: []);
+
+      // Act
+      final json = RecipeDTO.fromEntity(entity).toJson();
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result.mealType, isNull);
+      expect(json['mealType'], isNull);
+    });
+
+    test('an unknown mealType wire value degrades to null on toEntity', () {
+      // Arrange
+      const dto = RecipeDTO(name: 'Vacía', bomLines: [], mealType: 'bogus');
+
+      // Act
+      final result = dto.toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result.mealType, isNull);
     });
   });
 }
