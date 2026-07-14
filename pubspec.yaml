@@ -58,6 +58,7 @@ dev_dependencies:
 
   # Generates immutable value objects/entities (unions, copyWith, ==).
   freezed: ^3.2.5
+  mocktail: ^1.0.5
 
 flutter:
 
