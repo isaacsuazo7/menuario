@@ -99,6 +99,17 @@ class Failure {
     );
   }
 
+  /// The user dismissed the native Google account picker without choosing
+  /// an account. Expected, non-error outcome — never rethrown, always
+  /// surfaced as a typed `Left` so callers can distinguish it from a real
+  /// failure (e.g. to avoid showing an error message).
+  factory Failure.authCancelled() {
+    return const Failure(
+      message: 'Se canceló el inicio de sesión con Google.',
+      code: 'authCancelled',
+    );
+  }
+
   /// A Firestore/platform operation threw a platform exception. Firebase-
   /// agnostic on purpose: keeps `core/error` free of any Firebase import.
   /// Callers in `shared/data` extract [code]/[message] from the original
