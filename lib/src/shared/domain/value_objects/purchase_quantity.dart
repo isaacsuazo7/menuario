@@ -10,10 +10,12 @@ sealed class PurchaseQuantity with _$PurchaseQuantity {
   const PurchaseQuantity._();
 
   /// Buy an exact integer number of loose units (e.g. plátano, kiwi).
+  @Assert('units >= 0', 'units must be non-negative')
   const factory PurchaseQuantity.loosePurchase({required int units}) =
       LoosePurchase;
 
   /// Buy a whole number of fixed-yield packs (e.g. bolsas, cartones).
+  @Assert('packs >= 0', 'packs must be non-negative')
   const factory PurchaseQuantity.packagePurchase({
     required int packs,
     required String label,
@@ -22,6 +24,7 @@ sealed class PurchaseQuantity with _$PurchaseQuantity {
   /// Buy weight at the counter, stored as the total number of quarter
   /// pounds so [display] can render an exact ¼ / ½ / ¾ / whole-lb
   /// fraction.
+  @Assert('quarterPounds >= 0', 'quarterPounds must be non-negative')
   const factory PurchaseQuantity.counterPurchase({required int quarterPounds}) =
       CounterPurchase;
 
@@ -43,7 +46,7 @@ sealed class PurchaseQuantity with _$PurchaseQuantity {
     };
 
     if (wholePounds == 0) {
-      return '$fraction lb';
+      return fraction.isEmpty ? '0 lb' : '$fraction lb';
     }
     if (fraction.isEmpty) {
       return '$wholePounds lb';

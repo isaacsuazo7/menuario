@@ -20,6 +20,14 @@ void main() {
         // Assert
         expect(purchase.display, '6 unidades');
       });
+
+      test('should reject negative units', () {
+        // Act & Assert
+        expect(
+          () => PurchaseQuantity.loosePurchase(units: -1),
+          throwsA(isA<AssertionError>()),
+        );
+      });
     });
 
     group('packagePurchase', () {
@@ -44,6 +52,14 @@ void main() {
 
         // Assert
         expect(purchase.display, '1 cartón (15 u)');
+      });
+
+      test('should reject negative packs', () {
+        // Act & Assert
+        expect(
+          () => PurchaseQuantity.packagePurchase(packs: -1, label: 'bolsas'),
+          throwsA(isA<AssertionError>()),
+        );
       });
     });
 
@@ -87,6 +103,21 @@ void main() {
         expect(
           const PurchaseQuantity.counterPurchase(quarterPounds: 8).display,
           '2 lb',
+        );
+      });
+
+      test('0 quarters should render as 0 lb', () {
+        expect(
+          const PurchaseQuantity.counterPurchase(quarterPounds: 0).display,
+          '0 lb',
+        );
+      });
+
+      test('should reject negative quarterPounds', () {
+        // Act & Assert
+        expect(
+          () => PurchaseQuantity.counterPurchase(quarterPounds: -1),
+          throwsA(isA<AssertionError>()),
         );
       });
     });

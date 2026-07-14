@@ -181,7 +181,7 @@ return counterPurchase(_that.quarterPounds);case _:
 
 
 class LoosePurchase extends PurchaseQuantity {
-  const LoosePurchase({required this.units}): super._();
+  const LoosePurchase({required this.units}): assert(units >= 0, 'units must be non-negative'),super._();
   
 
  final  int units;
@@ -247,7 +247,7 @@ as int,
 
 
 class PackagePurchase extends PurchaseQuantity {
-  const PackagePurchase({required this.packs, required this.label}): super._();
+  const PackagePurchase({required this.packs, required this.label}): assert(packs >= 0, 'packs must be non-negative'),super._();
   
 
  final  int packs;
@@ -315,7 +315,7 @@ as String,
 
 
 class CounterPurchase extends PurchaseQuantity {
-  const CounterPurchase({required this.quarterPounds}): super._();
+  const CounterPurchase({required this.quarterPounds}): assert(quarterPounds >= 0, 'quarterPounds must be non-negative'),super._();
   
 
  final  int quarterPounds;
