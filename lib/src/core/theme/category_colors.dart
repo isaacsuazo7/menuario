@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:menuario/src/shared/domain/value_objects/category.dart';
 
 /// Reserved semantic colors for future ingredient/recipe category badges.
 ///
@@ -65,6 +66,23 @@ class MenuarioCategoryColors extends ThemeExtension<MenuarioCategoryColors> {
 
   /// Categoría "Semilla".
   final Color semilla;
+
+  /// Resolves the display color for [category].
+  ///
+  /// [Category.otro] has no dedicated field in this palette — it returns
+  /// [fallback] instead of throwing or rendering blank.
+  Color colorFor(Category category, {required Color fallback}) {
+    return switch (category) {
+      Category.proteina => proteina,
+      Category.vegetal => vegetal,
+      Category.fruta => fruta,
+      Category.cereal => cereal,
+      Category.lacteo => lacteo,
+      Category.condimento => condimento,
+      Category.semilla => semilla,
+      Category.otro => fallback,
+    };
+  }
 
   @override
   MenuarioCategoryColors copyWith({
