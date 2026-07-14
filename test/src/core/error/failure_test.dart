@@ -89,6 +89,16 @@ void main() {
         expect(failure.code, 'mutateBom');
         expect(failure.metadata, isNull);
       });
+
+      test('authNoUser should carry a fixed code without metadata', () {
+        // Act
+        final failure = Failure.authNoUser();
+
+        // Assert
+        expect(failure.code, 'authNoUser');
+        expect(failure.message, isNotEmpty);
+        expect(failure.metadata, isNull);
+      });
     });
 
     group('toString', () {

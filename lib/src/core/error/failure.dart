@@ -89,6 +89,16 @@ class Failure {
     );
   }
 
+  /// A sign-in operation completed without throwing but returned no
+  /// authenticated user, which should never happen for a successful
+  /// provider sign-in.
+  factory Failure.authNoUser() {
+    return const Failure(
+      message: 'El inicio de sesión no devolvió un usuario autenticado.',
+      code: 'authNoUser',
+    );
+  }
+
   @override
   String toString() => 'Failure(message: $message, code: $code)';
 }
