@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart' hide Unit;
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
+import 'package:menuario/src/shared/domain/value_objects/mass.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
@@ -17,10 +18,6 @@ import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 /// ingredient is tracked.
 class MeasurementConverter {
   const MeasurementConverter();
-
-  /// The standard avoirdupois pound, in grams, used to convert stock-unit
-  /// weight shortfalls into counter purchase quantities.
-  static const _gramsPerPound = 453.59237;
 
   /// Converts [recipeQuantity] (as written on a `BomLine`) into its
   /// stock-unit equivalent for [ingredient].
@@ -93,7 +90,7 @@ class MeasurementConverter {
   /// just-above-boundary value, since real shortfalls never carry
   /// meaningful precision below a whole gram.
   int _gramsToQuarterPounds(num grams) {
-    final quarters = (grams / _gramsPerPound) * 4;
+    final quarters = (grams / Mass.gramsPerPound) * 4;
     final roundedQuarters = double.parse(quarters.toStringAsFixed(6));
     return roundedQuarters.ceil();
   }
