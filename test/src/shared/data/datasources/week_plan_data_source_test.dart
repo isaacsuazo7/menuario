@@ -136,6 +136,30 @@ void main() {
     );
 
     test(
+      'getActive returns Left(Failure) instead of throwing when the '
+      'active plan document has an entry missing a required field',
+      () async {
+        // Arrange
+        final dataSource = makeDataSource();
+        await firestore.doc('users/uid-A/weekPlan/current').set({
+          'entries': [
+            {'mealSlot': 'desayuno', 'recipeId': 'recipe-1', 'cooked': false},
+          ],
+        });
+
+        // Act
+        final result = await dataSource.getActive();
+
+        // Assert
+        expect(result, isA<Left<Failure, WeekPlanDTO?>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
+        );
+      },
+    );
+
+    test(
       'save returns Left(Failure.unauthenticated) when no uid is signed in',
       () async {
         // Arrange

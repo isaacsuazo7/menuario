@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/data/datasources/ingredient_data_source.dart';
+import 'package:menuario/src/shared/data/models/ingredient_dto.dart';
 import 'package:menuario/src/shared/data/repositories/ingredient_repository_impl.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
@@ -88,6 +89,31 @@ void main() {
 
         // Assert
         expect(result, isA<Left<Failure, Ingredient>>());
+      },
+    );
+
+    test(
+      'getById returns Left(Failure) instead of throwing when the '
+      'document carries an unrecognized category',
+      () async {
+        // Arrange
+        const dto = IngredientDTO(
+          name: 'Ingrediente corrupto',
+          category: 'unknownCategory',
+          measurementKind: 'unit',
+          booleanTracked: false,
+        );
+        await dataSource.save('ingredient-x', dto);
+
+        // Act
+        final result = await repository.getById('ingredient-x');
+
+        // Assert
+        expect(result, isA<Left<Failure, Ingredient>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
+        );
       },
     );
   });

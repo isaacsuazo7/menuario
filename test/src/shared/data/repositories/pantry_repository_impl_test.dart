@@ -3,6 +3,8 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/data/datasources/pantry_data_source.dart';
+import 'package:menuario/src/shared/data/models/pantry_item_dto.dart';
+import 'package:menuario/src/shared/data/models/presentation_dto.dart';
 import 'package:menuario/src/shared/data/repositories/pantry_repository_impl.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
@@ -108,6 +110,30 @@ void main() {
 
         // Assert
         expect(result, isA<Left<Failure, PantryItem>>());
+      },
+    );
+
+    test(
+      'getById returns Left(Failure) instead of throwing when the '
+      'presentation carries an unrecognized type',
+      () async {
+        // Arrange
+        const dto = PantryItemDTO.booleanTracked(
+          category: 'cereal',
+          presentation: PresentationDTO(type: 'unknownType'),
+          haveIt: true,
+        );
+        await dataSource.save('ingredient-x', dto);
+
+        // Act
+        final result = await repository.getById('ingredient-x');
+
+        // Assert
+        expect(result, isA<Left<Failure, PantryItem>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
+        );
       },
     );
   });

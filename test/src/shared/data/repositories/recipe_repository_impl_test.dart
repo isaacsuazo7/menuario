@@ -3,6 +3,9 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/data/datasources/recipe_data_source.dart';
+import 'package:menuario/src/shared/data/models/bom_line_dto.dart';
+import 'package:menuario/src/shared/data/models/quantity_dto.dart';
+import 'package:menuario/src/shared/data/models/recipe_dto.dart';
 import 'package:menuario/src/shared/data/repositories/recipe_repository_impl.dart';
 import 'package:menuario/src/shared/domain/entities/bom_line.dart';
 import 'package:menuario/src/shared/domain/entities/recipe.dart';
@@ -79,6 +82,39 @@ void main() {
 
         // Assert
         expect(result, isA<Left<Failure, Recipe>>());
+      },
+    );
+
+    test(
+      'getById returns Left(Failure) instead of throwing when a BomLine '
+      'quantity carries an unrecognized unit dimension',
+      () async {
+        // Arrange
+        const dto = RecipeDTO(
+          name: 'Receta corrupta',
+          bomLines: [
+            BomLineDTO(
+              recipeId: 'recipe-1',
+              ingredientId: 'ingredient-1',
+              quantity: QuantityDTO(
+                value: 1,
+                unitSymbol: 'g',
+                unitDimension: 'unknownDimension',
+              ),
+            ),
+          ],
+        );
+        await dataSource.save('recipe-1', dto);
+
+        // Act
+        final result = await repository.getById('recipe-1');
+
+        // Assert
+        expect(result, isA<Left<Failure, Recipe>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
+        );
       },
     );
   });

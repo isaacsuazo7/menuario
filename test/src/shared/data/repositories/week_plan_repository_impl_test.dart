@@ -3,6 +3,8 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/data/datasources/week_plan_data_source.dart';
+import 'package:menuario/src/shared/data/models/plan_entry_dto.dart';
+import 'package:menuario/src/shared/data/models/week_plan_dto.dart';
 import 'package:menuario/src/shared/data/repositories/week_plan_repository_impl.dart';
 import 'package:menuario/src/shared/domain/entities/plan_entry.dart';
 import 'package:menuario/src/shared/domain/entities/week_plan.dart';
@@ -83,6 +85,35 @@ void main() {
         result.fold(
           (failure) => fail('expected Right, got Left($failure)'),
           (readPlan) => expect(readPlan, secondPlan),
+        );
+      },
+    );
+
+    test(
+      'getActive returns Left(Failure) instead of throwing when an entry '
+      'carries an unrecognized day',
+      () async {
+        // Arrange
+        const dto = WeekPlanDTO(
+          entries: [
+            PlanEntryDTO(
+              day: 'unknownDay',
+              mealSlot: 'desayuno',
+              recipeId: 'recipe-1',
+              cooked: false,
+            ),
+          ],
+        );
+        await dataSource.save(dto);
+
+        // Act
+        final result = await repository.getActive();
+
+        // Assert
+        expect(result, isA<Left<Failure, WeekPlan?>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
         );
       },
     );

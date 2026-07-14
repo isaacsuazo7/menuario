@@ -19,7 +19,11 @@ class WeekPlanRepositoryImpl implements WeekPlanRepository {
   @override
   Future<Either<Failure, WeekPlan?>> getActive() async {
     final result = await _dataSource.getActive();
-    return result.map((dto) => dto?.toEntity());
+    try {
+      return result.map((dto) => dto?.toEntity());
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
+    }
   }
 
   @override

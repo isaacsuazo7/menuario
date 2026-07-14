@@ -158,6 +158,33 @@ void main() {
     );
 
     test(
+      'getById returns Left(Failure) instead of throwing when the '
+      'document has an unrecognized union "type" discriminator',
+      () async {
+        // Arrange
+        final dataSource = makeDataSource();
+        await firestore
+            .collection('users/uid-A/pantry')
+            .doc('broken')
+            .set({
+              'type': 'unknownVariant',
+              'category': 'cereal',
+              'presentation': {'type': 'loose'},
+            });
+
+        // Act
+        final result = await dataSource.getById('broken');
+
+        // Assert
+        expect(result, isA<Left<Failure, PantryItemDTO>>());
+        result.fold(
+          (failure) => expect(failure.code, 'malformedData'),
+          (_) => fail('expected Left, got Right'),
+        );
+      },
+    );
+
+    test(
       'save returns Left(Failure.unauthenticated) when no uid is signed in',
       () async {
         // Arrange

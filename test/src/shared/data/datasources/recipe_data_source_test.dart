@@ -164,6 +164,31 @@ void main() {
       );
     });
 
+    group('malformed document', () {
+      test(
+        'getById returns Left(Failure) instead of throwing when the '
+        'document is missing a required field',
+        () async {
+          // Arrange
+          final dataSource = makeDataSource();
+          await firestore
+              .collection('users/uid-A/recipes')
+              .doc('broken')
+              .set({'bomLines': <Map<String, dynamic>>[]});
+
+          // Act
+          final result = await dataSource.getById('broken');
+
+          // Assert
+          expect(result, isA<Left<Failure, RecipeDTO>>());
+          result.fold(
+            (failure) => expect(failure.code, 'malformedData'),
+            (_) => fail('expected Left, got Right'),
+          );
+        },
+      );
+    });
+
     group('unauthenticated', () {
       test(
         'save returns Left(Failure.unauthenticated) and writes nothing '

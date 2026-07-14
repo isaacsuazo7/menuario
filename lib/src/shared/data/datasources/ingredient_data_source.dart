@@ -57,6 +57,8 @@ class IngredientDataSourceImpl implements IngredientDataSource {
       return Right(IngredientDTO.fromJson(data));
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 
@@ -75,6 +77,8 @@ class IngredientDataSourceImpl implements IngredientDataSource {
       );
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 

@@ -120,6 +120,20 @@ class Failure {
     );
   }
 
+  /// A Firestore document could not be decoded into its DTO/Entity shape:
+  /// a required field was missing, a value had an unexpected type, or an
+  /// enum/union value was not recognized (manual console edit, partial
+  /// write, or schema drift). [error] is typically a [TypeError] or
+  /// [ArgumentError] — never rethrown, always mapped to this factory.
+  factory Failure.malformedData(Object error, [StackTrace? stackTrace]) {
+    return Failure(
+      message: 'No se pudo interpretar el documento: $error',
+      code: 'malformedData',
+      stackTrace: stackTrace,
+      metadata: {'error': error.toString()},
+    );
+  }
+
   @override
   String toString() => 'Failure(message: $message, code: $code)';
 }

@@ -56,6 +56,8 @@ class PantryDataSourceImpl implements PantryDataSource {
       return Right(PantryItemDTO.fromJson(data));
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 
@@ -74,6 +76,8 @@ class PantryDataSourceImpl implements PantryDataSource {
       );
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 

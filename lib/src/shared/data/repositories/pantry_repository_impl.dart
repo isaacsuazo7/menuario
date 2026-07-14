@@ -16,17 +16,25 @@ class PantryRepositoryImpl implements PantryRepository {
   @override
   Future<Either<Failure, PantryItem>> getById(String ingredientId) async {
     final result = await _dataSource.getById(ingredientId);
-    return result.map((dto) => dto.toEntity(ingredientId: ingredientId));
+    try {
+      return result.map((dto) => dto.toEntity(ingredientId: ingredientId));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
+    }
   }
 
   @override
   Future<Either<Failure, List<PantryItem>>> list() async {
     final result = await _dataSource.list();
-    return result.map(
-      (items) => items
-          .map((item) => item.$2.toEntity(ingredientId: item.$1))
-          .toList(),
-    );
+    try {
+      return result.map(
+        (items) => items
+            .map((item) => item.$2.toEntity(ingredientId: item.$1))
+            .toList(),
+      );
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
+    }
   }
 
   @override

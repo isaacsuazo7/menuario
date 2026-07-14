@@ -150,6 +150,37 @@ void main() {
         expect(failure.message, isNotEmpty);
         expect(failure.metadata, isNull);
       });
+
+      test(
+        'malformedData should carry a fixed code, the offending error in '
+        'metadata and the given stackTrace',
+        () {
+          // Arrange
+          final error = ArgumentError('Unknown Category: "unknown".');
+          final stackTrace = StackTrace.current;
+
+          // Act
+          final failure = Failure.malformedData(error, stackTrace);
+
+          // Assert
+          expect(failure.code, 'malformedData');
+          expect(failure.message, contains('Unknown Category'));
+          expect(failure.stackTrace, stackTrace);
+          expect(failure.metadata?['error'], error.toString());
+        },
+      );
+
+      test(
+        'malformedData should allow a null stackTrace',
+        () {
+          // Act
+          final failure = Failure.malformedData(TypeError());
+
+          // Assert
+          expect(failure.code, 'malformedData');
+          expect(failure.stackTrace, isNull);
+        },
+      );
     });
 
     group('toString', () {

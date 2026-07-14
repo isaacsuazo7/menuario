@@ -56,6 +56,8 @@ class RecipeDataSourceImpl implements RecipeDataSource {
       return Right(RecipeDTO.fromJson(data));
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 
@@ -74,6 +76,8 @@ class RecipeDataSourceImpl implements RecipeDataSource {
       );
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 

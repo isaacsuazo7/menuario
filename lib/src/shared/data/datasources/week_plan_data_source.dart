@@ -50,6 +50,8 @@ class WeekPlanDataSourceImpl implements WeekPlanDataSource {
       return Right(WeekPlanDTO.fromJson(data));
     } on FirebaseException catch (exception) {
       return Left(Failure.firestore(exception));
+    } on Object catch (exception, stackTrace) {
+      return Left(Failure.malformedData(exception, stackTrace));
     }
   }
 
