@@ -6,9 +6,13 @@ import 'package:menuario/src/features/provisioning/presentation/providers/pantry
 import 'package:menuario/src/features/provisioning/presentation/widgets/_state_pill.dart';
 import 'package:menuario/src/shared/shared.dart';
 
-/// A quantity-tracked Despensa row: emoji, name, stock + unit, a
-/// [StatePill], and a +/- stepper wired to
-/// [PantryController.adjustStock].
+/// Pure and dependency-free (see [StockPresentationService]'s "no DI
+/// needed" design decision) — safe to hold as a single const instance.
+const _stockPresentation = StockPresentationService();
+
+/// A quantity-tracked Despensa row: emoji, name, purchase-unit stock
+/// display, a [StatePill], and a +/- stepper wired to
+/// [PantryController.adjustStock] with a presentation-aware smart step.
 class QuantityPantryRow extends ConsumerWidget {
   const QuantityPantryRow({super.key, required this.row});
 
@@ -29,8 +33,10 @@ class QuantityPantryRow extends ConsumerWidget {
         row;
     final item = liveRow.item as QuantityTrackedPantryItem;
     final ingredient = liveRow.ingredient;
+    final step = _stockPresentation.stockStep(item);
+    final display = _stockPresentation.display(item.stock, item.presentation);
 
-    Future<void> handleAdjust(int delta) async {
+    Future<void> handleAdjust(num delta) async {
       final failure = await ref
           .read(pantryControllerProvider.notifier)
           .adjustStock(item.ingredientId, delta);
@@ -42,13 +48,23 @@ class QuantityPantryRow extends ConsumerWidget {
       }
     }
 
+    void handleOpenSetStock() {
+      // TODO(PR4): swap this placeholder for the real SetStockSheet(item:
+      // item), wired to PantryController.setStock — see design.md's
+      // "Modal" decision. This stub only proves the row opens a sheet.
+      showModalBottomSheet<void>(
+        context: context,
+        builder: (_) => const SizedBox(height: 200),
+      );
+    }
+
     return ListTile(
       leading: Text(
         ingredient.emoji ?? '🥫',
         style: const TextStyle(fontSize: 24),
       ),
       title: Text(ingredient.name),
-      subtitle: Text('${item.stock.value} ${item.stock.unit.symbol}'),
+      subtitle: InkWell(onTap: handleOpenSetStock, child: Text(display.label)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -56,11 +72,11 @@ class QuantityPantryRow extends ConsumerWidget {
           MenuarioSpacing.gapH8,
           IconButton(
             icon: const Icon(Icons.remove),
-            onPressed: () => handleAdjust(-1),
+            onPressed: () => handleAdjust(-step),
           ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => handleAdjust(1),
+            onPressed: () => handleAdjust(step),
           ),
         ],
       ),
