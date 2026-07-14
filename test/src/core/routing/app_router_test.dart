@@ -8,25 +8,46 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/auth/auth_providers.dart';
 import 'package:menuario/src/core/auth/auth_service.dart';
 import 'package:menuario/src/core/routing/routing.dart';
-import 'package:menuario/src/features/provisioning/presentation/provisioning_screen.dart';
+import 'package:menuario/src/features/provisioning/presentation/screens/provisioning_screen.dart';
 import 'package:menuario/src/features/today/presentation/today_screen.dart';
+import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockAuthService extends Mock implements AuthService {}
 
 class MockUser extends Mock implements User {}
 
+class MockPantryRepository extends Mock implements PantryRepository {}
+
+class MockIngredientRepository extends Mock implements IngredientRepository {}
+
 void main() {
   late MockAuthService mockAuthService;
+  late MockPantryRepository mockPantryRepository;
+  late MockIngredientRepository mockIngredientRepository;
 
   setUp(() {
     mockAuthService = MockAuthService();
+    mockPantryRepository = MockPantryRepository();
+    mockIngredientRepository = MockIngredientRepository();
+    when(
+      () => mockPantryRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
   });
 
   Future<void> pumpApp(WidgetTester tester) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [authServiceProvider.overrideWithValue(mockAuthService)],
+        overrides: [
+          authServiceProvider.overrideWithValue(mockAuthService),
+          pantryRepositoryProvider.overrideWithValue(mockPantryRepository),
+          ingredientRepositoryProvider.overrideWithValue(
+            mockIngredientRepository,
+          ),
+        ],
         child: Consumer(
           builder: (context, ref, _) {
             return MaterialApp.router(
