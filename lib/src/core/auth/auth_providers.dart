@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/core/auth/auth_service.dart';
+import 'package:menuario/src/core/auth/google_sign_in_client.dart';
+import 'package:menuario/src/core/auth/google_sign_in_config.dart';
 
 /// The app-wide [FirebaseAuth] instance.
 ///
@@ -11,10 +13,22 @@ final firebaseAuthProvider = Provider<FirebaseAuth>(
   dependencies: const [],
 );
 
-/// The [AuthService] built on top of [firebaseAuthProvider].
+/// The [GoogleSignInClient] wrapping the native `google_sign_in` account
+/// picker. Colocated so downstream providers/tests can override it without
+/// touching the real Google Sign-In SDK.
+final googleSignInClientProvider = Provider<GoogleSignInClient>(
+  (ref) => GoogleSignInClientImpl(serverClientId: googleSignInServerClientId),
+  dependencies: const [],
+);
+
+/// The [AuthService] built on top of [firebaseAuthProvider] and
+/// [googleSignInClientProvider].
 final authServiceProvider = Provider<AuthService>(
-  (ref) => AuthService(auth: ref.watch(firebaseAuthProvider)),
-  dependencies: [firebaseAuthProvider],
+  (ref) => AuthService(
+    auth: ref.watch(firebaseAuthProvider),
+    googleSignInClient: ref.watch(googleSignInClientProvider),
+  ),
+  dependencies: [firebaseAuthProvider, googleSignInClientProvider],
 );
 
 /// Streams the current authenticated [User], or `null` when signed out.
