@@ -55,7 +55,7 @@ class PantryController extends AsyncNotifier<List<PantryRow>> {
   /// never a whole-list replace) so a concurrent success on another item
   /// survives. Clamped so stock never goes negative; a delta that would go
   /// below 0 is a no-op (no state patch, no `save()` call).
-  Future<Failure?> adjustStock(String ingredientId, int delta) async {
+  Future<Failure?> adjustStock(String ingredientId, num delta) async {
     final current = state.value;
     if (current == null) return null;
 
@@ -70,6 +70,53 @@ class PantryController extends AsyncNotifier<List<PantryRow>> {
 
     final newValue = item.stock.value + delta;
     if (newValue < 0) return null;
+
+    final patchedItem = item.copyWith(
+      stock: Quantity(value: newValue, unit: item.stock.unit),
+    );
+    final patchedRow = PantryRow(
+      item: patchedItem,
+      ingredient: snapshot.ingredient,
+    );
+
+    state = AsyncData([
+      for (final row in current)
+        row.item.ingredientId == ingredientId ? patchedRow : row,
+    ]);
+
+    final repository = ref.read(pantryRepositoryProvider);
+    final result = await repository.save(patchedItem);
+
+    if (!ref.mounted) return null;
+
+    return result.fold((failure) {
+      _revert(ingredientId, snapshot);
+      return failure;
+    }, (_) => null);
+  }
+
+  /// Sets a quantity-tracked item's stock to the absolute [newValue] stock
+  /// units (grams for mass, count for count) — the modal's persist path.
+  ///
+  /// Same optimistic-patch/persist/per-item-rollback shape as [adjustStock].
+  /// No-op (no state patch, no `save()`) if the item is not
+  /// [QuantityTrackedPantryItem], if [newValue] is unchanged from the
+  /// current stock, or if [newValue] is negative.
+  Future<Failure?> setStock(String ingredientId, num newValue) async {
+    final current = state.value;
+    if (current == null) return null;
+
+    final index = current.indexWhere(
+      (row) => row.item.ingredientId == ingredientId,
+    );
+    if (index == -1) return null;
+
+    final snapshot = current[index];
+    final item = snapshot.item;
+    if (item is! QuantityTrackedPantryItem) return null;
+
+    if (newValue < 0) return null;
+    if (newValue == item.stock.value) return null;
 
     final patchedItem = item.copyWith(
       stock: Quantity(value: newValue, unit: item.stock.unit),
