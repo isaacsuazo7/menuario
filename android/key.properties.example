@@ -1,0 +1,10 @@
+# Template for android/key.properties (the real file is gitignored — never commit it).
+# Copy this to `key.properties` and fill in the values you chose when running keytool.
+#
+#   cp android/key.properties.example android/key.properties
+#
+# storeFile: absolute path to your release keystore, kept OUTSIDE the repo.
+storePassword=your-store-password
+keyPassword=your-key-password
+keyAlias=upload
+storeFile=/Users/isaac/keys/menuario-upload-keystore.jks
