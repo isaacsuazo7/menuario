@@ -286,6 +286,31 @@ void main() {
           ),
         );
       });
+
+      test('should return Left(unitMismatch) instead of silently mixing '
+          'units when consumption and stock are expressed in different '
+          'units (680 g consumption vs 2 taza stock)', () {
+        // Arrange
+        const consumption = Quantity(value: 680, unit: Unit.gram);
+        const stock = Quantity(value: 2, unit: taza);
+
+        // Act
+        final result = calculator.shortfall(
+          ingredient: avena,
+          consumption: consumption,
+          stock: stock,
+        );
+
+        // Assert
+        expect(
+          result,
+          isA<Left<Failure, Quantity>>().having(
+            (left) => left.value.code,
+            'code',
+            'unitMismatch',
+          ),
+        );
+      });
     });
 
     group('purchaseQuantity', () {

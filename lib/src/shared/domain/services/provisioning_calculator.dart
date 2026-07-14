@@ -69,7 +69,9 @@ class ProvisioningCalculator {
 
   /// The positive shortfall between [consumption] and [stock], never
   /// negative. Returns `Left(Failure.negativeStock)` when [stock] itself
-  /// is invalid (below zero).
+  /// is invalid (below zero), and `Left(Failure.unitMismatch)` when
+  /// [consumption] and [stock] are expressed in different units — mixing
+  /// them would silently miscompute the shortfall.
   Either<Failure, Quantity> shortfall({
     required Ingredient ingredient,
     required Quantity consumption,
@@ -77,6 +79,15 @@ class ProvisioningCalculator {
   }) {
     if (stock.value < 0) {
       return Left(Failure.negativeStock(ingredient.name));
+    }
+    if (consumption.unit != stock.unit) {
+      return Left(
+        Failure.unitMismatch(
+          ingredientName: ingredient.name,
+          consumptionUnit: consumption.unit.symbol,
+          stockUnit: stock.unit.symbol,
+        ),
+      );
     }
 
     final diff = consumption.value - stock.value;

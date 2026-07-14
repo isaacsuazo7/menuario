@@ -85,7 +85,16 @@ class MeasurementConverter {
     };
   }
 
+  /// Floating-point noise (e.g. from a chain of prior arithmetic) can push
+  /// a shortfall that is mathematically exactly on a ¼-lb boundary a few
+  /// ULPs above it, which would make a bare `.ceil()` over-round to the
+  /// next quarter. Rounding the pre-ceil quotient to microgram precision
+  /// (1e-6) absorbs that noise without under-rounding any genuine
+  /// just-above-boundary value, since real shortfalls never carry
+  /// meaningful precision below a whole gram.
   int _gramsToQuarterPounds(num grams) {
-    return ((grams / _gramsPerPound) * 4).ceil();
+    final quarters = (grams / _gramsPerPound) * 4;
+    final roundedQuarters = double.parse(quarters.toStringAsFixed(6));
+    return roundedQuarters.ceil();
   }
 }

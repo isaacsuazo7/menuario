@@ -240,6 +240,54 @@ void main() {
         );
       });
 
+      test('package presentation should resolve a shortfall EXACTLY equal '
+          'to the pack yield to a single pack, not an extra one '
+          '(avena shortfall 454 g, bolsa yield 454 g -> 1 bolsa)', () {
+        // Arrange
+        const shortfall = Quantity(value: 454, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.package(
+            yieldQty: 454,
+            label: 'bolsas',
+          ),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.packagePurchase(packs: 1, label: 'bolsas'),
+          ),
+        );
+      });
+
+      test('package presentation should resolve a shortfall that is an '
+          'EXACT multiple of the pack yield without an off-by-one '
+          '(avena shortfall 908 g, bolsa yield 454 g -> 2 bolsas)', () {
+        // Arrange
+        const shortfall = Quantity(value: 908, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.package(
+            yieldQty: 454,
+            label: 'bolsas',
+          ),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.packagePurchase(packs: 2, label: 'bolsas'),
+          ),
+        );
+      });
+
       test('counter presentation should round up to the next quarter-pound '
           '(pollo shortfall 1200 g -> 2 ¾ lb)', () {
         // Arrange
@@ -285,6 +333,106 @@ void main() {
         expect(
           (result as Right<Failure, PurchaseQuantity>).value.display,
           '½ lb',
+        );
+      });
+
+      test('counter presentation should land exactly on 1 lb for a '
+          'shortfall exactly at the 1 lb boundary (453.59237 g -> 1 lb, '
+          'not 1 ¼ lb)', () {
+        // Arrange
+        const shortfall = Quantity(value: 453.59237, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.counter(),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.counterPurchase(quarterPounds: 4),
+          ),
+        );
+        expect(
+          (result as Right<Failure, PurchaseQuantity>).value.display,
+          '1 lb',
+        );
+      });
+
+      test('counter presentation should land exactly on ½ lb for a '
+          'shortfall exactly at the ½ lb boundary (226.796185 g -> ½ lb, '
+          'not ¾ lb)', () {
+        // Arrange
+        const shortfall = Quantity(value: 226.796185, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.counter(),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.counterPurchase(quarterPounds: 2),
+          ),
+        );
+        expect(
+          (result as Right<Failure, PurchaseQuantity>).value.display,
+          '½ lb',
+        );
+      });
+
+      test('counter presentation should land exactly on ¼ lb for a '
+          'shortfall exactly at the ¼ lb boundary (113.3980925 g -> ¼ lb, '
+          'not ½ lb)', () {
+        // Arrange
+        const shortfall = Quantity(value: 113.3980925, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.counter(),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.counterPurchase(quarterPounds: 1),
+          ),
+        );
+        expect(
+          (result as Right<Failure, PurchaseQuantity>).value.display,
+          '¼ lb',
+        );
+      });
+
+      test('counter presentation must not over-round when floating-point '
+          'noise pushes a mathematically-exact 1 lb boundary marginally '
+          'above it (0.1 * 4535.9237 g -> still 1 lb, not 1 ¼ lb)', () {
+        // Arrange
+        const shortfall = Quantity(value: 0.1 * 4535.9237, unit: Unit.gram);
+
+        // Act
+        final result = converter.toPurchaseQuantity(
+          stockShortfall: shortfall,
+          presentation: const Presentation.counter(),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, PurchaseQuantity>(
+            PurchaseQuantity.counterPurchase(quarterPounds: 4),
+          ),
+        );
+        expect(
+          (result as Right<Failure, PurchaseQuantity>).value.display,
+          '1 lb',
         );
       });
     });
