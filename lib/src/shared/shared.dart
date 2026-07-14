@@ -1,3 +1,7 @@
+export 'data/datasources/ingredient_data_source.dart';
+export 'data/datasources/pantry_data_source.dart';
+export 'data/datasources/recipe_data_source.dart';
+export 'data/datasources/week_plan_data_source.dart';
 export 'data/models/bom_line_dto.dart';
 export 'data/models/ingredient_dto.dart';
 export 'data/models/pantry_item_dto.dart';
@@ -6,6 +10,10 @@ export 'data/models/presentation_dto.dart';
 export 'data/models/quantity_dto.dart';
 export 'data/models/recipe_dto.dart';
 export 'data/models/week_plan_dto.dart';
+export 'data/repositories/ingredient_repository_impl.dart';
+export 'data/repositories/pantry_repository_impl.dart';
+export 'data/repositories/recipe_repository_impl.dart';
+export 'data/repositories/week_plan_repository_impl.dart';
 export 'domain/entities/bom_line.dart';
 export 'domain/entities/ingredient.dart';
 export 'domain/entities/pantry_item.dart';
