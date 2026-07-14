@@ -35,6 +35,13 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
 
+  # Functional error handling (Either<Failure, T>) across the domain layer.
+  dartz: ^0.10.1
+
+  # Annotations consumed by the freezed code generator for value objects
+  # and entities.
+  freezed_annotation: ^3.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -46,10 +53,12 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
+  # Code generator that powers `freezed` classes.
+  build_runner: ^2.15.1
 
-# The following section is specific to Flutter packages.
+  # Generates immutable value objects/entities (unions, copyWith, ==).
+  freezed: ^3.2.5
+
 flutter:
 
   # The following line ensures that the Material Icons font is
