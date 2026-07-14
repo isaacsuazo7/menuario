@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 
@@ -96,6 +97,56 @@ void main() {
 
         // Assert
         expect(failure.code, 'authNoUser');
+        expect(failure.message, isNotEmpty);
+        expect(failure.metadata, isNull);
+      });
+
+      test(
+        'firestore should carry the FirebaseException code, message and '
+        'the original exception',
+        () {
+          // Arrange
+          final exception = FirebaseException(
+            plugin: 'firestore',
+            code: 'permission-denied',
+            message: 'Missing or insufficient permissions.',
+          );
+
+          // Act
+          final failure = Failure.firestore(exception);
+
+          // Assert
+          expect(failure.code, 'permission-denied');
+          expect(failure.message, 'Missing or insufficient permissions.');
+          expect(failure.exception, exception);
+        },
+      );
+
+      test(
+        'firestore should fall back to a default message when the '
+        'FirebaseException carries none',
+        () {
+          // Arrange
+          final exception = FirebaseException(
+            plugin: 'firestore',
+            code: 'unavailable',
+          );
+
+          // Act
+          final failure = Failure.firestore(exception);
+
+          // Assert
+          expect(failure.code, 'unavailable');
+          expect(failure.message, isNotEmpty);
+        },
+      );
+
+      test('unauthenticated should carry a fixed code without metadata', () {
+        // Act
+        final failure = Failure.unauthenticated();
+
+        // Assert
+        expect(failure.code, 'unauthenticated');
         expect(failure.message, isNotEmpty);
         expect(failure.metadata, isNull);
       });

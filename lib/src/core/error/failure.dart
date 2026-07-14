@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 /// Represents a domain-level failure carried end-to-end through
 /// `Either<Failure, T>` pipelines.
 ///
@@ -96,6 +98,25 @@ class Failure {
     return const Failure(
       message: 'El inicio de sesión no devolvió un usuario autenticado.',
       code: 'authNoUser',
+    );
+  }
+
+  /// A Firestore/platform operation threw a [FirebaseException]. Never
+  /// rethrown by a datasource — always mapped to this factory instead.
+  factory Failure.firestore(FirebaseException exception) {
+    return Failure(
+      message: exception.message ?? 'Error de Firestore.',
+      code: exception.code,
+      exception: exception,
+    );
+  }
+
+  /// A Firestore repository/datasource operation was invoked without a
+  /// signed-in uid. The operation is gated before touching Firestore.
+  factory Failure.unauthenticated() {
+    return const Failure(
+      message: 'Se requiere iniciar sesión para acceder a estos datos.',
+      code: 'unauthenticated',
     );
   }
 
