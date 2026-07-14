@@ -23,4 +23,7 @@ abstract final class ShellRoutes {
   static const week = '/week';
   static const provisioning = '/provisioning';
   static const recipes = '/recipes';
+
+  /// The Recetario recipe-detail child route (full path `/recipes/:id`).
+  static const recipeDetailName = 'recipe-detail';
 }

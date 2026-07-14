@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
@@ -107,7 +109,10 @@ class _RecipeCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () => context.pushNamed(
+          ShellRoutes.recipeDetailName,
+          pathParameters: {'id': recipe.id},
+        ),
         child: Padding(
           padding: MenuarioSpacing.paddingAll16,
           child: Column(

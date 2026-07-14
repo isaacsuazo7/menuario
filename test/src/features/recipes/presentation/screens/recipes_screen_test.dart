@@ -4,12 +4,17 @@ import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/core/routing/app_routes.dart';
+import 'package:menuario/src/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipes_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
+
+class MockIngredientRepository extends Mock implements IngredientRepository {}
 
 void main() {
   late MockRecipeRepository mockRecipeRepository;
@@ -132,5 +137,57 @@ void main() {
 
     expect(find.text('Avena'), findsOneWidget);
     expect(find.text('Misterio'), findsOneWidget);
+  });
+
+  testWidgets('tapping a card navigates to its recipe detail route', (
+    tester,
+  ) async {
+    final mockIngredientRepository = MockIngredientRepository();
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([desayunoRecipe]));
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(desayunoRecipe));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    final router = GoRouter(
+      initialLocation: ShellRoutes.recipes,
+      routes: [
+        GoRoute(
+          path: ShellRoutes.recipes,
+          builder: (context, state) => const RecipesScreen(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              name: ShellRoutes.recipeDetailName,
+              builder: (context, state) =>
+                  RecipeDetailScreen(recipeId: state.pathParameters['id']!),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          ingredientRepositoryProvider.overrideWithValue(
+            mockIngredientRepository,
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Avena'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipeDetailScreen), findsOneWidget);
+    expect(find.text('Detalle de receta'), findsOneWidget);
   });
 }
