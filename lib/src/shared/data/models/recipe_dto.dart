@@ -13,6 +13,7 @@ part 'recipe_dto.g.dart';
 abstract class RecipeDTO with _$RecipeDTO {
   const factory RecipeDTO({
     required String name,
+    String? emoji,
     required List<BomLineDTO> bomLines,
   }) = _RecipeDTO;
 
@@ -25,6 +26,7 @@ abstract class RecipeDTO with _$RecipeDTO {
   static RecipeDTO fromEntity(Recipe entity) {
     return RecipeDTO(
       name: entity.name,
+      emoji: entity.emoji,
       bomLines: entity.bomLines.map(BomLineDTO.fromEntity).toList(),
     );
   }
@@ -39,6 +41,7 @@ extension RecipeDTOX on RecipeDTO {
     return Recipe(
       id: id,
       name: name,
+      emoji: emoji,
       bomLines: bomLines.map((dto) => dto.toEntity()).toList(),
     );
   }

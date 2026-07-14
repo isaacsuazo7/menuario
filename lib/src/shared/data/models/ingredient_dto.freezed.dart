@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IngredientDTO {
 
- String get name; String get category; String get measurementKind; bool get booleanTracked; num? get conversionFactor;
+ String get name; String? get emoji; String get category; String get measurementKind; bool get booleanTracked; num? get conversionFactor;
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $IngredientDTOCopyWith<IngredientDTO> get copyWith => _$IngredientDTOCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,category,measurementKind,booleanTracked,conversionFactor);
+int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor);
 
 @override
 String toString() {
-  return 'IngredientDTO(name: $name, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor)';
+  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $IngredientDTOCopyWith<$Res>  {
   factory $IngredientDTOCopyWith(IngredientDTO value, $Res Function(IngredientDTO) _then) = _$IngredientDTOCopyWithImpl;
 @useResult
 $Res call({
- String name, String category, String measurementKind, bool booleanTracked, num? conversionFactor
+ String name, String? emoji, String category, String measurementKind, bool booleanTracked, num? conversionFactor
 });
 
 
@@ -65,10 +65,11 @@ class _$IngredientDTOCopyWithImpl<$Res>
 
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? category = null,Object? measurementKind = null,Object? booleanTracked = null,Object? conversionFactor = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = null,Object? booleanTracked = null,Object? conversionFactor = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
+as String?,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,measurementKind: null == measurementKind ? _self.measurementKind : measurementKind // ignore: cast_nullable_to_non_nullable
 as String,booleanTracked: null == booleanTracked ? _self.booleanTracked : booleanTracked // ignore: cast_nullable_to_non_nullable
 as bool,conversionFactor: freezed == conversionFactor ? _self.conversionFactor : conversionFactor // ignore: cast_nullable_to_non_nullable
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IngredientDTO() when $default != null:
-return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTra
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)  $default,) {final _that = this;
 switch (_that) {
 case _IngredientDTO():
-return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTra
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? emoji,  String category,  String measurementKind,  bool booleanTracked,  num? conversionFactor)?  $default,) {final _that = this;
 switch (_that) {
 case _IngredientDTO() when $default != null:
-return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor);case _:
   return null;
 
 }
@@ -213,10 +214,11 @@ return $default(_that.name,_that.category,_that.measurementKind,_that.booleanTra
 @JsonSerializable()
 
 class _IngredientDTO extends IngredientDTO {
-  const _IngredientDTO({required this.name, required this.category, required this.measurementKind, required this.booleanTracked, this.conversionFactor}): super._();
+  const _IngredientDTO({required this.name, this.emoji, required this.category, required this.measurementKind, required this.booleanTracked, this.conversionFactor}): super._();
   factory _IngredientDTO.fromJson(Map<String, dynamic> json) => _$IngredientDTOFromJson(json);
 
 @override final  String name;
+@override final  String? emoji;
 @override final  String category;
 @override final  String measurementKind;
 @override final  bool booleanTracked;
@@ -235,16 +237,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,category,measurementKind,booleanTracked,conversionFactor);
+int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor);
 
 @override
 String toString() {
-  return 'IngredientDTO(name: $name, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor)';
+  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$IngredientDTOCopyWith<$Res> implements $IngredientDTOCopy
   factory _$IngredientDTOCopyWith(_IngredientDTO value, $Res Function(_IngredientDTO) _then) = __$IngredientDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String category, String measurementKind, bool booleanTracked, num? conversionFactor
+ String name, String? emoji, String category, String measurementKind, bool booleanTracked, num? conversionFactor
 });
 
 
@@ -272,10 +274,11 @@ class __$IngredientDTOCopyWithImpl<$Res>
 
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? category = null,Object? measurementKind = null,Object? booleanTracked = null,Object? conversionFactor = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = null,Object? booleanTracked = null,Object? conversionFactor = freezed,}) {
   return _then(_IngredientDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
+as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
+as String?,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String,measurementKind: null == measurementKind ? _self.measurementKind : measurementKind // ignore: cast_nullable_to_non_nullable
 as String,booleanTracked: null == booleanTracked ? _self.booleanTracked : booleanTracked // ignore: cast_nullable_to_non_nullable
 as bool,conversionFactor: freezed == conversionFactor ? _self.conversionFactor : conversionFactor // ignore: cast_nullable_to_non_nullable

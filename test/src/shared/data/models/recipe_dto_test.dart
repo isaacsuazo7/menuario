@@ -14,6 +14,7 @@ void main() {
       const entity = Recipe(
         id: 'recipe-1',
         name: 'Avena con leche',
+        emoji: '🥣',
         bomLines: [
           BomLine(
             recipeId: 'recipe-1',
@@ -38,6 +39,7 @@ void main() {
         'ingredient-avena',
         'ingredient-leche',
       ]);
+      expect(result.emoji, '🥣');
       expect(json.containsKey('id'), isFalse);
     });
 
@@ -52,6 +54,7 @@ void main() {
       // Assert
       expect(result, entity);
       expect(result.bomLines, isEmpty);
+      expect(result.emoji, isNull);
     });
   });
 }

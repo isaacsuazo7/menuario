@@ -9,6 +9,7 @@ part of 'ingredient_dto.dart';
 _IngredientDTO _$IngredientDTOFromJson(Map<String, dynamic> json) =>
     _IngredientDTO(
       name: json['name'] as String,
+      emoji: json['emoji'] as String?,
       category: json['category'] as String,
       measurementKind: json['measurementKind'] as String,
       booleanTracked: json['booleanTracked'] as bool,
@@ -18,6 +19,7 @@ _IngredientDTO _$IngredientDTOFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$IngredientDTOToJson(_IngredientDTO instance) =>
     <String, dynamic>{
       'name': instance.name,
+      'emoji': instance.emoji,
       'category': instance.category,
       'measurementKind': instance.measurementKind,
       'booleanTracked': instance.booleanTracked,
