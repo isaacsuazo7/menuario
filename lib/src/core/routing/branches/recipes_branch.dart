@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
-import 'package:menuario/src/features/recipes/presentation/recipes_screen.dart';
+import 'package:menuario/src/features/recipes/presentation/screens/recipes_screen.dart';
 
 final _recipesNavigatorKey = GlobalKey<NavigatorState>();
 
