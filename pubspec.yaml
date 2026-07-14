@@ -41,6 +41,11 @@ dependencies:
   # Annotations consumed by the freezed code generator for value objects
   # and entities.
   freezed_annotation: ^3.1.0
+  firebase_core: ^4.12.1
+  cloud_firestore: ^6.7.1
+  firebase_auth: ^6.5.6
+  flutter_riverpod: ^3.3.2
+  json_annotation: ^4.12.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +64,8 @@ dev_dependencies:
   # Generates immutable value objects/entities (unions, copyWith, ==).
   freezed: ^3.2.5
   mocktail: ^1.0.5
+  json_serializable: ^6.14.0
+  fake_cloud_firestore: ^4.1.1
 
 flutter:
 
