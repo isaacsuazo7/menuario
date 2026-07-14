@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:menuario/src/shared/data/models/bom_line_dto.dart';
 import 'package:menuario/src/shared/domain/entities/recipe.dart';
+import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 
 part 'recipe_dto.freezed.dart';
 part 'recipe_dto.g.dart';
@@ -14,6 +15,7 @@ abstract class RecipeDTO with _$RecipeDTO {
   const factory RecipeDTO({
     required String name,
     String? emoji,
+    String? mealType,
     required List<BomLineDTO> bomLines,
   }) = _RecipeDTO;
 
@@ -27,6 +29,7 @@ abstract class RecipeDTO with _$RecipeDTO {
     return RecipeDTO(
       name: entity.name,
       emoji: entity.emoji,
+      mealType: entity.mealType?.wire,
       bomLines: entity.bomLines.map(BomLineDTO.fromEntity).toList(),
     );
   }
@@ -42,6 +45,7 @@ extension RecipeDTOX on RecipeDTO {
       id: id,
       name: name,
       emoji: emoji,
+      mealType: MealType.fromWire(mealType),
       bomLines: bomLines.map((dto) => dto.toEntity()).toList(),
     );
   }
