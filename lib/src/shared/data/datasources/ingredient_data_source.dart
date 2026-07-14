@@ -27,11 +27,9 @@ class IngredientDataSourceImpl implements IngredientDataSource {
 
   // The public constructor params are `firestore`/`uid` (per design); an
   // initializing formal would force them to be named `_firestore`/`_uid`.
-  IngredientDataSourceImpl({
-    required FirebaseFirestore firestore,
-    String? uid,
-  }) : _firestore = firestore, // ignore: prefer_initializing_formals
-       _uid = uid; // ignore: prefer_initializing_formals
+  IngredientDataSourceImpl({required FirebaseFirestore firestore, String? uid})
+    : _firestore = firestore, // ignore: prefer_initializing_formals
+      _uid = uid; // ignore: prefer_initializing_formals
 
   CollectionReference<Map<String, dynamic>> _collection(String uid) {
     return _firestore.collection('users/$uid/ingredients');
@@ -56,7 +54,9 @@ class IngredientDataSourceImpl implements IngredientDataSource {
       }
       return Right(IngredientDTO.fromJson(data));
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -76,7 +76,9 @@ class IngredientDataSourceImpl implements IngredientDataSource {
             .toList(),
       );
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -92,7 +94,9 @@ class IngredientDataSourceImpl implements IngredientDataSource {
       await _collection(uid).doc(id).set(dto.toJson());
       return const Right(null);
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     }
   }
 }

@@ -55,7 +55,9 @@ class RecipeDataSourceImpl implements RecipeDataSource {
       }
       return Right(RecipeDTO.fromJson(data));
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -75,7 +77,9 @@ class RecipeDataSourceImpl implements RecipeDataSource {
             .toList(),
       );
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));
     }
@@ -91,7 +95,9 @@ class RecipeDataSourceImpl implements RecipeDataSource {
       await _collection(uid).doc(id).set(dto.toJson());
       return const Right(null);
     } on FirebaseException catch (exception) {
-      return Left(Failure.firestore(exception));
+      return Left(
+        Failure.firestore(code: exception.code, message: exception.message),
+      );
     }
   }
 }
