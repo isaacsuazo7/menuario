@@ -75,7 +75,10 @@ class RecipePickerSheet extends ConsumerWidget {
         children: [
           Padding(
             padding: MenuarioSpacing.paddingAll16,
-            child: Text('${mealSlot.label} · ${day.label}', style: MenuarioTypography.h4),
+            child: Text(
+              '${mealSlot.label} · ${day.label}',
+              style: MenuarioTypography.h4,
+            ),
           ),
           if (currentEntry != null)
             ListTile(

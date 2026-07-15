@@ -84,9 +84,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          weekPlanRepositoryProvider.overrideWithValue(
-            mockWeekPlanRepository,
-          ),
+          weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
         ],
         child: MaterialApp(
@@ -118,9 +116,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('lists only recipes matching the slot mealType', (
-    tester,
-  ) async {
+  testWidgets('lists only recipes matching the slot mealType', (tester) async {
     await pumpSheet(tester, mealSlot: MealSlot.almuerzo);
 
     expect(find.text('Pollo al horno'), findsOneWidget);

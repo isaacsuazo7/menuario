@@ -55,10 +55,7 @@ class PlanController extends AsyncNotifier<WeekPlan> {
   /// Removes the [PlanEntry] for the `(day, mealSlot)` slot, if any. A
   /// no-op slot still applies the (unchanged) plan optimistically and
   /// calls `save()`, matching [assign]'s optimistic/revert shape.
-  Future<Failure?> clear({
-    required DayOfWeek day,
-    required MealSlot mealSlot,
-  }) {
+  Future<Failure?> clear({required DayOfWeek day, required MealSlot mealSlot}) {
     return _upsert(day: day, mealSlot: mealSlot, recipeId: null);
   }
 

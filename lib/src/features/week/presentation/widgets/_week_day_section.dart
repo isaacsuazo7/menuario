@@ -38,8 +38,7 @@ class WeekDaySection extends StatelessWidget {
             padding: MenuarioSpacing.paddingAll16,
             child: Text(day.label, style: MenuarioTypography.h4),
           ),
-          for (final slot in MealSlot.values)
-            _buildSlotRow(context, slot),
+          for (final slot in MealSlot.values) _buildSlotRow(context, slot),
         ],
       ),
     );

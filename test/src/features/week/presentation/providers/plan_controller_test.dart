@@ -122,9 +122,9 @@ void main() {
     test(
       'replaces the existing PlanEntry on an occupied slot, not duplicates',
       () async {
-        when(
-          () => mockWeekPlanRepository.getActive(),
-        ).thenAnswer((_) async => const Right(WeekPlan(entries: [marAlmuerzo])));
+        when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+          (_) async => const Right(WeekPlan(entries: [marAlmuerzo])),
+        );
         when(
           () => mockWeekPlanRepository.save(any()),
         ).thenAnswer((_) async => const Right(null));
@@ -151,9 +151,9 @@ void main() {
     );
 
     test('preserves the replaced slot\'s own cooked flag', () async {
-      when(
-        () => mockWeekPlanRepository.getActive(),
-      ).thenAnswer((_) async => const Right(WeekPlan(entries: [jueCenaCooked])));
+      when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+        (_) async => const Right(WeekPlan(entries: [jueCenaCooked])),
+      );
       when(
         () => mockWeekPlanRepository.save(any()),
       ).thenAnswer((_) async => const Right(null));
@@ -175,7 +175,8 @@ void main() {
 
     test('preserves other entries and their cooked flags untouched', () async {
       when(() => mockWeekPlanRepository.getActive()).thenAnswer(
-        (_) async => const Right(WeekPlan(entries: [jueCenaCooked, marAlmuerzo])),
+        (_) async =>
+            const Right(WeekPlan(entries: [jueCenaCooked, marAlmuerzo])),
       );
       when(
         () => mockWeekPlanRepository.save(any()),
@@ -259,27 +260,30 @@ void main() {
       expect(entries, [jueCenaCooked]);
     });
 
-    test('a no-op slot is a no-op that still saves the unchanged plan', () async {
-      when(
-        () => mockWeekPlanRepository.getActive(),
-      ).thenAnswer((_) async => const Right(WeekPlan(entries: [lunCena])));
-      when(
-        () => mockWeekPlanRepository.save(any()),
-      ).thenAnswer((_) async => const Right(null));
+    test(
+      'a no-op slot is a no-op that still saves the unchanged plan',
+      () async {
+        when(
+          () => mockWeekPlanRepository.getActive(),
+        ).thenAnswer((_) async => const Right(WeekPlan(entries: [lunCena])));
+        when(
+          () => mockWeekPlanRepository.save(any()),
+        ).thenAnswer((_) async => const Right(null));
 
-      final container = makeContainer();
-      await container.read(planControllerProvider.future);
-      final notifier = container.read(planControllerProvider.notifier);
+        final container = makeContainer();
+        await container.read(planControllerProvider.future);
+        final notifier = container.read(planControllerProvider.notifier);
 
-      final result = await notifier.clear(
-        day: DayOfWeek.mar,
-        mealSlot: MealSlot.almuerzo,
-      );
+        final result = await notifier.clear(
+          day: DayOfWeek.mar,
+          mealSlot: MealSlot.almuerzo,
+        );
 
-      expect(result, isNull);
-      final entries = container.read(planControllerProvider).value!.entries;
-      expect(entries, [lunCena]);
-    });
+        expect(result, isNull);
+        final entries = container.read(planControllerProvider).value!.entries;
+        expect(entries, [lunCena]);
+      },
+    );
   });
 
   group('optimistic update', () {
@@ -342,49 +346,55 @@ void main() {
   });
 
   group('save failure revert', () {
-    test('assign reverts to the pre-edit snapshot and returns the Failure', () async {
-      when(
-        () => mockWeekPlanRepository.getActive(),
-      ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
-      when(
-        () => mockWeekPlanRepository.save(any()),
-      ).thenAnswer((_) async => Left(failure));
+    test(
+      'assign reverts to the pre-edit snapshot and returns the Failure',
+      () async {
+        when(
+          () => mockWeekPlanRepository.getActive(),
+        ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+        when(
+          () => mockWeekPlanRepository.save(any()),
+        ).thenAnswer((_) async => Left(failure));
 
-      final container = makeContainer();
-      await container.read(planControllerProvider.future);
-      final notifier = container.read(planControllerProvider.notifier);
+        final container = makeContainer();
+        await container.read(planControllerProvider.future);
+        final notifier = container.read(planControllerProvider.notifier);
 
-      final result = await notifier.assign(
-        day: DayOfWeek.lun,
-        mealSlot: MealSlot.cena,
-        recipeId: 'r-lun-cena',
-      );
+        final result = await notifier.assign(
+          day: DayOfWeek.lun,
+          mealSlot: MealSlot.cena,
+          recipeId: 'r-lun-cena',
+        );
 
-      expect(result, failure);
-      final entries = container.read(planControllerProvider).value!.entries;
-      expect(entries, isEmpty);
-    });
+        expect(result, failure);
+        final entries = container.read(planControllerProvider).value!.entries;
+        expect(entries, isEmpty);
+      },
+    );
 
-    test('clear reverts to the pre-edit snapshot and returns the Failure', () async {
-      when(
-        () => mockWeekPlanRepository.getActive(),
-      ).thenAnswer((_) async => const Right(WeekPlan(entries: [lunCena])));
-      when(
-        () => mockWeekPlanRepository.save(any()),
-      ).thenAnswer((_) async => Left(failure));
+    test(
+      'clear reverts to the pre-edit snapshot and returns the Failure',
+      () async {
+        when(
+          () => mockWeekPlanRepository.getActive(),
+        ).thenAnswer((_) async => const Right(WeekPlan(entries: [lunCena])));
+        when(
+          () => mockWeekPlanRepository.save(any()),
+        ).thenAnswer((_) async => Left(failure));
 
-      final container = makeContainer();
-      await container.read(planControllerProvider.future);
-      final notifier = container.read(planControllerProvider.notifier);
+        final container = makeContainer();
+        await container.read(planControllerProvider.future);
+        final notifier = container.read(planControllerProvider.notifier);
 
-      final result = await notifier.clear(
-        day: DayOfWeek.lun,
-        mealSlot: MealSlot.cena,
-      );
+        final result = await notifier.clear(
+          day: DayOfWeek.lun,
+          mealSlot: MealSlot.cena,
+        );
 
-      expect(result, failure);
-      final entries = container.read(planControllerProvider).value!.entries;
-      expect(entries, [lunCena]);
-    });
+        expect(result, failure);
+        final entries = container.read(planControllerProvider).value!.entries;
+        expect(entries, [lunCena]);
+      },
+    );
   });
 }
