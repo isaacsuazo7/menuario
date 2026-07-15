@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/auth/auth_providers.dart';
 import 'package:menuario/src/core/auth/auth_service.dart';
 import 'package:menuario/src/core/routing/routing.dart';
+import 'package:menuario/src/features/ingredients/presentation/screens/ingredients_list_screen.dart';
 import 'package:menuario/src/features/provisioning/presentation/screens/provisioning_screen.dart';
 import 'package:menuario/src/features/today/presentation/today_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
@@ -163,5 +164,24 @@ void main() {
 
     verify(() => mockAuthService.signOut()).called(1);
     expect(find.text('Iniciar sesión con Google'), findsOneWidget);
+  });
+
+  testWidgets('drawer Ingredientes tile opens the ingredients list screen', (
+    tester,
+  ) async {
+    final mockUser = MockUser();
+    when(
+      () => mockAuthService.authStateChanges,
+    ).thenAnswer((_) => Stream.value(mockUser));
+
+    await pumpApp(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ingredientes'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(IngredientsListScreen), findsOneWidget);
   });
 }

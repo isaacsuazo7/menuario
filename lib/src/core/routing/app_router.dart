@@ -13,6 +13,8 @@ import 'package:menuario/src/core/routing/branches/week_branch.dart';
 import 'package:menuario/src/core/routing/widgets/app_shell_scaffold.dart';
 import 'package:menuario/src/core/routing/widgets/splash_screen.dart';
 import 'package:menuario/src/features/auth/presentation/sign_in_screen.dart';
+import 'package:menuario/src/features/ingredients/presentation/screens/ingredient_form_screen.dart';
+import 'package:menuario/src/features/ingredients/presentation/screens/ingredients_list_screen.dart';
 
 /// Bridges a [Stream] to a [Listenable] so [GoRouter] re-evaluates its
 /// `redirect` on every emission — here, every `authStateProvider`
@@ -74,6 +76,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AuthRoutes.signIn,
         name: AuthRoutes.signIn,
         builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: IngredientRoutes.list,
+        name: IngredientRoutes.list,
+        builder: (context, state) => const IngredientsListScreen(),
+      ),
+      GoRoute(
+        path: IngredientRoutes.form,
+        name: IngredientRoutes.form,
+        builder: (context, state) => IngredientFormScreen(
+          ingredientId: state.uri.queryParameters['id'],
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
