@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/features/week/presentation/providers/today_provider.dart';
 import 'package:menuario/src/features/week/presentation/screens/week_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
@@ -36,12 +37,17 @@ void main() {
     mockRecipeRepository = MockRecipeRepository();
   });
 
-  Future<void> pumpScreen(WidgetTester tester) async {
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    bool overrideToday = false,
+    DayOfWeek? today,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          if (overrideToday) todayProvider.overrideWithValue(today),
         ],
         child: const MaterialApp(home: WeekScreen()),
       ),
@@ -119,5 +125,33 @@ void main() {
 
     expect(find.text('Pollo al horno'), findsOneWidget);
     expect(find.text('Agregar'), findsNWidgets(23));
+  });
+
+  testWidgets('marks only today\'s section with a "Hoy" chip', (tester) async {
+    when(
+      () => mockWeekPlanRepository.getActive(),
+    ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    await pumpScreen(tester, overrideToday: true, today: DayOfWeek.mar);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hoy'), findsOneWidget);
+  });
+
+  testWidgets('on Sunday (today == null) no section is marked', (tester) async {
+    when(
+      () => mockWeekPlanRepository.getActive(),
+    ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    await pumpScreen(tester, overrideToday: true, today: null);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hoy'), findsNothing);
   });
 }

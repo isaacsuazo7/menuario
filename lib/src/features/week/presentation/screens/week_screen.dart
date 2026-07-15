@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
 import 'package:menuario/src/features/week/presentation/providers/plan_controller.dart';
+import 'package:menuario/src/features/week/presentation/providers/today_provider.dart';
 import 'package:menuario/src/features/week/presentation/widgets/_week_day_section.dart';
 import 'package:menuario/src/shared/shared.dart';
 
@@ -45,6 +46,7 @@ class WeekScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final planAsync = ref.watch(planControllerProvider);
     final recipesAsync = ref.watch(recipeListProvider);
+    final today = ref.watch(todayProvider);
     final combined = _combine(planAsync, recipesAsync);
 
     return Scaffold(
@@ -77,6 +79,7 @@ class WeekScreen extends ConsumerWidget {
                     day: day,
                     entriesBySlot: entriesByDay[day]!,
                     recipesById: recipesById,
+                    isToday: day == today,
                   ),
               ],
             ),

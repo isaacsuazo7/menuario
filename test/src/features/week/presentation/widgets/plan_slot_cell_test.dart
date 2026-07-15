@@ -78,7 +78,7 @@ void main() {
     expect(find.byIcon(Icons.chevron_right), findsOneWidget);
   });
 
-  testWidgets('a dangling recipeId shows a fallback label and reads as filled', (
+  testWidgets('a dangling recipeId shows a fallback label, reads as filled', (
     tester,
   ) async {
     await pumpCell(tester, entry: danglingEntry, recipe: null);
@@ -90,7 +90,12 @@ void main() {
 
   testWidgets('tapping the cell invokes onTap', (tester) async {
     var tapped = false;
-    await pumpCell(tester, entry: null, recipe: null, onTap: () => tapped = true);
+    await pumpCell(
+      tester,
+      entry: null,
+      recipe: null,
+      onTap: () => tapped = true,
+    );
 
     await tester.tap(find.byType(PlanSlotCell));
 
