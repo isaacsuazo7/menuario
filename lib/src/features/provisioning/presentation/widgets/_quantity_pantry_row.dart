@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/features/provisioning/presentation/models/pantry_row.dart';
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
+import 'package:menuario/src/features/provisioning/presentation/widgets/_set_stock_sheet.dart';
 import 'package:menuario/src/features/provisioning/presentation/widgets/_state_pill.dart';
 import 'package:menuario/src/shared/shared.dart';
 
@@ -49,12 +50,9 @@ class QuantityPantryRow extends ConsumerWidget {
     }
 
     void handleOpenSetStock() {
-      // TODO(PR4): swap this placeholder for the real SetStockSheet(item:
-      // item), wired to PantryController.setStock — see design.md's
-      // "Modal" decision. This stub only proves the row opens a sheet.
       showModalBottomSheet<void>(
         context: context,
-        builder: (_) => const SizedBox(height: 200),
+        builder: (_) => SetStockSheet(row: liveRow),
       );
     }
 

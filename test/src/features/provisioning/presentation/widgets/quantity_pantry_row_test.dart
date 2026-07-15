@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/provisioning/presentation/models/pantry_row.dart';
 import 'package:menuario/src/features/provisioning/presentation/widgets/_quantity_pantry_row.dart';
+import 'package:menuario/src/features/provisioning/presentation/widgets/_set_stock_sheet.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -247,16 +248,17 @@ void main() {
   });
 
   testWidgets(
-    'tapping the stock display opens a bottom sheet (PR4 wires the real form)',
+    'tapping the stock display opens the real SetStockSheet, prefilled',
     (tester) async {
       await pumpRow(tester);
 
-      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.byType(SetStockSheet), findsNothing);
 
       await tester.tap(find.text('1 bolsa'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(BottomSheet), findsOneWidget);
+      expect(find.byType(SetStockSheet), findsOneWidget);
+      expect(find.widgetWithText(TextField, '1'), findsOneWidget);
     },
   );
 }
