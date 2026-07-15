@@ -611,5 +611,47 @@ void main() {
       expect(savedPantryItem.ingredientId, 'ing-avena');
       verifyNever(() => mockIngredientCatalogRepository.newId());
     });
+
+    testWidgets(
+      'edit Confirm persists a changed field value under the reused id',
+      (tester) async {
+        when(
+          () => mockIngredientRepository.getById('ing-avena'),
+        ).thenAnswer((_) async => const Right(avena));
+        when(
+          () => mockPantryRepository.getById('ing-avena'),
+        ).thenAnswer((_) async => const Right(avenaPantry));
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester, ingredientId: 'ing-avena');
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Avena integral',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedIngredient = captured[0] as Ingredient;
+
+        expect(savedIngredient.name, 'Avena integral');
+        expect(savedIngredient.id, 'ing-avena');
+      },
+    );
   });
 }
