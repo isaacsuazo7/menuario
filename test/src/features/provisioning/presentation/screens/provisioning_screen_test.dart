@@ -11,6 +11,10 @@ class MockPantryRepository extends Mock implements PantryRepository {}
 
 class MockIngredientRepository extends Mock implements IngredientRepository {}
 
+class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
+
+class MockRecipeRepository extends Mock implements RecipeRepository {}
+
 void main() {
   late MockPantryRepository mockPantryRepository;
   late MockIngredientRepository mockIngredientRepository;
@@ -129,5 +133,72 @@ void main() {
 
     expect(find.text('No se pudo cargar.'), findsOneWidget);
     expect(find.text('Reintentar'), findsOneWidget);
+  });
+
+  group('Despensa/Comprar toggle', () {
+    late MockWeekPlanRepository mockWeekPlanRepository;
+    late MockRecipeRepository mockRecipeRepository;
+
+    setUp(() {
+      mockWeekPlanRepository = MockWeekPlanRepository();
+      mockRecipeRepository = MockRecipeRepository();
+    });
+
+    Future<void> pumpScreenWithComprar(WidgetTester tester) {
+      return tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            pantryRepositoryProvider.overrideWithValue(mockPantryRepository),
+            ingredientRepositoryProvider.overrideWithValue(
+              mockIngredientRepository,
+            ),
+            weekPlanRepositoryProvider.overrideWithValue(
+              mockWeekPlanRepository,
+            ),
+            recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          ],
+          child: const MaterialApp(home: ProvisioningScreen()),
+        ),
+      );
+    }
+
+    testWidgets(
+      'SegmentedButton switches the body between Despensa and Comprar '
+      'without navigating to a new route',
+      (tester) async {
+        when(
+          () => mockPantryRepository.list(),
+        ).thenAnswer((_) async => const Right([avenaItem]));
+        when(
+          () => mockIngredientRepository.list(),
+        ).thenAnswer((_) async => const Right([avena]));
+        when(
+          () => mockWeekPlanRepository.getActive(),
+        ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+        when(
+          () => mockRecipeRepository.list(),
+        ).thenAnswer((_) async => const Right([]));
+
+        await pumpScreenWithComprar(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Avena'), findsOneWidget);
+        final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+        expect(navigator.canPop(), isFalse);
+
+        await tester.tap(find.text('Comprar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Avena'), findsNothing);
+        expect(find.text('ya tenés todo lo necesario'), findsOneWidget);
+        expect(navigator.canPop(), isFalse);
+
+        await tester.tap(find.text('Despensa'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Avena'), findsOneWidget);
+        expect(navigator.canPop(), isFalse);
+      },
+    );
   });
 }
