@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
-import 'package:menuario/src/features/week/presentation/week_screen.dart';
+import 'package:menuario/src/features/week/presentation/screens/week_screen.dart';
 
 final _weekNavigatorKey = GlobalKey<NavigatorState>();
 
