@@ -152,6 +152,40 @@ void main() {
     expect(find.text('Misterio'), findsOneWidget);
   });
 
+  testWidgets(
+    'a card with a 2-line name and a meal chip does not overflow',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      const longNameRecipes = [
+        Recipe(
+          id: 'r3',
+          name: 'Aderezo mostaza-miel',
+          emoji: '🥫',
+          mealType: MealType.desayuno,
+          bomLines: [],
+        ),
+        Recipe(
+          id: 'r4',
+          name: 'Aderezo yogurt-cilantro',
+          emoji: '🥫',
+          mealType: MealType.cena,
+          bomLines: [],
+        ),
+      ];
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right(longNameRecipes));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('tapping a card navigates to its recipe detail route', (
     tester,
   ) async {

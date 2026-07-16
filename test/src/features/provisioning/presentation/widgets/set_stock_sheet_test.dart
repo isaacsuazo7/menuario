@@ -90,6 +90,7 @@ void main() {
                   return ElevatedButton(
                     onPressed: () => showModalBottomSheet<void>(
                       context: context,
+                      isScrollControlled: true,
                       builder: (_) => SetStockSheet(row: row),
                     ),
                     child: const Text('open'),
@@ -208,4 +209,32 @@ void main() {
 
     expect(find.text('No se pudo guardar.'), findsOneWidget);
   });
+
+  testWidgets(
+    'does not overflow and keeps Confirm reachable when the keyboard is up',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 500);
+      tester.view.devicePixelRatio = 1.0;
+      // Simulates a soft keyboard covering roughly the bottom half of the
+      // screen, which is the scenario that produced the 53px overflow.
+      tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+      addTearDown(tester.view.reset);
+
+      await pumpSheet(tester, row: polloRow);
+
+      expect(tester.takeException(), isNull);
+
+      await tester.ensureVisible(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Confirmar'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+
+      // The keyboard covers the bottom 300 of the 500-tall screen, so only
+      // y < 200 is actually visible above it. Confirm must be reachable
+      // there, not rendered past the bottom of the (visible) screen.
+      final confirmRect = tester.getRect(find.text('Confirmar'));
+      expect(confirmRect.bottom, lessThanOrEqualTo(200));
+    },
+  );
 }
