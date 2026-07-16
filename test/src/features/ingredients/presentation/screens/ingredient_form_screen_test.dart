@@ -203,6 +203,45 @@ void main() {
     expect(find.text('Sí-No'), findsOneWidget);
   });
 
+  testWidgets(
+    'the "¿Cómo lo medís?" selector fits cleanly on a narrow phone width, '
+    'with no overflow',
+    (tester) async {
+      final originalSize = tester.view.physicalSize;
+      final originalRatio = tester.view.devicePixelRatio;
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.physicalSize = originalSize;
+        tester.view.devicePixelRatio = originalRatio;
+      });
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('ingredient-mode-field')), findsOneWidget);
+      expect(find.text('Por peso'), findsOneWidget);
+      expect(find.text('Por unidad'), findsOneWidget);
+      expect(find.text('Por paquete'), findsOneWidget);
+      expect(find.text('Sí-No'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'each "¿Cómo lo medís?" option carries a leading icon/emoji, so the '
+    '4-way selector reads clearly even compacted',
+    (tester) async {
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('⚖️'), findsOneWidget);
+      expect(find.text('#️⃣'), findsOneWidget);
+      expect(find.text('📦'), findsOneWidget);
+      expect(find.text('✓'), findsOneWidget);
+    },
+  );
+
   testWidgets('shows the edit title when ingredientId is provided', (
     tester,
   ) async {

@@ -490,19 +490,34 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
           MenuarioSpacing.gapV8,
           SegmentedButton<_ModeChoice>(
             key: const Key('ingredient-mode-field'),
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+            ),
             segments: const [
-              ButtonSegment(value: _ModeChoice.mass, label: Text('Por peso')),
+              ButtonSegment(
+                value: _ModeChoice.mass,
+                icon: Text('⚖️'),
+                label: Text('Por peso'),
+              ),
               ButtonSegment(
                 value: _ModeChoice.count,
+                icon: Text('#️⃣'),
                 label: Text('Por unidad'),
               ),
               ButtonSegment(
                 value: _ModeChoice.package,
+                icon: Text('📦'),
                 label: Text('Por paquete'),
               ),
-              ButtonSegment(value: _ModeChoice.boolean, label: Text('Sí-No')),
+              ButtonSegment(
+                value: _ModeChoice.boolean,
+                icon: Text('✓'),
+                label: Text('Sí-No'),
+              ),
             ],
             selected: {_modeChoice},
+            showSelectedIcon: false,
             onSelectionChanged: (selection) =>
                 _handleModeChanged(selection.first),
           ),
