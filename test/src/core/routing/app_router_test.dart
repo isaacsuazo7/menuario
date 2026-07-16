@@ -22,20 +22,34 @@ class MockPantryRepository extends Mock implements PantryRepository {}
 
 class MockIngredientRepository extends Mock implements IngredientRepository {}
 
+class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
+
+class MockRecipeRepository extends Mock implements RecipeRepository {}
+
 void main() {
   late MockAuthService mockAuthService;
   late MockPantryRepository mockPantryRepository;
   late MockIngredientRepository mockIngredientRepository;
+  late MockWeekPlanRepository mockWeekPlanRepository;
+  late MockRecipeRepository mockRecipeRepository;
 
   setUp(() {
     mockAuthService = MockAuthService();
     mockPantryRepository = MockPantryRepository();
     mockIngredientRepository = MockIngredientRepository();
+    mockWeekPlanRepository = MockWeekPlanRepository();
+    mockRecipeRepository = MockRecipeRepository();
     when(
       () => mockPantryRepository.list(),
     ).thenAnswer((_) async => const Right([]));
     when(
       () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockWeekPlanRepository.getActive(),
+    ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+    when(
+      () => mockRecipeRepository.list(),
     ).thenAnswer((_) async => const Right([]));
   });
 
@@ -48,6 +62,8 @@ void main() {
           ingredientRepositoryProvider.overrideWithValue(
             mockIngredientRepository,
           ),
+          weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
+          recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
         ],
         child: Consumer(
           builder: (context, ref, _) {
