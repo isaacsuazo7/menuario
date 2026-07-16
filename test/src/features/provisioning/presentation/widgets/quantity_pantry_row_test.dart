@@ -172,14 +172,17 @@ void main() {
   }
 
   testWidgets(
-    'renders emoji, name, smart-formatted stock display and a green pill',
+    'renders emoji, name and smart-formatted stock display, with no error '
+    'tint on the row',
     (tester) async {
       await pumpRow(tester);
 
       expect(find.text('🍗'), findsOneWidget);
       expect(find.text('Pollo'), findsOneWidget);
       expect(find.text('1.76 lb'), findsOneWidget);
-      expect(find.text('🟢 Tengo'), findsOneWidget);
+      expect(find.text('🟢 Tengo'), findsNothing);
+      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      expect(tile.tileColor, isNull);
     },
   );
 
@@ -376,9 +379,8 @@ void main() {
   );
 
   testWidgets(
-    'a sub-display residual stock ("0 lb") shows the red No tengo pill, '
-    'not the green Tengo pill a raw nonzero stock would wrongly suggest '
-    '(effective-zero overrides raw positivity)',
+    'a sub-display residual stock ("0 lb") tints the row instead of '
+    'showing a red No tengo pill (effective-zero overrides raw positivity)',
     (tester) async {
       // 1 g is nonzero raw stock, but rounds to zero at the mass-mode
       // default lens's 2dp display precision — `formatStock` trims that
@@ -401,8 +403,46 @@ void main() {
       await pumpRow(tester, withRow: residualRow);
 
       expect(find.text('0 lb'), findsOneWidget);
-      expect(find.text('🔴 No tengo'), findsOneWidget);
+      expect(find.text('🔴 No tengo'), findsNothing);
       expect(find.text('🟢 Tengo'), findsNothing);
+      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      expect(tile.tileColor, isNotNull);
+    },
+  );
+
+  testWidgets(
+    'tapping - on an item whose stock is below the step floors it to '
+    'exactly 0, instead of no-op-ing above zero (pollo 57 g, step ~113.4 g)',
+    (tester) async {
+      const lowStockItem = PantryItem.quantityTracked(
+        ingredientId: 'ing-pollo',
+        category: Category.proteina,
+        presentation: Presentation.counter(),
+        stock: Quantity(value: 57, unit: Unit.gram),
+      );
+      final lowStockRow = PantryRow(item: lowStockItem, ingredient: pollo);
+
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([lowStockItem]));
+      when(
+        () => mockPantryRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
+
+      await pumpRow(tester, withRow: lowStockRow);
+
+      await tester.tap(find.byIcon(Icons.remove));
+      await tester.pump();
+
+      expect(find.text('0 lb'), findsOneWidget);
+
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockPantryRepository.save(captureAny()),
+      ).captured;
+      final saved = captured.single as QuantityTrackedPantryItem;
+      expect(saved.stock.value, 0);
     },
   );
 }

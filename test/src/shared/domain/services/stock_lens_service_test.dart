@@ -87,6 +87,52 @@ void main() {
     measurementMode: MeasurementMode.boolean,
   );
 
+  // packageBase mode with a second count-base ingredient (distinct from
+  // `carton`), confirming the whole-unit step rule is general and not
+  // specific to huevo's own fixture.
+  const jamon = Ingredient(
+    id: 'ingredient-jamon',
+    name: 'Jamón',
+    category: Category.proteina,
+    measurementKind: MeasurementKind.unit,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'bolsa',
+      yieldQty: 10,
+      baseDimension: Unit.count,
+    ),
+  );
+
+  // packageBase mode with a CONTINUOUS (mass) base dimension — steps by a
+  // quarter of the pack lens, same rule as leche's liter base.
+  const requesonPana = Ingredient(
+    id: 'ingredient-requeson-pana',
+    name: 'Requesón',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'pana',
+      yieldQty: 500,
+      baseDimension: Unit.gram,
+    ),
+  );
+
+  // packageAbstract mode, used to pin the percent-formatter bug fix: a
+  // value >= 1 whole package must never multiply into a percent (the old
+  // `1.7 -> "170%"` bug).
+  const caja = Ingredient(
+    id: 'ingredient-caja',
+    name: 'Galletas',
+    category: Category.cereal,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageAbstract,
+    package: PackageSpec(label: 'caja'),
+  );
+
   group('StockLensService', () {
     group('lensesFor', () {
       test('mass mode offers g and lb, both decimal', () {
@@ -214,9 +260,22 @@ void main() {
     });
 
     group('stockStep', () {
-      test('mass mode steps by a quarter of the default lens (lb)', () {
+      test('mass mode steps by a fixed quarter pound (carne)', () {
         // Act
         final step = service.stockStep(mass);
+
+        // Assert
+        expect(step, closeTo(Mass.gramsPerPound / 4, 1e-9));
+      });
+
+      test('mass mode steps by a fixed quarter pound even when the default '
+          'lens is overridden to grams (arroz -> ~113.4 g, NOT '
+          'defaultLens/4 = 0.25 g)', () {
+        // Arrange
+        final overridden = mass.copyWith(defaultLensLabel: 'g');
+
+        // Act
+        final step = service.stockStep(overridden);
 
         // Assert
         expect(step, closeTo(Mass.gramsPerPound / 4, 1e-9));
@@ -227,15 +286,43 @@ void main() {
         expect(service.stockStep(count), 1);
       });
 
-      test('packageBase mode steps by a quarter of the pack lens '
-          '(leche -> 0.25 bolsa = 0.25 L)', () {
+      test('packageBase mode with a COUNT base dimension steps by exactly '
+          '1 whole unit, not a fraction of the pack (huevo cartón)', () {
+        // Act & Assert
+        expect(service.stockStep(carton), 1);
+      });
+
+      test('packageBase mode with a COUNT base dimension steps by exactly '
+          '1 whole unit (jamón bolsa/u)', () {
+        // Act & Assert
+        expect(service.stockStep(jamon), 1);
+      });
+
+      test('a packageBase-count ingredient whose defaultLensLabel is '
+          'overridden to the base-unit lens (crackers caja/u) still steps '
+          'by exactly 1 whole unit', () {
+        // Arrange
+        final overridden = carton.copyWith(defaultLensLabel: 'u');
+
+        // Act & Assert
+        expect(service.stockStep(overridden), 1);
+      });
+
+      test('packageBase mode with a CONTINUOUS base dimension steps by a '
+          'quarter of the pack lens (leche -> 0.25 bolsa = 0.25 L)', () {
         // Act & Assert
         expect(service.stockStep(leche), closeTo(0.25, 1e-9));
       });
 
-      test('packageAbstract mode steps by a percent-granular 0.01', () {
+      test('packageBase mode with a CONTINUOUS base dimension steps by a '
+          'quarter of the pack lens (requesón pana/g -> 125 g)', () {
         // Act & Assert
-        expect(service.stockStep(lechuga), closeTo(0.01, 1e-9));
+        expect(service.stockStep(requesonPana), closeTo(125, 1e-9));
+      });
+
+      test('packageAbstract mode steps by a quarter package (0.25)', () {
+        // Act & Assert
+        expect(service.stockStep(lechuga), closeTo(0.25, 1e-9));
       });
 
       test('boolean mode has no numeric step', () {
@@ -351,6 +438,53 @@ void main() {
         // Act & Assert
         expect(canonical, closeTo(793.8, 0.05));
         expect(service.formatStock(mass, stock), '1¾ lb');
+      });
+
+      test('a packageAbstract value >= 1 whole package with no '
+          'clean-fraction match renders a trimmed decimal, NOT a percent '
+          '(the old "170%" bug: 1.7 -> "1.7 caja")', () {
+        // Arrange
+        const stock = Quantity(value: 1.7, unit: Unit.package);
+
+        // Act & Assert
+        expect(service.formatStock(caja, stock), '1.7 caja');
+      });
+
+      test('a packageAbstract mixed number >= 1 still renders the glyph '
+          'when its fraction is clean (1.5 -> "1½ caja")', () {
+        // Arrange
+        const stock = Quantity(value: 1.5, unit: Unit.package);
+
+        // Act & Assert
+        expect(service.formatStock(caja, stock), '1½ caja');
+      });
+
+      test('an exact zero packageAbstract value renders cleanly, not as '
+          'a percent (0 -> "0 caja")', () {
+        // Arrange
+        const stock = Quantity(value: 0, unit: Unit.package);
+
+        // Act & Assert
+        expect(service.formatStock(caja, stock), '0 caja');
+      });
+
+      test('an exact zero mass value renders cleanly (0 -> "0 lb")', () {
+        // Arrange
+        const stock = Quantity(value: 0, unit: Unit.gram);
+
+        // Act & Assert
+        expect(service.formatStock(mass, stock), '0 lb');
+      });
+
+      test('a packageBase-count ingredient whose defaultLensLabel is '
+          'overridden to the base-unit lens displays whole units (crackers '
+          'caja/u -> "8 u")', () {
+        // Arrange
+        final overridden = carton.copyWith(defaultLensLabel: 'u');
+        const stock = Quantity(value: 8, unit: Unit.count);
+
+        // Act & Assert
+        expect(service.formatStock(overridden, stock), '8 u');
       });
     });
 
