@@ -19,6 +19,35 @@ void main() {
       return RecipeDataSourceImpl(firestore: firestore, uid: uid);
     }
 
+    group('newId', () {
+      test('returns a non-empty id and writes no document', () async {
+        // Arrange
+        final dataSource = makeDataSource();
+
+        // Act
+        final id = dataSource.newId();
+        final snapshot = await firestore
+            .collection('users/uid-A/recipes')
+            .get();
+
+        // Assert
+        expect(id, isNotEmpty);
+        expect(snapshot.docs, isEmpty);
+      });
+
+      test('returns a unique id on every call', () {
+        // Arrange
+        final dataSource = makeDataSource();
+
+        // Act
+        final first = dataSource.newId();
+        final second = dataSource.newId();
+
+        // Assert
+        expect(first, isNot(second));
+      });
+    });
+
     group('save + getById', () {
       test(
         'a saved recipe round-trips back with the same id and fields',

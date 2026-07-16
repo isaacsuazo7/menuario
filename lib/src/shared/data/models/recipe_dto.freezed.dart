@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RecipeDTO {
 
- String get name; String? get emoji; String? get mealType; List<BomLineDTO> get bomLines;
+ String get name; String? get emoji; String? get mealType; List<BomLineDTO> get bomLines; List<VideoLinkDTO>? get videos; bool? get enabled;
 /// Create a copy of RecipeDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $RecipeDTOCopyWith<RecipeDTO> get copyWith => _$RecipeDTOCopyWithImpl<RecipeDTO>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other.bomLines, bomLines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other.bomLines, bomLines)&&const DeepCollectionEquality().equals(other.videos, videos)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,emoji,mealType,const DeepCollectionEquality().hash(bomLines));
+int get hashCode => Object.hash(runtimeType,name,emoji,mealType,const DeepCollectionEquality().hash(bomLines),const DeepCollectionEquality().hash(videos),enabled);
 
 @override
 String toString() {
-  return 'RecipeDTO(name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines)';
+  return 'RecipeDTO(name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines, videos: $videos, enabled: $enabled)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $RecipeDTOCopyWith<$Res>  {
   factory $RecipeDTOCopyWith(RecipeDTO value, $Res Function(RecipeDTO) _then) = _$RecipeDTOCopyWithImpl;
 @useResult
 $Res call({
- String name, String? emoji, String? mealType, List<BomLineDTO> bomLines
+ String name, String? emoji, String? mealType, List<BomLineDTO> bomLines, List<VideoLinkDTO>? videos, bool? enabled
 });
 
 
@@ -65,13 +65,15 @@ class _$RecipeDTOCopyWithImpl<$Res>
 
 /// Create a copy of RecipeDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,Object? videos = freezed,Object? enabled = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
 as String?,mealType: freezed == mealType ? _self.mealType : mealType // ignore: cast_nullable_to_non_nullable
 as String?,bomLines: null == bomLines ? _self.bomLines : bomLines // ignore: cast_nullable_to_non_nullable
-as List<BomLineDTO>,
+as List<BomLineDTO>,videos: freezed == videos ? _self.videos : videos // ignore: cast_nullable_to_non_nullable
+as List<VideoLinkDTO>?,enabled: freezed == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 
@@ -156,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines,  List<VideoLinkDTO>? videos,  bool? enabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecipeDTO() when $default != null:
-return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   return orElse();
 
 }
@@ -177,10 +179,10 @@ return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines,  List<VideoLinkDTO>? videos,  bool? enabled)  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDTO():
-return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +199,10 @@ return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? emoji,  String? mealType,  List<BomLineDTO> bomLines,  List<VideoLinkDTO>? videos,  bool? enabled)?  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDTO() when $default != null:
-return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   return null;
 
 }
@@ -212,7 +214,7 @@ return $default(_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
 @JsonSerializable()
 
 class _RecipeDTO extends RecipeDTO {
-  const _RecipeDTO({required this.name, this.emoji, this.mealType, required final  List<BomLineDTO> bomLines}): _bomLines = bomLines,super._();
+  const _RecipeDTO({required this.name, this.emoji, this.mealType, required final  List<BomLineDTO> bomLines, final  List<VideoLinkDTO>? videos, this.enabled}): _bomLines = bomLines,_videos = videos,super._();
   factory _RecipeDTO.fromJson(Map<String, dynamic> json) => _$RecipeDTOFromJson(json);
 
 @override final  String name;
@@ -225,6 +227,16 @@ class _RecipeDTO extends RecipeDTO {
   return EqualUnmodifiableListView(_bomLines);
 }
 
+ final  List<VideoLinkDTO>? _videos;
+@override List<VideoLinkDTO>? get videos {
+  final value = _videos;
+  if (value == null) return null;
+  if (_videos is EqualUnmodifiableListView) return _videos;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+@override final  bool? enabled;
 
 /// Create a copy of RecipeDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other._bomLines, _bomLines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other._bomLines, _bomLines)&&const DeepCollectionEquality().equals(other._videos, _videos)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,emoji,mealType,const DeepCollectionEquality().hash(_bomLines));
+int get hashCode => Object.hash(runtimeType,name,emoji,mealType,const DeepCollectionEquality().hash(_bomLines),const DeepCollectionEquality().hash(_videos),enabled);
 
 @override
 String toString() {
-  return 'RecipeDTO(name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines)';
+  return 'RecipeDTO(name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines, videos: $videos, enabled: $enabled)';
 }
 
 
@@ -259,7 +271,7 @@ abstract mixin class _$RecipeDTOCopyWith<$Res> implements $RecipeDTOCopyWith<$Re
   factory _$RecipeDTOCopyWith(_RecipeDTO value, $Res Function(_RecipeDTO) _then) = __$RecipeDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String? emoji, String? mealType, List<BomLineDTO> bomLines
+ String name, String? emoji, String? mealType, List<BomLineDTO> bomLines, List<VideoLinkDTO>? videos, bool? enabled
 });
 
 
@@ -276,13 +288,15 @@ class __$RecipeDTOCopyWithImpl<$Res>
 
 /// Create a copy of RecipeDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,Object? videos = freezed,Object? enabled = freezed,}) {
   return _then(_RecipeDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
 as String?,mealType: freezed == mealType ? _self.mealType : mealType // ignore: cast_nullable_to_non_nullable
 as String?,bomLines: null == bomLines ? _self._bomLines : bomLines // ignore: cast_nullable_to_non_nullable
-as List<BomLineDTO>,
+as List<BomLineDTO>,videos: freezed == videos ? _self._videos : videos // ignore: cast_nullable_to_non_nullable
+as List<VideoLinkDTO>?,enabled: freezed == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool?,
   ));
 }
 

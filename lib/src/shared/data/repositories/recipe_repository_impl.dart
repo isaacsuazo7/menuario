@@ -17,6 +17,9 @@ class RecipeRepositoryImpl implements RecipeRepository {
     : _dataSource = dataSource; // ignore: prefer_initializing_formals
 
   @override
+  String newId() => _dataSource.newId();
+
+  @override
   Future<Either<Failure, Recipe>> getById(String id) async {
     final result = await _dataSource.getById(id);
     try {

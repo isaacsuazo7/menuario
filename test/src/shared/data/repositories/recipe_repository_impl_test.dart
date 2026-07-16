@@ -85,6 +85,24 @@ void main() {
       },
     );
 
+    test('newId delegates to the datasource and its minted id is usable '
+        'for a subsequent save', () async {
+      // Act
+      final id = repository.newId();
+      const recipe = Recipe(id: '', name: 'Nueva', bomLines: []);
+      final saveResult = await repository.save(recipe.copyWith(id: id));
+      final getResult = await repository.getById(id);
+
+      // Assert
+      expect(id, isNotEmpty);
+      expect(saveResult, const Right<Failure, void>(null));
+      expect(getResult, isA<Right<Failure, Recipe>>());
+      getResult.fold(
+        (failure) => fail('expected Right, got Left($failure)'),
+        (readRecipe) => expect(readRecipe.id, id),
+      );
+    });
+
     test(
       'getById returns Left(Failure) instead of throwing when a BomLine '
       'quantity carries an unrecognized unit dimension',

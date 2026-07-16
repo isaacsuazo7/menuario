@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Recipe {
 
- String get id; String get name; String? get emoji; MealType? get mealType; List<BomLine> get bomLines;
+ String get id; String get name; String? get emoji; MealType? get mealType; List<BomLine> get bomLines; List<VideoLink> get videos; bool get enabled;
 /// Create a copy of Recipe
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $RecipeCopyWith<Recipe> get copyWith => _$RecipeCopyWithImpl<Recipe>(this as Rec
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Recipe&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other.bomLines, bomLines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Recipe&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other.bomLines, bomLines)&&const DeepCollectionEquality().equals(other.videos, videos)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,emoji,mealType,const DeepCollectionEquality().hash(bomLines));
+int get hashCode => Object.hash(runtimeType,id,name,emoji,mealType,const DeepCollectionEquality().hash(bomLines),const DeepCollectionEquality().hash(videos),enabled);
 
 @override
 String toString() {
-  return 'Recipe(id: $id, name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines)';
+  return 'Recipe(id: $id, name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines, videos: $videos, enabled: $enabled)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $RecipeCopyWith<$Res>  {
   factory $RecipeCopyWith(Recipe value, $Res Function(Recipe) _then) = _$RecipeCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, String? emoji, MealType? mealType, List<BomLine> bomLines
+ String id, String name, String? emoji, MealType? mealType, List<BomLine> bomLines, List<VideoLink> videos, bool enabled
 });
 
 
@@ -62,14 +62,16 @@ class _$RecipeCopyWithImpl<$Res>
 
 /// Create a copy of Recipe
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,Object? videos = null,Object? enabled = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
 as String?,mealType: freezed == mealType ? _self.mealType : mealType // ignore: cast_nullable_to_non_nullable
 as MealType?,bomLines: null == bomLines ? _self.bomLines : bomLines // ignore: cast_nullable_to_non_nullable
-as List<BomLine>,
+as List<BomLine>,videos: null == videos ? _self.videos : videos // ignore: cast_nullable_to_non_nullable
+as List<VideoLink>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -154,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines,  List<VideoLink> videos,  bool enabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Recipe() when $default != null:
-return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   return orElse();
 
 }
@@ -175,10 +177,10 @@ return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines,  List<VideoLink> videos,  bool enabled)  $default,) {final _that = this;
 switch (_that) {
 case _Recipe():
-return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -195,10 +197,10 @@ return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? emoji,  MealType? mealType,  List<BomLine> bomLines,  List<VideoLink> videos,  bool enabled)?  $default,) {final _that = this;
 switch (_that) {
 case _Recipe() when $default != null:
-return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);case _:
+return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines,_that.videos,_that.enabled);case _:
   return null;
 
 }
@@ -210,8 +212,8 @@ return $default(_that.id,_that.name,_that.emoji,_that.mealType,_that.bomLines);c
 
 
 class _Recipe implements Recipe {
-  const _Recipe({required this.id, required this.name, this.emoji, this.mealType, required final  List<BomLine> bomLines}): _bomLines = bomLines;
-  
+  const _Recipe({required this.id, required this.name, this.emoji, this.mealType, required final  List<BomLine> bomLines, final  List<VideoLink> videos = const <VideoLink>[], this.enabled = true}): _bomLines = bomLines,_videos = videos;
+
 
 @override final  String id;
 @override final  String name;
@@ -224,6 +226,14 @@ class _Recipe implements Recipe {
   return EqualUnmodifiableListView(_bomLines);
 }
 
+ final  List<VideoLink> _videos;
+@override@JsonKey() List<VideoLink> get videos {
+  if (_videos is EqualUnmodifiableListView) return _videos;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_videos);
+}
+
+@override@JsonKey() final  bool enabled;
 
 /// Create a copy of Recipe
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +245,16 @@ _$RecipeCopyWith<_Recipe> get copyWith => __$RecipeCopyWithImpl<_Recipe>(this, _
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Recipe&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other._bomLines, _bomLines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Recipe&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.mealType, mealType) || other.mealType == mealType)&&const DeepCollectionEquality().equals(other._bomLines, _bomLines)&&const DeepCollectionEquality().equals(other._videos, _videos)&&(identical(other.enabled, enabled) || other.enabled == enabled));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,name,emoji,mealType,const DeepCollectionEquality().hash(_bomLines));
+int get hashCode => Object.hash(runtimeType,id,name,emoji,mealType,const DeepCollectionEquality().hash(_bomLines),const DeepCollectionEquality().hash(_videos),enabled);
 
 @override
 String toString() {
-  return 'Recipe(id: $id, name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines)';
+  return 'Recipe(id: $id, name: $name, emoji: $emoji, mealType: $mealType, bomLines: $bomLines, videos: $videos, enabled: $enabled)';
 }
 
 
@@ -255,7 +265,7 @@ abstract mixin class _$RecipeCopyWith<$Res> implements $RecipeCopyWith<$Res> {
   factory _$RecipeCopyWith(_Recipe value, $Res Function(_Recipe) _then) = __$RecipeCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, String? emoji, MealType? mealType, List<BomLine> bomLines
+ String id, String name, String? emoji, MealType? mealType, List<BomLine> bomLines, List<VideoLink> videos, bool enabled
 });
 
 
@@ -272,14 +282,16 @@ class __$RecipeCopyWithImpl<$Res>
 
 /// Create a copy of Recipe
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? emoji = freezed,Object? mealType = freezed,Object? bomLines = null,Object? videos = null,Object? enabled = null,}) {
   return _then(_Recipe(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
 as String?,mealType: freezed == mealType ? _self.mealType : mealType // ignore: cast_nullable_to_non_nullable
 as MealType?,bomLines: null == bomLines ? _self._bomLines : bomLines // ignore: cast_nullable_to_non_nullable
-as List<BomLine>,
+as List<BomLine>,videos: null == videos ? _self._videos : videos // ignore: cast_nullable_to_non_nullable
+as List<VideoLink>,enabled: null == enabled ? _self.enabled : enabled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

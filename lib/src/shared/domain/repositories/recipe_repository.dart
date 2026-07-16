@@ -8,6 +8,9 @@ import 'package:menuario/src/shared/domain/entities/recipe.dart';
 /// implementation. A concrete `RecipeRepositoryImpl` (backed by Firestore)
 /// is added in a later data-layer change.
 abstract class RecipeRepository {
+  /// Mints a fresh id, usable for a subsequent [save] of a new [Recipe].
+  String newId();
+
   /// Looks up a single [Recipe] by [id].
   Future<Either<Failure, Recipe>> getById(String id);
 

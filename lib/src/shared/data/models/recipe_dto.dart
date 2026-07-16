@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:menuario/src/shared/data/models/bom_line_dto.dart';
+import 'package:menuario/src/shared/data/models/video_link_dto.dart';
 import 'package:menuario/src/shared/domain/entities/recipe.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 
@@ -10,6 +11,11 @@ part 'recipe_dto.g.dart';
 ///
 /// [Recipe.id] is never stored in the map: it is the Firestore `doc.id`
 /// and is injected back via [RecipeDTOX.toEntity].
+///
+/// [videos] and [enabled] are nullable so an old-shape document written
+/// before this rollout — which has neither key — still loads: see
+/// [RecipeDTOX.toEntity] for the back-compat defaults (`[]` / `true`),
+/// mirroring [IngredientDTO.needType].
 @freezed
 abstract class RecipeDTO with _$RecipeDTO {
   const factory RecipeDTO({
@@ -17,6 +23,8 @@ abstract class RecipeDTO with _$RecipeDTO {
     String? emoji,
     String? mealType,
     required List<BomLineDTO> bomLines,
+    List<VideoLinkDTO>? videos,
+    bool? enabled,
   }) = _RecipeDTO;
 
   const RecipeDTO._();
@@ -31,6 +39,8 @@ abstract class RecipeDTO with _$RecipeDTO {
       emoji: entity.emoji,
       mealType: entity.mealType?.wire,
       bomLines: entity.bomLines.map(BomLineDTO.fromEntity).toList(),
+      videos: entity.videos.map(VideoLinkDTO.fromEntity).toList(),
+      enabled: entity.enabled,
     );
   }
 }
@@ -39,7 +49,9 @@ abstract class RecipeDTO with _$RecipeDTO {
 extension RecipeDTOX on RecipeDTO {
   /// Rebuilds the [Recipe] entity carried by this DTO, injecting [id] (the
   /// Firestore `doc.id`) since it is not part of the stored map. The
-  /// ordered [bomLines] list is preserved.
+  /// ordered [bomLines] list is preserved. A missing [videos] key defaults
+  /// to `[]` and a missing [enabled] key defaults to `true` — today's
+  /// behavior for every document written before this rollout, unchanged.
   Recipe toEntity({required String id}) {
     return Recipe(
       id: id,
@@ -47,6 +59,8 @@ extension RecipeDTOX on RecipeDTO {
       emoji: emoji,
       mealType: MealType.fromWire(mealType),
       bomLines: bomLines.map((dto) => dto.toEntity()).toList(),
+      videos: videos?.map((dto) => dto.toEntity()).toList() ?? const [],
+      enabled: enabled ?? true,
     );
   }
 }
