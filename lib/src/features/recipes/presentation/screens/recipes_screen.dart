@@ -94,7 +94,9 @@ class _RecipeGrid extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: MenuarioSpacing.md,
         crossAxisSpacing: MenuarioSpacing.md,
-        childAspectRatio: 1,
+        // Slightly taller than square so a 2-line name plus the meal chip
+        // always fits without overflowing the cell.
+        childAspectRatio: 0.85,
       ),
       itemCount: recipes.length,
       itemBuilder: (context, index) => _RecipeCard(recipe: recipes[index]),
@@ -122,7 +124,7 @@ class _RecipeCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(recipe.emoji ?? '🍽️', style: MenuarioTypography.h2),
-              MenuarioSpacing.gapV8,
+              MenuarioSpacing.gapV4,
               Text(
                 recipe.name,
                 style: MenuarioTypography.h6,
@@ -131,10 +133,13 @@ class _RecipeCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               if (recipe.mealType != null) ...[
-                MenuarioSpacing.gapV8,
-                Chip(
-                  label: Text(recipe.mealType!.label),
-                  visualDensity: VisualDensity.compact,
+                MenuarioSpacing.gapV4,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Chip(
+                    label: Text(recipe.mealType!.label),
+                    visualDensity: VisualDensity.compact,
+                  ),
                 ),
               ],
             ],
@@ -156,7 +161,7 @@ class _RecipeGridSkeleton extends StatelessWidget {
         crossAxisCount: 2,
         mainAxisSpacing: MenuarioSpacing.md,
         crossAxisSpacing: MenuarioSpacing.md,
-        childAspectRatio: 1,
+        childAspectRatio: 0.85,
       ),
       itemCount: 6,
       itemBuilder: (context, index) => Card(
