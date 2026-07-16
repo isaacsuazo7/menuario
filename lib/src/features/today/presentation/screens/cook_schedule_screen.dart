@@ -32,8 +32,7 @@ class CookScheduleScreen extends ConsumerStatefulWidget {
   const CookScheduleScreen({super.key});
 
   @override
-  ConsumerState<CookScheduleScreen> createState() =>
-      _CookScheduleScreenState();
+  ConsumerState<CookScheduleScreen> createState() => _CookScheduleScreenState();
 }
 
 class _CookScheduleScreenState extends ConsumerState<CookScheduleScreen> {
@@ -45,10 +44,6 @@ class _CookScheduleScreenState extends ConsumerState<CookScheduleScreen> {
       for (var weekday = DateTime.monday; weekday <= DateTime.sunday; weekday++)
         weekday: fromTargets(weekday, schedule.targetsFor(weekday)),
     };
-  }
-
-  void _prefill(CookSchedule schedule) {
-    _draft = _togglesFrom(schedule);
   }
 
   void _handleReset() {
@@ -77,9 +72,9 @@ class _CookScheduleScreenState extends ConsumerState<CookScheduleScreen> {
     final navigator = Navigator.of(context);
 
     setState(() => _saving = true);
-    final failure = await ref.read(cookScheduleProvider.notifier).save(
-      schedule,
-    );
+    final failure = await ref
+        .read(cookScheduleProvider.notifier)
+        .save(schedule);
     if (!mounted) return;
     setState(() => _saving = false);
 
@@ -186,12 +181,11 @@ class _DayTogglesTile extends StatelessWidget {
               title: const Text('Cena de hoy'),
               value: toggles.cenaHoy,
               onChanged: hoyEnabled
-                  ? (value) =>
-                        onChanged((
-                          cenaHoy: value,
-                          damManana: toggles.damManana,
-                          damHoy: toggles.damHoy,
-                        ))
+                  ? (value) => onChanged((
+                      cenaHoy: value,
+                      damManana: toggles.damManana,
+                      damHoy: toggles.damHoy,
+                    ))
                   : null,
             ),
             SwitchListTile(
@@ -200,12 +194,11 @@ class _DayTogglesTile extends StatelessWidget {
               title: const Text('Des/Alm/Mer de mañana'),
               value: toggles.damManana,
               onChanged: mananaEnabled
-                  ? (value) =>
-                        onChanged((
-                          cenaHoy: toggles.cenaHoy,
-                          damManana: value,
-                          damHoy: toggles.damHoy,
-                        ))
+                  ? (value) => onChanged((
+                      cenaHoy: toggles.cenaHoy,
+                      damManana: value,
+                      damHoy: toggles.damHoy,
+                    ))
                   : null,
             ),
             SwitchListTile(
@@ -214,12 +207,11 @@ class _DayTogglesTile extends StatelessWidget {
               title: const Text('Des/Alm/Mer de hoy'),
               value: toggles.damHoy,
               onChanged: hoyEnabled
-                  ? (value) =>
-                        onChanged((
-                          cenaHoy: toggles.cenaHoy,
-                          damManana: toggles.damManana,
-                          damHoy: value,
-                        ))
+                  ? (value) => onChanged((
+                      cenaHoy: toggles.cenaHoy,
+                      damManana: toggles.damManana,
+                      damHoy: value,
+                    ))
                   : null,
             ),
           ],

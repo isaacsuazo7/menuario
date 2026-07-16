@@ -42,8 +42,9 @@ class _FakeHttpOverrides extends HttpOverrides {
     when(request.close).thenAnswer((_) async => response);
     when(() => response.contentLength).thenReturn(_kTransparentImage.length);
     when(() => response.statusCode).thenReturn(HttpStatus.ok);
-    when(() => response.compressionState)
-        .thenReturn(HttpClientResponseCompressionState.notCompressed);
+    when(
+      () => response.compressionState,
+    ).thenReturn(HttpClientResponseCompressionState.notCompressed);
     when(
       () => response.listen(
         any(),
@@ -55,8 +56,9 @@ class _FakeHttpOverrides extends HttpOverrides {
       final onData =
           invocation.positionalArguments[0] as void Function(List<int>);
       final onDone = invocation.namedArguments[#onDone] as void Function()?;
-      return Stream<List<int>>.fromIterable([_kTransparentImage])
-          .listen(onData, onDone: onDone);
+      return Stream<List<int>>.fromIterable([
+        _kTransparentImage,
+      ]).listen(onData, onDone: onDone);
     });
     return client;
   }
@@ -110,10 +112,7 @@ void main() {
   testWidgets('renders the display name and email in the header', (
     tester,
   ) async {
-    final user = buildUser(
-      displayName: 'Isaac Suazo',
-      email: 'isaac@cit.hn',
-    );
+    final user = buildUser(displayName: 'Isaac Suazo', email: 'isaac@cit.hn');
 
     await pumpDrawer(tester, user: user);
 
@@ -174,6 +173,14 @@ void main() {
     await pumpDrawer(tester, user: user);
 
     expect(find.text('Ingredientes'), findsOneWidget);
+  });
+
+  testWidgets('shows the Calendario de cocina navigation item', (tester) async {
+    final user = buildUser(displayName: 'Isaac Suazo', email: 'isaac@cit.hn');
+
+    await pumpDrawer(tester, user: user);
+
+    expect(find.text('Calendario de cocina'), findsOneWidget);
   });
 
   testWidgets('pins "Cerrar sesión" below the Ingredientes item', (

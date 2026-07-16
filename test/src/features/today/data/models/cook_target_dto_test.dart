@@ -27,10 +27,7 @@ void main() {
         group: CookGroup.hoy,
       );
 
-      final result = CookTargetDTO.fromEntity(
-        weekday: weekday,
-        target: target,
-      );
+      final result = CookTargetDTO.fromEntity(weekday: weekday, target: target);
 
       expect(result.weekday, DateTime.friday);
       expect(result.targetDay, 'vie');

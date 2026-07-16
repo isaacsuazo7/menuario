@@ -20,7 +20,8 @@ class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
-class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
+class MockCookScheduleRepository extends Mock
+    implements CookScheduleRepository {}
 
 void main() {
   const cenaLun = Recipe(id: 'r-cena-lun', name: 'Sopa', bomLines: []);
@@ -182,54 +183,51 @@ void main() {
     expect(result.value!.manana.single.day, DayOfWeek.lun);
   });
 
-  test(
-    'an edited schedule (not the seed) is reflected: Domingo with a custom '
-    'saved damManana-only routine resolves via the saved schedule',
-    () async {
-      when(() => mockCookScheduleRepository.getActive()).thenAnswer(
-        (_) async => const Right(
-          CookSchedule(
-            byWeekday: {
-              DateTime.sunday: [
-                (
-                  targetDay: DayOfWeek.lun,
-                  slot: MealSlot.almuerzo,
-                  group: CookGroup.manana,
-                ),
-              ],
-            },
-          ),
-        ),
-      );
-      when(() => mockWeekPlanRepository.getActive()).thenAnswer(
-        (_) async => const Right(
-          WeekPlan(
-            entries: [
-              PlanEntry(
-                day: DayOfWeek.lun,
-                mealSlot: MealSlot.almuerzo,
-                recipeId: 'r-alm-mar',
-                cooked: false,
+  test('an edited schedule (not the seed) is reflected: Domingo with a custom '
+      'saved damManana-only routine resolves via the saved schedule', () async {
+    when(() => mockCookScheduleRepository.getActive()).thenAnswer(
+      (_) async => const Right(
+        CookSchedule(
+          byWeekday: {
+            DateTime.sunday: [
+              (
+                targetDay: DayOfWeek.lun,
+                slot: MealSlot.almuerzo,
+                group: CookGroup.manana,
               ),
             ],
-          ),
+          },
         ),
-      );
-      when(
-        () => mockRecipeRepository.list(),
-      ).thenAnswer((_) async => const Right([almMar]));
+      ),
+    );
+    when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+      (_) async => const Right(
+        WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.almuerzo,
+              recipeId: 'r-alm-mar',
+              cooked: false,
+            ),
+          ],
+        ),
+      ),
+    );
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([almMar]));
 
-      final container = makeContainer(now: DateTime(2024, 1, 7)); // Sunday
-      await container.read(planControllerProvider.future);
-      await container.read(recipeListProvider.future);
-      await container.read(cookScheduleProvider.future);
+    final container = makeContainer(now: DateTime(2024, 1, 7)); // Sunday
+    await container.read(planControllerProvider.future);
+    await container.read(recipeListProvider.future);
+    await container.read(cookScheduleProvider.future);
 
-      final result = container.read(cookListProvider);
+    final result = container.read(cookListProvider);
 
-      expect(result.value!.manana.single.recipe.id, 'r-alm-mar');
-      expect(result.value!.manana.single.slot, MealSlot.almuerzo);
-    },
-  );
+    expect(result.value!.manana.single.recipe.id, 'r-alm-mar');
+    expect(result.value!.manana.single.slot, MealSlot.almuerzo);
+  });
 
   test('propagates a loading plan AsyncValue', () async {
     final planCompleter = Completer<Either<Failure, WeekPlan?>>();

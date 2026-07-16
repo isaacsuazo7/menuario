@@ -41,3 +41,15 @@ abstract final class IngredientRoutes {
   static const list = '/ingredients';
   static const form = '/ingredients/form';
 }
+
+/// Route path/name constant for the batch-cook schedule editor.
+///
+/// Top-level (sibling of [SplashRoutes]/[AuthRoutes], NOT nested inside
+/// the shell's [ShellRoutes] branches) — mirrors [IngredientRoutes]: the
+/// editor covers the whole screen, no bottom nav, no drawer, just a back
+/// button.
+abstract final class CookScheduleRoutes {
+  const CookScheduleRoutes._();
+
+  static const edit = '/cook-schedule';
+}

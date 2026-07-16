@@ -19,7 +19,8 @@ class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
-class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
+class MockCookScheduleRepository extends Mock
+    implements CookScheduleRepository {}
 
 class MockUser extends Mock implements User {}
 

@@ -13,7 +13,8 @@ import 'package:menuario/src/features/today/presentation/providers/cook_schedule
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
+class MockCookScheduleRepository extends Mock
+    implements CookScheduleRepository {}
 
 void main() {
   late MockCookScheduleRepository mockCookScheduleRepository;

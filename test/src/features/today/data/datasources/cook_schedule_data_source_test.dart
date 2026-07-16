@@ -60,40 +60,37 @@ void main() {
       );
     });
 
-    test(
-      'saving a second schedule overwrites the first: getActive returns '
-      'only the latest schedule, single doc, no history',
-      () async {
-        // Arrange
-        final dataSource = makeDataSource();
-        const firstSchedule = CookScheduleDTO(targets: []);
-        const secondSchedule = CookScheduleDTO(
-          targets: [
-            CookTargetDTO(
-              weekday: DateTime.friday,
-              targetDay: 'vie',
-              slot: 'cena',
-              group: 'hoy',
-            ),
-          ],
-        );
+    test('saving a second schedule overwrites the first: getActive returns '
+        'only the latest schedule, single doc, no history', () async {
+      // Arrange
+      final dataSource = makeDataSource();
+      const firstSchedule = CookScheduleDTO(targets: []);
+      const secondSchedule = CookScheduleDTO(
+        targets: [
+          CookTargetDTO(
+            weekday: DateTime.friday,
+            targetDay: 'vie',
+            slot: 'cena',
+            group: 'hoy',
+          ),
+        ],
+      );
 
-        // Act
-        await dataSource.save(firstSchedule);
-        await dataSource.save(secondSchedule);
-        final result = await dataSource.getActive();
-        final collectionSnapshot = await firestore
-            .collection('users/uid-A/cookSchedule')
-            .get();
+      // Act
+      await dataSource.save(firstSchedule);
+      await dataSource.save(secondSchedule);
+      final result = await dataSource.getActive();
+      final collectionSnapshot = await firestore
+          .collection('users/uid-A/cookSchedule')
+          .get();
 
-        // Assert
-        result.fold(
-          (failure) => fail('expected Right, got Left($failure)'),
-          (readDto) => expect(readDto, secondSchedule),
-        );
-        expect(collectionSnapshot.docs, hasLength(1));
-      },
-    );
+      // Assert
+      result.fold(
+        (failure) => fail('expected Right, got Left($failure)'),
+        (readDto) => expect(readDto, secondSchedule),
+      );
+      expect(collectionSnapshot.docs, hasLength(1));
+    });
 
     test(
       'a schedule written under uid A is not returned when scoped to uid B',
@@ -111,31 +108,26 @@ void main() {
       },
     );
 
-    test(
-      'save returns Left(Failure) when Firestore throws a '
-      'FirebaseException',
-      () async {
-        // Arrange
-        final dataSource = makeDataSource();
-        final doc = firestore.doc('users/uid-A/cookSchedule/current');
-        whenCalling(Invocation.method(#set, null))
-            .on(doc)
-            .thenThrow(
-              FirebaseException(plugin: 'firestore', code: 'unavailable'),
-            );
+    test('save returns Left(Failure) when Firestore throws a '
+        'FirebaseException', () async {
+      // Arrange
+      final dataSource = makeDataSource();
+      final doc = firestore.doc('users/uid-A/cookSchedule/current');
+      whenCalling(Invocation.method(#set, null))
+          .on(doc)
+          .thenThrow(
+            FirebaseException(plugin: 'firestore', code: 'unavailable'),
+          );
 
-        // Act
-        final result = await dataSource.save(
-          const CookScheduleDTO(targets: []),
-        );
+      // Act
+      final result = await dataSource.save(const CookScheduleDTO(targets: []));
 
-        // Assert
-        result.fold(
-          (failure) => expect(failure.code, 'unavailable'),
-          (_) => fail('expected Left, got Right'),
-        );
-      },
-    );
+      // Assert
+      result.fold(
+        (failure) => expect(failure.code, 'unavailable'),
+        (_) => fail('expected Left, got Right'),
+      );
+    });
 
     test(
       'getActive returns Left(Failure) instead of throwing when the '

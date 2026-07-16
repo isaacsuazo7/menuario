@@ -16,7 +16,13 @@ void main() {
     // combinations round-trip back to all-off, everything else survives
     // unchanged.
     for (var weekday = DateTime.monday; weekday <= DateTime.sunday; weekday++) {
-      for (final toggles in [allOff, allOn, onlyCenaHoy, onlyDamManana, onlyDamHoy]) {
+      for (final toggles in [
+        allOff,
+        allOn,
+        onlyCenaHoy,
+        onlyDamManana,
+        onlyDamHoy,
+      ]) {
         test('weekday $weekday, toggles $toggles', () {
           final targets = toTargets(weekday, toggles);
           final roundTripped = fromTargets(weekday, targets);
@@ -109,17 +115,14 @@ void main() {
     test(
       'Saturday: cenaHoy+damHoy -> cena sab hoy + d/a/m sab hoy, no manana',
       () {
-        final targets = toTargets(
-          DateTime.saturday,
-          (cenaHoy: true, damManana: false, damHoy: true),
-        );
+        final targets = toTargets(DateTime.saturday, (
+          cenaHoy: true,
+          damManana: false,
+          damHoy: true,
+        ));
 
         expect(targets.toSet(), {
-          (
-            targetDay: DayOfWeek.sab,
-            slot: MealSlot.cena,
-            group: CookGroup.hoy,
-          ),
+          (targetDay: DayOfWeek.sab, slot: MealSlot.cena, group: CookGroup.hoy),
           (
             targetDay: DayOfWeek.sab,
             slot: MealSlot.desayuno,

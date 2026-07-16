@@ -62,64 +62,58 @@ void main() {
       );
     });
 
-    test(
-      'save overwrites the previously active schedule: getActive returns '
-      'only the latest, no history',
-      () async {
-        // Arrange
-        const firstSchedule = CookSchedule(byWeekday: {});
-        const secondSchedule = CookSchedule(
-          byWeekday: {
-            DateTime.friday: [
-              (
-                targetDay: DayOfWeek.vie,
-                slot: MealSlot.cena,
-                group: CookGroup.hoy,
-              ),
-            ],
-          },
-        );
-
-        // Act
-        await repository.save(firstSchedule);
-        await repository.save(secondSchedule);
-        final result = await repository.getActive();
-
-        // Assert
-        result.fold(
-          (failure) => fail('expected Right, got Left($failure)'),
-          (readSchedule) => expect(readSchedule, secondSchedule),
-        );
-      },
-    );
-
-    test(
-      'getActive returns Left(Failure) instead of throwing when an entry '
-      'carries an unrecognized day',
-      () async {
-        // Arrange
-        const dto = CookScheduleDTO(
-          targets: [
-            CookTargetDTO(
-              weekday: DateTime.monday,
-              targetDay: 'unknownDay',
-              slot: 'cena',
-              group: 'hoy',
+    test('save overwrites the previously active schedule: getActive returns '
+        'only the latest, no history', () async {
+      // Arrange
+      const firstSchedule = CookSchedule(byWeekday: {});
+      const secondSchedule = CookSchedule(
+        byWeekday: {
+          DateTime.friday: [
+            (
+              targetDay: DayOfWeek.vie,
+              slot: MealSlot.cena,
+              group: CookGroup.hoy,
             ),
           ],
-        );
-        await dataSource.save(dto);
+        },
+      );
 
-        // Act
-        final result = await repository.getActive();
+      // Act
+      await repository.save(firstSchedule);
+      await repository.save(secondSchedule);
+      final result = await repository.getActive();
 
-        // Assert
-        expect(result, isA<Left<Failure, CookSchedule?>>());
-        result.fold(
-          (failure) => expect(failure.code, 'malformedData'),
-          (_) => fail('expected Left, got Right'),
-        );
-      },
-    );
+      // Assert
+      result.fold(
+        (failure) => fail('expected Right, got Left($failure)'),
+        (readSchedule) => expect(readSchedule, secondSchedule),
+      );
+    });
+
+    test('getActive returns Left(Failure) instead of throwing when an entry '
+        'carries an unrecognized day', () async {
+      // Arrange
+      const dto = CookScheduleDTO(
+        targets: [
+          CookTargetDTO(
+            weekday: DateTime.monday,
+            targetDay: 'unknownDay',
+            slot: 'cena',
+            group: 'hoy',
+          ),
+        ],
+      );
+      await dataSource.save(dto);
+
+      // Act
+      final result = await repository.getActive();
+
+      // Assert
+      expect(result, isA<Left<Failure, CookSchedule?>>());
+      result.fold(
+        (failure) => expect(failure.code, 'malformedData'),
+        (_) => fail('expected Left, got Right'),
+      );
+    });
   });
 }

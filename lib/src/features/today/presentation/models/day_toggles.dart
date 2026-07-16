@@ -47,7 +47,11 @@ List<CookTarget> toTargets(int weekday, DayToggles toggles) {
 
   final thisDay = eating.thisDay;
   if (toggles.cenaHoy && thisDay != null) {
-    targets.add((targetDay: thisDay, slot: MealSlot.cena, group: CookGroup.hoy));
+    targets.add((
+      targetDay: thisDay,
+      slot: MealSlot.cena,
+      group: CookGroup.hoy,
+    ));
   }
   if (toggles.damHoy && thisDay != null) {
     for (final slot in _damSlots) {

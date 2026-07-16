@@ -28,9 +28,11 @@ class CookScheduleDataSourceImpl implements CookScheduleDataSource {
 
   // The public constructor params are `firestore`/`uid` (per design); an
   // initializing formal would force them to be named `_firestore`/`_uid`.
-  CookScheduleDataSourceImpl({required FirebaseFirestore firestore, String? uid})
-    : _firestore = firestore, // ignore: prefer_initializing_formals
-      _uid = uid; // ignore: prefer_initializing_formals
+  CookScheduleDataSourceImpl({
+    required FirebaseFirestore firestore,
+    String? uid,
+  }) : _firestore = firestore, // ignore: prefer_initializing_formals
+       _uid = uid; // ignore: prefer_initializing_formals
 
   DocumentReference<Map<String, dynamic>> _doc(String uid) {
     return _firestore.doc('users/$uid/cookSchedule/current');

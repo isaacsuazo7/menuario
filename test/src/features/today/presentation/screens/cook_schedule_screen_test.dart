@@ -11,7 +11,8 @@ import 'package:menuario/src/features/today/domain/repositories/cook_schedule_re
 import 'package:menuario/src/features/today/presentation/screens/cook_schedule_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
-class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
+class MockCookScheduleRepository extends Mock
+    implements CookScheduleRepository {}
 
 void main() {
   late MockCookScheduleRepository mockCookScheduleRepository;
@@ -208,9 +209,9 @@ void main() {
   testWidgets('Save failure surfaces an error and keeps the draft', (
     tester,
   ) async {
-    when(() => mockCookScheduleRepository.save(any())).thenAnswer(
-      (_) async => Left(Failure(message: 'No se pudo guardar.')),
-    );
+    when(
+      () => mockCookScheduleRepository.save(any()),
+    ).thenAnswer((_) async => Left(Failure(message: 'No se pudo guardar.')));
 
     await pumpScreen(tester);
 
