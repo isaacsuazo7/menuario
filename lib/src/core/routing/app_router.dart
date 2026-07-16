@@ -15,6 +15,7 @@ import 'package:menuario/src/core/routing/widgets/splash_screen.dart';
 import 'package:menuario/src/features/auth/presentation/sign_in_screen.dart';
 import 'package:menuario/src/features/ingredients/presentation/screens/ingredient_form_screen.dart';
 import 'package:menuario/src/features/ingredients/presentation/screens/ingredients_list_screen.dart';
+import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/features/today/presentation/screens/cook_schedule_screen.dart';
 
 /// Bridges a [Stream] to a [Listenable] so [GoRouter] re-evaluates its
@@ -93,6 +94,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: CookScheduleRoutes.edit,
         name: CookScheduleRoutes.edit,
         builder: (context, state) => const CookScheduleScreen(),
+      ),
+      GoRoute(
+        path: RecipeRoutes.form,
+        name: RecipeRoutes.form,
+        builder: (context, state) =>
+            RecipeFormScreen(recipeId: state.uri.queryParameters['id']),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>

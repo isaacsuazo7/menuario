@@ -2,8 +2,11 @@ import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_detail_screen.dart';
+import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -150,5 +153,98 @@ void main() {
 
     expect(find.text('Receta no encontrada.'), findsOneWidget);
     expect(find.text('Reintentar'), findsOneWidget);
+  });
+
+  testWidgets('tapping the edit action navigates to the edit form with id', (
+    tester,
+  ) async {
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, avena, leche]));
+
+    final router = GoRouter(
+      initialLocation: '/recipes/r1',
+      routes: [
+        GoRoute(
+          path: '/recipes/:id',
+          builder: (context, state) =>
+              RecipeDetailScreen(recipeId: state.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: RecipeRoutes.form,
+          name: RecipeRoutes.form,
+          builder: (context, state) =>
+              RecipeFormScreen(recipeId: state.uri.queryParameters['id']),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          ingredientRepositoryProvider.overrideWithValue(
+            mockIngredientRepository,
+          ),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('recipe-detail-edit-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipeFormScreen), findsOneWidget);
+    final formScreen = tester.widget<RecipeFormScreen>(
+      find.byType(RecipeFormScreen),
+    );
+    expect(formScreen.recipeId, 'r1');
+  });
+
+  testWidgets('renders the video list with a tappable row per video', (
+    tester,
+  ) async {
+    const recipeWithVideos = Recipe(
+      id: 'r1',
+      name: 'Avena con leche',
+      bomLines: [],
+      videos: [
+        VideoLink(source: VideoSource.youtube, url: 'https://youtu.be/abc'),
+        VideoLink(source: VideoSource.tiktok, url: 'https://tiktok.com/xyz'),
+      ],
+    );
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithVideos));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Videos'), findsOneWidget);
+    expect(find.text('https://youtu.be/abc'), findsOneWidget);
+    expect(find.text('https://tiktok.com/xyz'), findsOneWidget);
+  });
+
+  testWidgets('an empty video list renders no Videos section', (
+    tester,
+  ) async {
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, avena, leche]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Videos'), findsNothing);
   });
 }
