@@ -7,15 +7,15 @@ import 'package:menuario/src/features/provisioning/presentation/models/pantry_ro
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
 import 'package:menuario/src/shared/shared.dart';
 
-/// Pure and dependency-free (see [StockPresentationService]'s "no DI
-/// needed" design decision) — safe to hold as a single const instance.
-const _stockPresentation = StockPresentationService();
+/// Pure and dependency-free (see [StockLensService]'s "no DI needed"
+/// design decision) — safe to hold as a single const instance.
+const _stockLensService = StockLensService();
 
 /// Direct-entry bottom sheet: sets a quantity-tracked item's stock to an
-/// exact absolute value, typed in the item's natural purchase unit (lb for
-/// `counter`, packs for `package`, whole units for `loose`) and converted
-/// to the stock's own unit (grams or count) via [StockPresentationService]
-/// on confirm.
+/// exact absolute value, typed in one of the ingredient's
+/// [MeasurementMode]-driven input lenses (see [StockLensService.lensesFor])
+/// and converted to the item's canonical stock unit via
+/// [StockLens.toCanonical] on confirm.
 ///
 /// This is the app's first real form surface — it establishes the
 /// [MenuarioSpacing]/[MenuarioTypography] form idiom future sheets should
@@ -33,20 +33,23 @@ class SetStockSheet extends ConsumerStatefulWidget {
 
 class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   late final QuantityTrackedPantryItem _item;
+  late final Ingredient _ingredient;
+  late final List<StockLens> _lenses;
   late final TextEditingController _controller;
-  late final bool _allowsDecimal;
+  late StockLens _selectedLens;
 
   @override
   void initState() {
     super.initState();
     _item = widget.row.item as QuantityTrackedPantryItem;
-    _allowsDecimal = _item.presentation is PresentationCounter;
+    _ingredient = widget.row.ingredient;
+    _lenses = _stockLensService.lensesFor(_ingredient);
+    _selectedLens = _stockLensService.defaultLensFor(_ingredient);
 
-    final naturalValue = _stockPresentation.toNaturalValue(
-      stockValue: _item.stock.value,
-      presentation: _item.presentation,
+    final naturalValue = _selectedLens.fromCanonical(_item.stock.value);
+    _controller = TextEditingController(
+      text: _formatNatural(naturalValue, _selectedLens),
     );
-    _controller = TextEditingController(text: _formatNatural(naturalValue));
     _controller.addListener(_handleFieldChanged);
   }
 
@@ -60,10 +63,10 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   void _handleFieldChanged() => setState(() {});
 
   /// Trims trailing fractional zeros (and a bare trailing `.`), so `1.00`
-  /// displays as `1` and `0.50` as `0.5`. Integer-only presentations round
-  /// first, since their field never carries a decimal point.
-  String _formatNatural(num value) {
-    if (!_allowsDecimal) return value.round().toString();
+  /// displays as `1` and `0.50` as `0.5`. Integer-only lenses round first,
+  /// since their field never carries a decimal point.
+  String _formatNatural(num value, StockLens lens) {
+    if (!lens.allowsDecimal) return value.round().toString();
 
     var fixed = value.toStringAsFixed(2);
     while (fixed.contains('.') && fixed.endsWith('0')) {
@@ -75,58 +78,49 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
     return fixed;
   }
 
-  /// The typed value in the field's natural unit, or `null` when the field
-  /// is empty or not a valid number.
+  /// The typed value in [_selectedLens]'s unit, or `null` when the field is
+  /// empty or not a valid number.
   num? get _parsedValue {
     final text = _controller.text.trim();
     if (text.isEmpty) return null;
     return num.tryParse(text);
   }
 
-  /// The typed value converted to the item's stock unit (grams or count),
-  /// or `null` when there is nothing valid to preview yet.
-  num? get _previewStockValue {
+  /// The typed value converted to the ingredient's canonical stock unit via
+  /// [_selectedLens], or `null` when there is nothing valid to preview yet.
+  num? get _canonicalValue {
     final parsed = _parsedValue;
     if (parsed == null) return null;
-    return _stockPresentation.toStockValue(
-      naturalValue: parsed,
-      presentation: _item.presentation,
-      stockUnit: _item.stock.unit,
-    );
+    return _selectedLens.toCanonical(parsed);
   }
 
-  /// The natural-unit label shown as the field suffix and on quick-set
-  /// chips: `lb` for counter, the pack `label` for package, `u` for loose.
-  String get _naturalUnitLabel => switch (_item.presentation) {
-    PresentationCounter() => 'lb',
-    PresentationPackage(:final label) => label,
-    PresentationLoose() => 'u',
-  };
-
-  /// Reasonable quick-set defaults in the field's natural unit: half/1/2/3
-  /// lb for counter, 1/2/3 units or packs otherwise.
+  /// Reasonable quick-set defaults in [_selectedLens]'s unit: half/1/2/3
+  /// for decimal lenses, 1/2/3 for integer-only lenses.
   List<num> get _quickSetOptions =>
-      _allowsDecimal ? const [0.5, 1, 2, 3] : const [1, 2, 3];
+      _selectedLens.allowsDecimal ? const [0.5, 1, 2, 3] : const [1, 2, 3];
 
   void _handleChipTap(num naturalValue) {
-    _controller.text = _formatNatural(naturalValue);
+    _controller.text = _formatNatural(naturalValue, _selectedLens);
+  }
+
+  /// Switches the active lens, re-scaling the field to the same canonical
+  /// value expressed in the new lens's unit — so the underlying quantity
+  /// never changes just because the user changed how they're looking at it.
+  void _handleLensChanged(StockLens lens) {
+    final canonical = _canonicalValue ?? _item.stock.value;
+    setState(() => _selectedLens = lens);
+    _controller.text = _formatNatural(lens.fromCanonical(canonical), lens);
   }
 
   Future<void> _handleConfirm() async {
-    final parsed = _parsedValue;
-    if (parsed == null || parsed < 0) return;
-
-    final stockValue = _stockPresentation.toStockValue(
-      naturalValue: parsed,
-      presentation: _item.presentation,
-      stockUnit: _item.stock.unit,
-    );
+    final canonical = _canonicalValue;
+    if (canonical == null || canonical < 0) return;
 
     final notifier = ref.read(pantryControllerProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
 
-    final failure = await notifier.setStock(_item.ingredientId, stockValue);
+    final failure = await notifier.setStock(_item.ingredientId, canonical);
 
     if (failure != null) {
       messenger.showSnackBar(SnackBar(content: Text(failure.message)));
@@ -135,9 +129,9 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final preview = _previewStockValue;
-    final unitSymbol = _item.stock.unit.symbol;
-    final canConfirm = _parsedValue != null && _parsedValue! >= 0;
+    final canonical = _canonicalValue;
+    final canConfirm = canonical != null && canonical >= 0;
+    final otherLenses = _lenses.where((lens) => lens != _selectedLens);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -161,39 +155,61 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
                 Text(widget.row.ingredient.name, style: MenuarioTypography.h4),
               ],
             ),
+            if (_lenses.length > 1) ...[
+              MenuarioSpacing.gapV16,
+              SegmentedButton<StockLens>(
+                segments: [
+                  for (final lens in _lenses)
+                    ButtonSegment(value: lens, label: Text(lens.label)),
+                ],
+                selected: {_selectedLens},
+                showSelectedIcon: false,
+                onSelectionChanged: (selection) =>
+                    _handleLensChanged(selection.first),
+              ),
+            ],
             MenuarioSpacing.gapV16,
             TextField(
               controller: _controller,
               autofocus: true,
               keyboardType: TextInputType.numberWithOptions(
-                decimal: _allowsDecimal,
+                decimal: _selectedLens.allowsDecimal,
               ),
               inputFormatters: [
-                if (_allowsDecimal)
+                if (_selectedLens.allowsDecimal)
                   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
                 else
                   FilteringTextInputFormatter.digitsOnly,
               ],
               decoration: InputDecoration(
                 labelText: 'Cantidad',
-                suffixText: _naturalUnitLabel,
+                suffixText: _selectedLens.label,
                 border: const OutlineInputBorder(),
               ),
             ),
             MenuarioSpacing.gapV8,
-            Text(
-              preview == null
-                  ? 'Ingresa una cantidad válida'
-                  : '≈ ${preview.round()} $unitSymbol',
-              style: MenuarioTypography.body,
-            ),
+            if (canonical == null)
+              Text(
+                'Ingresa una cantidad válida',
+                style: MenuarioTypography.body,
+              )
+            else
+              for (final lens in otherLenses)
+                Text(
+                  '= ${_formatNatural(lens.fromCanonical(canonical), lens)} '
+                  '${lens.label}',
+                  style: MenuarioTypography.body,
+                ),
             MenuarioSpacing.gapV16,
             Wrap(
               spacing: MenuarioSpacing.sm,
               children: [
                 for (final option in _quickSetOptions)
                   ChoiceChip(
-                    label: Text('${_formatNatural(option)} $_naturalUnitLabel'),
+                    label: Text(
+                      '${_formatNatural(option, _selectedLens)} '
+                      '${_selectedLens.label}',
+                    ),
                     selected: false,
                     onSelected: (_) => _handleChipTap(option),
                   ),

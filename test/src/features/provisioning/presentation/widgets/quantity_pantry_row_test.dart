@@ -19,34 +19,8 @@ void main() {
   late MockPantryRepository mockPantryRepository;
   late MockIngredientRepository mockIngredientRepository;
 
-  const avena = Ingredient(
-    id: 'ing-avena',
-    name: 'Avena',
-    emoji: '🥣',
-    category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
-    conversionFactor: 85,
-  );
-  // Exactly one pack, so the purchase-unit display is a clean "1 bolsa".
-  const avenaItem = PantryItem.quantityTracked(
-    ingredientId: 'ing-avena',
-    category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
-    stock: Quantity(value: 454, unit: Unit.gram),
-  );
-  final row = PantryRow(item: avenaItem, ingredient: avena);
-
-  // Empty stock, so tapping "+" proves the smart step (whole pack, 454 g)
-  // rather than a hardcoded delta of 1.
-  const zeroAvenaItem = PantryItem.quantityTracked(
-    ingredientId: 'ing-avena',
-    category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
-    stock: Quantity(value: 0, unit: Unit.gram),
-  );
-  final zeroRow = PantryRow(item: zeroAvenaItem, ingredient: avena);
-
+  // mass mode, no clean-fraction match: pinned "1.76 lb" (800 g), same
+  // pinned value as `stock_lens_service_test.dart`'s own formatStock case.
   const pollo = Ingredient(
     id: 'ing-pollo',
     name: 'Pollo',
@@ -55,16 +29,17 @@ void main() {
     measurementKind: MeasurementKind.bulk,
     booleanTracked: false,
     conversionFactor: 1,
+    measurementMode: MeasurementMode.mass,
   );
-  const polloDisplayItem = PantryItem.quantityTracked(
+  const polloItem = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
     presentation: Presentation.counter(),
-    stock: Quantity(value: 793.7, unit: Unit.gram),
+    stock: Quantity(value: 800, unit: Unit.gram),
   );
-  final polloDisplayRow = PantryRow(item: polloDisplayItem, ingredient: pollo);
+  final polloRow = PantryRow(item: polloItem, ingredient: pollo);
 
-  // Exactly 1.75 lb, so the post-step value lands on a clean 2.00 lb.
+  // Exactly 1.75 lb, so a quarter-lb step lands on a clean 2 lb.
   const polloStepItem = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
@@ -73,14 +48,15 @@ void main() {
   );
   final polloStepRow = PantryRow(item: polloStepItem, ingredient: pollo);
 
+  // count mode: a single integer-only lens u, steps by exactly 1.
   const huevo = Ingredient(
     id: 'ing-huevo',
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
+    measurementKind: MeasurementKind.unit,
     booleanTracked: false,
-    conversionFactor: 1,
+    measurementMode: MeasurementMode.count,
   );
   const huevoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-huevo',
@@ -90,8 +66,81 @@ void main() {
   );
   final huevoRow = PantryRow(item: huevoItem, ingredient: huevo);
 
+  const zeroHuevoItem = PantryItem.quantityTracked(
+    ingredientId: 'ing-huevo',
+    category: Category.proteina,
+    presentation: Presentation.loose(),
+    stock: Quantity(value: 0, unit: Unit.count),
+  );
+  final zeroHuevoRow = PantryRow(item: zeroHuevoItem, ingredient: huevo);
+
+  // packageBase mode: bolsas (yield 1 L) + base-dimension L lens, steps by
+  // a QUARTER pack (0.25 L) — not a whole pack, per the new lens-driven
+  // stockStep (replaces the old whole-presentation-unit step).
+  const leche = Ingredient(
+    id: 'ing-leche',
+    name: 'Leche',
+    emoji: '🥛',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'bolsas',
+      yieldQty: 1,
+      baseDimension: Unit.liter,
+    ),
+  );
+  const zeroLecheItem = PantryItem.quantityTracked(
+    ingredientId: 'ing-leche',
+    category: Category.lacteo,
+    presentation: Presentation.package(yieldQty: 1, label: 'bolsas'),
+    stock: Quantity(value: 0, unit: Unit.liter),
+  );
+  final zeroLecheRow = PantryRow(item: zeroLecheItem, ingredient: leche);
+
+  // packageAbstract mode: an exact-half canonical value renders the "½"
+  // glyph.
+  const lechuga = Ingredient(
+    id: 'ing-lechuga',
+    name: 'Lechuga',
+    emoji: '🥬',
+    category: Category.vegetal,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageAbstract,
+    package: PackageSpec(label: 'bolsa'),
+  );
+  const lechugaItem = PantryItem.quantityTracked(
+    ingredientId: 'ing-lechuga',
+    category: Category.vegetal,
+    presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
+    stock: Quantity(value: 0.5, unit: Unit.package),
+  );
+  final lechugaRow = PantryRow(item: lechugaItem, ingredient: lechuga);
+
+  // packageAbstract mode: a value with no clean-fraction match renders a
+  // percent instead.
+  const requeson = Ingredient(
+    id: 'ing-requeson',
+    name: 'Requesón',
+    emoji: '🧀',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageAbstract,
+    package: PackageSpec(label: 'pana'),
+  );
+  const requesonItem = PantryItem.quantityTracked(
+    ingredientId: 'ing-requeson',
+    category: Category.lacteo,
+    presentation: Presentation.package(yieldQty: 1, label: 'pana'),
+    stock: Quantity(value: 0.37, unit: Unit.package),
+  );
+  final requesonRow = PantryRow(item: requesonItem, ingredient: requeson);
+
   setUpAll(() {
-    registerFallbackValue(avenaItem);
+    registerFallbackValue(polloItem);
   });
 
   setUp(() {
@@ -99,10 +148,10 @@ void main() {
     mockIngredientRepository = MockIngredientRepository();
     when(
       () => mockPantryRepository.list(),
-    ).thenAnswer((_) async => const Right([avenaItem]));
+    ).thenAnswer((_) async => const Right([polloItem]));
     when(
       () => mockIngredientRepository.list(),
-    ).thenAnswer((_) async => const Right([avena]));
+    ).thenAnswer((_) async => const Right([pollo]));
   });
 
   Future<void> pumpRow(WidgetTester tester, {PantryRow? withRow}) async {
@@ -115,7 +164,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
-          home: Scaffold(body: QuantityPantryRow(row: withRow ?? row)),
+          home: Scaffold(body: QuantityPantryRow(row: withRow ?? polloRow)),
         ),
       ),
     );
@@ -123,48 +172,110 @@ void main() {
   }
 
   testWidgets(
-    'renders emoji, name, purchase-unit stock display and a green pill',
+    'renders emoji, name, smart-formatted stock display and a green pill',
     (tester) async {
       await pumpRow(tester);
 
-      expect(find.text('🥣'), findsOneWidget);
-      expect(find.text('Avena'), findsOneWidget);
-      expect(find.text('1 bolsa'), findsOneWidget);
+      expect(find.text('🍗'), findsOneWidget);
+      expect(find.text('Pollo'), findsOneWidget);
+      expect(find.text('1.76 lb'), findsOneWidget);
       expect(find.text('🟢 Tengo'), findsOneWidget);
     },
   );
 
-  testWidgets('renders a counter item as decimal pounds, not raw grams', (
+  testWidgets('renders a count item as a whole-unit count (7 u)', (
     tester,
   ) async {
-    await pumpRow(tester, withRow: polloDisplayRow);
+    when(
+      () => mockPantryRepository.list(),
+    ).thenAnswer((_) async => const Right([huevoItem]));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo]));
 
-    expect(find.text('1.75 lb'), findsOneWidget);
-    expect(find.text('793.7 g'), findsNothing);
-  });
-
-  testWidgets('renders a loose item as a whole-unit count', (tester) async {
     await pumpRow(tester, withRow: huevoRow);
 
     expect(find.text('7 u'), findsOneWidget);
   });
 
   testWidgets(
-    'tapping + steps a package item by a whole pack (454 g), not by 1',
+    'renders a packageAbstract item with a clean-fraction glyph (½ bolsa)',
     (tester) async {
       when(
         () => mockPantryRepository.list(),
-      ).thenAnswer((_) async => const Right([zeroAvenaItem]));
+      ).thenAnswer((_) async => const Right([lechugaItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([lechuga]));
+
+      await pumpRow(tester, withRow: lechugaRow);
+
+      expect(find.text('½ bolsa'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'renders a packageAbstract item with no clean-fraction match as a '
+    'percent (37% pana)',
+    (tester) async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([requesonItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([requeson]));
+
+      await pumpRow(tester, withRow: requesonRow);
+
+      expect(find.text('37% pana'), findsOneWidget);
+    },
+  );
+
+  testWidgets('tapping + on a mass item steps by a quarter pound, landing on a '
+      'clean whole value (trimmed, no trailing zeros)', (tester) async {
+    when(
+      () => mockPantryRepository.list(),
+    ).thenAnswer((_) async => const Right([polloStepItem]));
+    when(
+      () => mockPantryRepository.save(any()),
+    ).thenAnswer((_) async => const Right(null));
+
+    await pumpRow(tester, withRow: polloStepRow);
+
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
+
+    expect(find.text('2 lb'), findsOneWidget);
+
+    await tester.pumpAndSettle();
+
+    final captured = verify(
+      () => mockPantryRepository.save(captureAny()),
+    ).captured;
+    final saved = captured.single as QuantityTrackedPantryItem;
+    expect(saved.stock.value, closeTo(907.1847400, 1e-6));
+  });
+
+  testWidgets(
+    'tapping + on a packageBase item steps by a QUARTER pack (0.25 L), '
+    'not a whole pack',
+    (tester) async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([zeroLecheItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([leche]));
       when(
         () => mockPantryRepository.save(any()),
       ).thenAnswer((_) async => const Right(null));
 
-      await pumpRow(tester, withRow: zeroRow);
+      await pumpRow(tester, withRow: zeroLecheRow);
 
       await tester.tap(find.byIcon(Icons.add));
       await tester.pump();
 
-      expect(find.text('1 bolsa'), findsOneWidget);
+      expect(find.text('¼ bolsas'), findsOneWidget);
 
       await tester.pumpAndSettle();
 
@@ -172,56 +283,58 @@ void main() {
         () => mockPantryRepository.save(captureAny()),
       ).captured;
       final saved = captured.single as QuantityTrackedPantryItem;
-      expect(saved.stock.value, 454);
+      expect(saved.stock.value, closeTo(0.25, 1e-9));
     },
   );
 
   testWidgets(
-    'tapping - on a package item at 0 stays at 0 and never calls save',
+    'tapping - on a count item at 0 stays at 0 and never calls save',
     (tester) async {
       when(
         () => mockPantryRepository.list(),
-      ).thenAnswer((_) async => const Right([zeroAvenaItem]));
+      ).thenAnswer((_) async => const Right([zeroHuevoItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([huevo]));
 
-      await pumpRow(tester, withRow: zeroRow);
+      await pumpRow(tester, withRow: zeroHuevoRow);
 
       await tester.tap(find.byIcon(Icons.remove));
       await tester.pumpAndSettle();
 
-      expect(find.text('0 bolsa'), findsOneWidget);
+      expect(find.text('0 u'), findsOneWidget);
       verifyNever(() => mockPantryRepository.save(any()));
     },
   );
 
-  testWidgets(
-    'tapping + on a counter item advances by a quarter pound, not 1 gram',
-    (tester) async {
-      when(
-        () => mockPantryRepository.list(),
-      ).thenAnswer((_) async => const Right([polloStepItem]));
-      when(
-        () => mockIngredientRepository.list(),
-      ).thenAnswer((_) async => const Right([pollo]));
-      when(
-        () => mockPantryRepository.save(any()),
-      ).thenAnswer((_) async => const Right(null));
+  testWidgets('tapping + on a count item advances by exactly 1', (
+    tester,
+  ) async {
+    when(
+      () => mockPantryRepository.list(),
+    ).thenAnswer((_) async => const Right([huevoItem]));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo]));
+    when(
+      () => mockPantryRepository.save(any()),
+    ).thenAnswer((_) async => const Right(null));
 
-      await pumpRow(tester, withRow: polloStepRow);
+    await pumpRow(tester, withRow: huevoRow);
 
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pump();
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pump();
 
-      expect(find.text('2.00 lb'), findsOneWidget);
+    expect(find.text('8 u'), findsOneWidget);
 
-      await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
 
-      final captured = verify(
-        () => mockPantryRepository.save(captureAny()),
-      ).captured;
-      final saved = captured.single as QuantityTrackedPantryItem;
-      expect(saved.stock.value, closeTo(907.1847400, 1e-6));
-    },
-  );
+    final captured = verify(
+      () => mockPantryRepository.save(captureAny()),
+    ).captured;
+    final saved = captured.single as QuantityTrackedPantryItem;
+    expect(saved.stock.value, 8);
+  });
 
   testWidgets('shows a SnackBar and reverts the stock when save fails', (
     tester,
@@ -238,12 +351,12 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
-    expect(find.text('2 bolsa'), findsOneWidget);
+    expect(find.text('2.01 lb'), findsOneWidget);
 
     saveCompleter.complete(Left(Failure(message: 'No se pudo guardar.')));
     await tester.pumpAndSettle();
 
-    expect(find.text('1 bolsa'), findsOneWidget);
+    expect(find.text('1.76 lb'), findsOneWidget);
     expect(find.text('No se pudo guardar.'), findsOneWidget);
   });
 
@@ -254,21 +367,22 @@ void main() {
 
       expect(find.byType(SetStockSheet), findsNothing);
 
-      await tester.tap(find.text('1 bolsa'));
+      await tester.tap(find.text('1.76 lb'));
       await tester.pumpAndSettle();
 
       expect(find.byType(SetStockSheet), findsOneWidget);
-      expect(find.widgetWithText(TextField, '1'), findsOneWidget);
+      expect(find.widgetWithText(TextField, '1.76'), findsOneWidget);
     },
   );
 
   testWidgets(
-    'a sub-display residual stock ("0.00 lb") shows the red No tengo pill, '
+    'a sub-display residual stock ("0 lb") shows the red No tengo pill, '
     'not the green Tengo pill a raw nonzero stock would wrongly suggest '
     '(effective-zero overrides raw positivity)',
     (tester) async {
-      // 1 g is nonzero raw stock, but rounds to "0.00 lb" at the
-      // mass-mode default lens's 2dp display precision.
+      // 1 g is nonzero raw stock, but rounds to zero at the mass-mode
+      // default lens's 2dp display precision — `formatStock` trims that
+      // "0.00" down to a bare "0" (see `_trimTrailingZeros`).
       const residualItem = PantryItem.quantityTracked(
         ingredientId: 'ing-pollo',
         category: Category.proteina,
@@ -277,9 +391,16 @@ void main() {
       );
       final residualRow = PantryRow(item: residualItem, ingredient: pollo);
 
+      // Overrides the default (unrelated) 800 g `polloItem` fixture, which
+      // shares this same ingredient id and would otherwise shadow
+      // `residualItem` once the controller's live state resolves.
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([residualItem]));
+
       await pumpRow(tester, withRow: residualRow);
 
-      expect(find.text('0.00 lb'), findsOneWidget);
+      expect(find.text('0 lb'), findsOneWidget);
       expect(find.text('🔴 No tengo'), findsOneWidget);
       expect(find.text('🟢 Tengo'), findsNothing);
     },
