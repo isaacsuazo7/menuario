@@ -13,31 +13,6 @@ class MockRecipeRepository extends Mock implements RecipeRepository {}
 
 class MockIngredientRepository extends Mock implements IngredientRepository {}
 
-/// Stands in for `IngredientFormScreen` in the inline add-ingredient flow:
-/// immediately pops with a fixed id when built, exercising the picker's
-/// `pop(id)` handoff without needing the real ingredient form's fields
-/// (mirrors `_recipe_ingredient_picker_sheet_test.dart`'s fake).
-class _FakeIngredientFormScreen extends StatefulWidget {
-  const _FakeIngredientFormScreen();
-
-  @override
-  State<_FakeIngredientFormScreen> createState() =>
-      _FakeIngredientFormScreenState();
-}
-
-class _FakeIngredientFormScreenState extends State<_FakeIngredientFormScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).pop('ing-new');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: SizedBox());
-}
-
 void main() {
   late MockRecipeRepository mockRecipeRepository;
   late MockIngredientRepository mockIngredientRepository;
@@ -60,6 +35,21 @@ void main() {
     booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
+  const leche = Ingredient(
+    id: 'ing-leche',
+    name: 'Leche',
+    emoji: '🥛',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    conversionFactor: 0.24,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'bolsa',
+      yieldQty: 1,
+      baseDimension: Unit.liter,
+    ),
+  );
 
   setUpAll(() {
     registerFallbackValue(const Recipe(id: '', name: '', bomLines: []));
@@ -70,7 +60,7 @@ void main() {
     mockIngredientRepository = MockIngredientRepository();
     when(
       () => mockIngredientRepository.list(),
-    ).thenAnswer((_) async => const Right([pollo, huevo]));
+    ).thenAnswer((_) async => const Right([pollo, huevo, leche]));
   });
 
   overrides() => [
@@ -88,9 +78,7 @@ void main() {
   }
 
   /// Pumps the form behind a [GoRouter] so pop-on-success is observable
-  /// (mirrors `ingredient_form_screen_test.dart`) AND [IngredientRoutes.form]
-  /// is a real, navigable route — needed for the BOM picker's inline
-  /// add-ingredient escape hatch.
+  /// (mirrors `ingredient_form_screen_test.dart`).
   Future<void> pumpPushableScreen(
     WidgetTester tester, {
     String? recipeId,
@@ -117,11 +105,6 @@ void main() {
           name: RecipeRoutes.form,
           builder: (context, state) =>
               RecipeFormScreen(recipeId: state.uri.queryParameters['id']),
-        ),
-        GoRoute(
-          path: IngredientRoutes.form,
-          name: IngredientRoutes.form,
-          builder: (context, state) => const _FakeIngredientFormScreen(),
         ),
       ],
     );
@@ -488,7 +471,7 @@ void main() {
 
     testWidgets(
       'save persists a new BOM line with the picked ingredient, quantity '
-      'and curated unit',
+      "and a unit from that ingredient's derived set",
       (tester) async {
         when(() => mockRecipeRepository.newId()).thenReturn('r-new');
         when(
@@ -509,7 +492,7 @@ void main() {
           find.byKey(const Key('recipe-bom-ingredient-field-0')),
         );
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Huevo'));
+        await tester.tap(find.text('Leche'));
         await tester.pumpAndSettle();
 
         await tester.enterText(
@@ -519,7 +502,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Litros (L)').last);
+        await tester.tap(find.text('Mililitros (ml)').last);
         await tester.pumpAndSettle();
 
         await tester.ensureVisible(find.text('Confirmar'));
@@ -534,8 +517,8 @@ void main() {
         expect(saved.bomLines, [
           const BomLine(
             recipeId: 'r-new',
-            ingredientId: 'ing-huevo',
-            quantity: Quantity(value: 3, unit: Unit.liter),
+            ingredientId: 'ing-leche',
+            quantity: Quantity(value: 3, unit: Unit.milliliter),
           ),
         ]);
       },
@@ -574,9 +557,31 @@ void main() {
     testWidgets(
       'editing an existing line quantity and unit persists the new values',
       (tester) async {
+        // The BOM line's ingredient (leche) has a conversionFactor, so its
+        // derived set includes taza/cda in addition to L/ml — pollo/huevo
+        // (count-mode, no factor) only ever offer {u}, so they can't cover
+        // this "switch to a soft unit" scenario.
+        const existingRecipeWithLeche = Recipe(
+          id: 'r1',
+          name: 'Avena con leche',
+          emoji: '🥣',
+          mealType: MealType.desayuno,
+          enabled: true,
+          videos: [
+            VideoLink(source: VideoSource.youtube, url: 'https://youtu.be/abc'),
+          ],
+          bomLines: [
+            BomLine(
+              recipeId: 'r1',
+              ingredientId: 'ing-leche',
+              quantity: Quantity(value: 2, unit: Unit.liter),
+            ),
+          ],
+        );
+
         when(
           () => mockRecipeRepository.getById('r1'),
-        ).thenAnswer((_) async => const Right(existingRecipe));
+        ).thenAnswer((_) async => const Right(existingRecipeWithLeche));
         when(
           () => mockRecipeRepository.save(any()),
         ).thenAnswer((_) async => const Right(null));
@@ -606,11 +611,8 @@ void main() {
         expect(saved.bomLines, [
           const BomLine(
             recipeId: 'r1',
-            ingredientId: 'i1',
-            quantity: Quantity(
-              value: 5,
-              unit: Unit(symbol: 'taza', dimension: UnitDimension.volume),
-            ),
+            ingredientId: 'ing-leche',
+            quantity: Quantity(value: 5, unit: Unit.cup),
           ),
         ]);
       },
@@ -664,75 +666,20 @@ void main() {
       });
     });
 
-    testWidgets(
-      'Nuevo ingrediente in the picker auto-selects the newly-created '
-      'ingredient into the BOM line, which then saves correctly',
-      (tester) async {
-        const ingNew = Ingredient(
-          id: 'ing-new',
-          name: 'Ingrediente Nuevo',
-          category: Category.otro,
-          measurementKind: MeasurementKind.unit,
-          booleanTracked: false,
-          measurementMode: MeasurementMode.count,
-        );
-        // The real ingredientsListProvider re-fetch (triggered by the
-        // picker's post-inline-create invalidate) would include the
-        // just-persisted ingredient — simulate that here so the row can
-        // resolve its name, instead of always returning the fixed list.
-        var listCallCount = 0;
-        when(() => mockIngredientRepository.list()).thenAnswer((_) async {
-          listCallCount++;
-          return Right(
-            listCallCount == 1 ? [pollo, huevo] : [pollo, huevo, ingNew],
-          );
-        });
+    testWidgets('the picker has no inline "create ingredient" action (product '
+        'decision: ingredients are created only from the Ingredients screen)', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
 
-        when(() => mockRecipeRepository.newId()).thenReturn('r-new');
-        when(
-          () => mockRecipeRepository.save(any()),
-        ).thenAnswer((_) async => const Right(null));
+      await tester.ensureVisible(find.text('Agregar ingrediente'));
+      await tester.tap(find.text('Agregar ingrediente'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('recipe-bom-ingredient-field-0')));
+      await tester.pumpAndSettle();
 
-        await pumpPushableScreen(tester);
-
-        await tester.enterText(
-          find.byKey(const Key('recipe-name-field')),
-          'Panqueques',
-        );
-        await tester.ensureVisible(find.text('Agregar ingrediente'));
-        await tester.tap(find.text('Agregar ingrediente'));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const Key('recipe-bom-ingredient-field-0')),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('＋ Nuevo ingrediente'));
-        await tester.pumpAndSettle();
-
-        // The fake ingredient form auto-pops('ing-new'); back on the recipe
-        // form, the BOM line should already carry that id and resolve its
-        // (now-refetched) name.
-        expect(find.text('Seleccionar ingrediente'), findsNothing);
-        expect(find.textContaining('Ingrediente Nuevo'), findsOneWidget);
-
-        await tester.enterText(
-          find.byKey(const Key('recipe-bom-quantity-field-0')),
-          '1',
-        );
-        await tester.pumpAndSettle();
-
-        await tester.ensureVisible(find.text('Confirmar'));
-        await tester.tap(find.text('Confirmar'));
-        await tester.pumpAndSettle();
-
-        final captured = verify(
-          () => mockRecipeRepository.save(captureAny()),
-        ).captured;
-        final saved = captured.single as Recipe;
-
-        expect(saved.bomLines.single.ingredientId, 'ing-new');
-      },
-    );
+      expect(find.text('＋ Nuevo ingrediente'), findsNothing);
+    });
   });
 }
