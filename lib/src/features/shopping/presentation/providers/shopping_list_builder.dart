@@ -3,13 +3,17 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/shopping/presentation/models/shopping_row.dart';
 import 'package:menuario/src/shared/shared.dart';
 
-/// Pure, Flutter-free derivation of the Comprar buy list from the active
-/// plan, pantry and recipe data, via [ProvisioningCalculator].
+/// Pure, Flutter-free derivation of the Comprar buy list from the shared
+/// weekly-consumption map, pantry and ingredient data, via
+/// [ProvisioningCalculator].
 ///
-/// No mutations, no Riverpod — the derived provider that watches the four
+/// No mutations, no Riverpod — the derived provider that watches the
 /// upstream `AsyncValue`s is the only Flutter-aware layer; this class is
 /// unit-testable with plain fixtures, mirroring [ProvisioningCalculator]
-/// itself.
+/// itself. The plan+recipe join that produces
+/// [ShoppingBuyList]'s per-ingredient demand lives in exactly ONE place —
+/// `weeklyConsumptionByIngredientProvider` — this builder only consumes
+/// its result, it never re-derives it.
 class ShoppingListBuilder {
   const ShoppingListBuilder({required ProvisioningCalculator calculator})
     // ignore: prefer_initializing_formals
@@ -17,54 +21,39 @@ class ShoppingListBuilder {
 
   final ProvisioningCalculator _calculator;
 
-  /// Derives the [ShoppingBuyList] for [weekPlan] against [recipes],
-  /// [ingredientsById] and [pantryByIngredientId].
+  /// Derives the [ShoppingBuyList] from [weeklyConsumptionByIngredient]
+  /// (the shared weekly-need join's result) against [ingredientsById] and
+  /// [pantryByIngredientId].
   ///
-  /// Quantity-tracked ingredients are gathered from every `BomLine` of a
-  /// recipe [weekPlan] actually plans (see the Assume-Zero Anchor Rule for
-  /// ingredients with no matching [pantryByIngredientId] entry).
+  /// Quantity-tracked rows are gathered directly from
+  /// [weeklyConsumptionByIngredient]'s keys (see the Assume-Zero Anchor
+  /// Rule for ingredients with no matching [pantryByIngredientId] entry).
   /// Boolean-tracked ingredients are gathered directly from
   /// [pantryByIngredientId] via
   /// [ProvisioningCalculator.shouldSurfaceBooleanItem] — independent of
-  /// whether they appear in [weekPlan] this week.
+  /// whether they appear in [weeklyConsumptionByIngredient].
   ///
-  /// Any step returning `Left(Failure)` for one ingredient skips only that
-  /// row, recorded in [ShoppingBuyList.skipped], and continues with the
-  /// rest.
+  /// A `Left(Failure)` consumption entry for one ingredient skips only
+  /// that row, recorded in [ShoppingBuyList.skipped], and continues with
+  /// the rest.
   ShoppingBuyList build({
-    required WeekPlan weekPlan,
-    required List<Recipe> recipes,
+    required Map<String, Either<Failure, Quantity>>
+    weeklyConsumptionByIngredient,
     required Map<String, Ingredient> ingredientsById,
     required Map<String, PantryItem> pantryByIngredientId,
   }) {
-    final plannedRecipeIds = {
-      for (final entry in weekPlan.entries) entry.recipeId,
-    };
-    final plannedRecipes = [
-      for (final recipe in recipes)
-        if (plannedRecipeIds.contains(recipe.id)) recipe,
-    ];
-
-    final quantityIngredientIds = <String>{};
-    for (final recipe in plannedRecipes) {
-      for (final line in recipe.bomLines) {
-        final ingredient = ingredientsById[line.ingredientId];
-        if (ingredient != null && !ingredient.booleanTracked) {
-          quantityIngredientIds.add(line.ingredientId);
-        }
-      }
-    }
-
     final rows = <ShoppingRow>[];
     final skipped = <SkippedItem>[];
 
-    for (final ingredientId in quantityIngredientIds) {
-      final ingredient = ingredientsById[ingredientId]!;
+    for (final entry in weeklyConsumptionByIngredient.entries) {
+      final ingredientId = entry.key;
+      final ingredient = ingredientsById[ingredientId];
+      if (ingredient == null) continue;
+
       final result = _buildQuantityRow(
         ingredientId: ingredientId,
         ingredient: ingredient,
-        recipes: recipes,
-        weekPlan: weekPlan,
+        consumptionResult: entry.value,
         pantryByIngredientId: pantryByIngredientId,
       );
       if (result case Left(value: final failure)) {
@@ -122,15 +111,9 @@ class ShoppingListBuilder {
   Either<Failure, ShoppingRow?> _buildQuantityRow({
     required String ingredientId,
     required Ingredient ingredient,
-    required List<Recipe> recipes,
-    required WeekPlan weekPlan,
+    required Either<Failure, Quantity> consumptionResult,
     required Map<String, PantryItem> pantryByIngredientId,
   }) {
-    final consumptionResult = _calculator.weeklyConsumption(
-      ingredient: ingredient,
-      recipes: recipes,
-      weekPlan: weekPlan,
-    );
     if (consumptionResult case Left(value: final failure)) {
       return Left(failure);
     }
