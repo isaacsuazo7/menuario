@@ -21,6 +21,8 @@ void main() {
   late MockWeekPlanRepository mockWeekPlanRepository;
   late MockRecipeRepository mockRecipeRepository;
 
+  const taza = Unit(symbol: 'taza', dimension: UnitDimension.volume);
+
   const pollo = Ingredient(
     id: 'ing-pollo',
     name: 'Pollo',
@@ -56,7 +58,7 @@ void main() {
       BomLine(
         recipeId: 'recipe-arroz',
         ingredientId: 'ing-arroz',
-        quantity: Quantity(value: 2, unit: Unit.gram),
+        quantity: Quantity(value: 2, unit: taza),
       ),
     ],
   );

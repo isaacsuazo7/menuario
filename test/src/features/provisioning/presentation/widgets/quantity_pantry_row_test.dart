@@ -576,6 +576,7 @@ void main() {
       'a skipped/needs-factor weekly need (Left) degrades gracefully: '
       'stock-only subtitle, no tint, no crash',
       (tester) async {
+        const taza = Unit(symbol: 'taza', dimension: UnitDimension.volume);
         const arroz = Ingredient(
           id: 'ing-arroz',
           name: 'Arroz',
@@ -591,7 +592,7 @@ void main() {
             BomLine(
               recipeId: 'recipe-arroz',
               ingredientId: 'ing-arroz',
-              quantity: Quantity(value: 2, unit: Unit.gram),
+              quantity: Quantity(value: 2, unit: taza),
             ),
           ],
         );

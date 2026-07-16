@@ -45,6 +45,33 @@ void main() {
         );
       });
 
+      test('mass mode passes the recipe quantity through as an identity '
+          'when it is already in grams, requiring NO conversionFactor '
+          '(queso already in g, no factor set, 250 g -> 250 g)', () {
+        // Arrange
+        const queso = Ingredient(
+          id: 'ingredient-queso',
+          name: 'Queso',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+        );
+        const recipeQuantity = Quantity(value: 250, unit: Unit.gram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: queso,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 250, unit: Unit.gram)),
+        );
+      });
+
       test('mass mode multiplies by a different factor '
           '(avena 8 taza x 85 g/taza = 680 g)', () {
         // Arrange
@@ -191,6 +218,142 @@ void main() {
         );
       });
 
+      test('packageBase mode with a count base dimension passes the recipe '
+          'quantity through as an identity, requiring NO conversionFactor '
+          '(huevo cartón/u, no factor set, 1 u -> 1 u)', () {
+        // Arrange
+        const huevoCarton = Ingredient(
+          id: 'ingredient-huevo-carton',
+          name: 'Huevo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'cartón',
+            yieldQty: 15,
+            baseDimension: Unit.count,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: huevoCarton,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 1, unit: Unit.count)),
+        );
+      });
+
+      test('packageBase mode with a count base dimension passes the recipe '
+          'quantity through as an identity for a caja/u cracker, requiring '
+          'NO conversionFactor (galletas-marías caja/u, no factor set, '
+          '2 u -> 2 u)', () {
+        // Arrange
+        const galletasMarias = Ingredient(
+          id: 'ingredient-galletas-marias',
+          name: 'Galletas María',
+          category: Category.cereal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'caja',
+            yieldQty: 20,
+            baseDimension: Unit.count,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 2, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: galletasMarias,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 2, unit: Unit.count)),
+        );
+      });
+
+      test('packageBase mode with a cross-dimension recipe unit still '
+          'requires and applies conversionFactor (leche, base L, recipe '
+          'in taza, cf=0.24, 0.5 taza -> 0.12 L)', () {
+        // Arrange
+        const leche = Ingredient(
+          id: 'ingredient-leche',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          conversionFactor: 0.24,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 0.5, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: leche,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.12, unit: Unit.liter),
+          ),
+        );
+      });
+
+      test('packageBase mode with a cross-dimension recipe unit still '
+          'reports Left(missingConversionFactor) when no factor is set '
+          '(leche, base L, recipe in taza, no factor)', () {
+        // Arrange
+        const lecheNoFactor = Ingredient(
+          id: 'ingredient-leche-no-factor',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 0.5, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: lecheNoFactor,
+        );
+
+        // Assert
+        expect(
+          result,
+          isA<Left<Failure, Quantity>>().having(
+            (left) => left.value.code,
+            'code',
+            'missingConversionFactor',
+          ),
+        );
+      });
+
       test('packageAbstract mode multiplies into a package fraction '
           '(espinaca cf=0.1, 1 recipe unit -> 0.1 paq)', () {
         // Arrange
@@ -217,6 +380,37 @@ void main() {
           result,
           const Right<Failure, Quantity>(
             Quantity(value: 0.1, unit: Unit.package),
+          ),
+        );
+      });
+
+      test('packageAbstract mode passes the recipe quantity through as an '
+          'identity when it is already in paq, requiring NO '
+          'conversionFactor (espinaca given in paq directly, no factor '
+          'set, 0.5 paq -> 0.5 paq)', () {
+        // Arrange
+        const espinaca = Ingredient(
+          id: 'ingredient-espinaca',
+          name: 'Espinaca',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageAbstract,
+          package: PackageSpec(label: 'bolsa'),
+        );
+        const recipeQuantity = Quantity(value: 0.5, unit: Unit.package);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: espinaca,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.5, unit: Unit.package),
           ),
         );
       });
