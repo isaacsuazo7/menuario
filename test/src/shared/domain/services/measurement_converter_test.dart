@@ -795,5 +795,273 @@ void main() {
         );
       });
     });
+
+    group('metric pre-pass regression guard (existing units untouched)', () {
+      test('mass mode stays byte-identical for g after the metric pre-pass '
+          'lands (queso already in g, no factor, 250 g -> 250 g)', () {
+        // Arrange
+        const queso = Ingredient(
+          id: 'ingredient-queso',
+          name: 'Queso',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+        );
+        const recipeQuantity = Quantity(value: 250, unit: Unit.gram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: queso,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 250, unit: Unit.gram)),
+        );
+      });
+
+      test('mass mode stays byte-identical for taza after the metric '
+          'pre-pass lands (avena 8 taza x 85 g/taza = 680 g)', () {
+        // Arrange
+        const avena = Ingredient(
+          id: 'ingredient-avena',
+          name: 'Avena',
+          category: Category.cereal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+          conversionFactor: 85,
+        );
+        const recipeQuantity = Quantity(value: 8, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: avena,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 680, unit: Unit.gram)),
+        );
+      });
+
+      test('count mode stays byte-identical for u after the metric pre-pass '
+          'lands (banano 2 u -> 2 u)', () {
+        // Arrange
+        const banano = Ingredient(
+          id: 'ingredient-banano',
+          name: 'Banano',
+          category: Category.fruta,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+        );
+        const recipeQuantity = Quantity(value: 2, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: banano,
+        );
+
+        // Assert
+        expect(result, const Right<Failure, Quantity>(recipeQuantity));
+      });
+
+      test('packageBase mode stays byte-identical for L after the metric '
+          'pre-pass lands (leche 0.5 taza x 0.24 = 0.12 L)', () {
+        // Arrange
+        const leche = Ingredient(
+          id: 'ingredient-leche',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          conversionFactor: 0.24,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 0.5, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: leche,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.12, unit: Unit.liter),
+          ),
+        );
+      });
+
+      test('packageBase mode stays byte-identical for cda-equivalent taza '
+          'unit after the metric pre-pass lands (huevo cartón, cf=1, '
+          '1 u -> 1 u)', () {
+        // Arrange
+        const huevoCarton = Ingredient(
+          id: 'ingredient-huevo-carton',
+          name: 'Huevo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          conversionFactor: 1,
+          package: PackageSpec(
+            label: 'cartón',
+            yieldQty: 15,
+            baseDimension: Unit.count,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: huevoCarton,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 1, unit: Unit.count)),
+        );
+      });
+    });
+
+    group('metric pre-pass (kg, ml)', () {
+      test('kg normalizes to g before the mass switch runs '
+          '(pollo cf=1, 1 kg -> 1000 g)', () {
+        // Arrange
+        const pollo = Ingredient(
+          id: 'ingredient-pollo',
+          name: 'Pollo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+          conversionFactor: 1,
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.kilogram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: pollo,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 1000, unit: Unit.gram),
+          ),
+        );
+      });
+
+      test('kg requires NO conversionFactor because the pre-pass already '
+          'identity-matches the canonical g unit (arroz no factor, '
+          '2 kg -> 2000 g)', () {
+        // Arrange
+        const arroz = Ingredient(
+          id: 'ingredient-arroz',
+          name: 'Arroz',
+          category: Category.cereal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+        );
+        const recipeQuantity = Quantity(value: 2, unit: Unit.kilogram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: arroz,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 2000, unit: Unit.gram),
+          ),
+        );
+      });
+
+      test('ml normalizes to L before the packageBase switch runs '
+          '(leche base L, 500 ml -> 0.5 L, no factor needed)', () {
+        // Arrange
+        const leche = Ingredient(
+          id: 'ingredient-leche',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 500, unit: Unit.milliliter);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: leche,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.5, unit: Unit.liter),
+          ),
+        );
+      });
+
+      test('kg on a count-mode ingredient still returns Left(unknownUnit), '
+          'the pre-pass does not bypass the mode gate (huevo given kg)', () {
+        // Arrange
+        const huevo = Ingredient(
+          id: 'ingredient-huevo',
+          name: 'Huevo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.kilogram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: huevo,
+        );
+
+        // Assert
+        expect(
+          result,
+          isA<Left<Failure, Quantity>>().having(
+            (left) => left.value.code,
+            'code',
+            'unknownUnit',
+          ),
+        );
+      });
+    });
   });
 }

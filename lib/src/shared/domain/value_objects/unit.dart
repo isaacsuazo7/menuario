@@ -36,4 +36,32 @@ abstract class Unit with _$Unit {
     symbol: 'paq',
     dimension: UnitDimension.count,
   );
+
+  /// A recipe-only mass unit: 1000 [gram]. Never a stock unit — normalized
+  /// to [gram] by `MeasurementConverter`'s metric pre-pass before any
+  /// mode-driven conversion runs.
+  static const Unit kilogram = Unit(
+    symbol: 'kg',
+    dimension: UnitDimension.mass,
+  );
+
+  /// A recipe-only volume unit: 0.001 [liter]. Never a stock unit —
+  /// normalized to [liter] by `MeasurementConverter`'s metric pre-pass
+  /// before any mode-driven conversion runs.
+  static const Unit milliliter = Unit(
+    symbol: 'ml',
+    dimension: UnitDimension.volume,
+  );
+
+  /// A recipe-only volume unit requiring [Ingredient.conversionFactor]:
+  /// taza (cup). Named consts for what were previously inline `Unit`
+  /// literals in `_bom_editor.dart`'s now-superseded `recipeUnitOptions`.
+  static const Unit cup = Unit(symbol: 'taza', dimension: UnitDimension.volume);
+
+  /// A recipe-only volume unit requiring [Ingredient.conversionFactor]:
+  /// cucharada (tablespoon). See [cup].
+  static const Unit tablespoon = Unit(
+    symbol: 'cda',
+    dimension: UnitDimension.volume,
+  );
 }
