@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:menuario/src/core/theme/app_seed.dart';
 import 'package:menuario/src/core/theme/category_colors.dart';
+import 'package:menuario/src/core/theme/coverage_colors.dart';
 
 /// Centralized Material 3 theme definitions for Menuario.
 ///
@@ -24,7 +25,10 @@ abstract final class MenuarioTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      extensions: [MenuarioCategoryColors.fromBrightness(brightness)],
+      extensions: [
+        MenuarioCategoryColors.fromBrightness(brightness),
+        MenuarioCoverageColors.fromBrightness(brightness),
+      ],
     );
   }
 }

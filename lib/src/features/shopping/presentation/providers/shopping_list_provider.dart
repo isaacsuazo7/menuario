@@ -1,33 +1,35 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
+import 'package:menuario/src/features/provisioning/presentation/providers/weekly_consumption_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
 import 'package:menuario/src/features/shopping/presentation/models/shopping_row.dart';
 import 'package:menuario/src/features/shopping/presentation/providers/shopping_list_builder.dart';
-import 'package:menuario/src/features/week/presentation/providers/plan_controller.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 final _builder = ShoppingListBuilder(
   calculator: ProvisioningCalculator(converter: const MeasurementConverter()),
 );
 
-/// The derived Comprar buy list: combines [planControllerProvider],
-/// [pantryControllerProvider], [recipeListProvider] and
-/// [ingredientsByIdProvider] through the pure [ShoppingListBuilder].
+/// The derived Comprar buy list: combines
+/// [weeklyConsumptionByIngredientProvider] (the shared plan+recipe join),
+/// [pantryControllerProvider] and [ingredientsByIdProvider] through the
+/// pure [ShoppingListBuilder].
 ///
-/// Read-only, mirrors [pantryGroupsProvider]'s shape — the four upstream
+/// Read-only, mirrors [pantryGroupsProvider]'s shape — the upstream
 /// providers already carry `retry: null` + keep-alive, so this derived
 /// `Provider` needs neither. An optimistic pantry patch re-emits from
 /// [pantryControllerProvider] and this recomputes automatically, so a
-/// covered item self-clears without any explicit invalidation here.
+/// covered item self-clears without any explicit invalidation here. The
+/// plan+recipe join itself is NOT repeated here — see
+/// [weeklyConsumptionByIngredientProvider]'s docs for why it lives in
+/// exactly one place.
 final shoppingListProvider = Provider<AsyncValue<ShoppingBuyList>>(
   (ref) {
-    final planValue = ref.watch(planControllerProvider);
     final pantryValue = ref.watch(pantryControllerProvider);
-    final recipesValue = ref.watch(recipeListProvider);
+    final consumptionValue = ref.watch(weeklyConsumptionByIngredientProvider);
     final ingredientsValue = ref.watch(ingredientsByIdProvider);
 
-    final upstream = [planValue, pantryValue, recipesValue, ingredientsValue];
+    final upstream = [pantryValue, consumptionValue, ingredientsValue];
 
     if (upstream.any((value) => value.isLoading)) {
       return const AsyncLoading();
@@ -43,8 +45,7 @@ final shoppingListProvider = Provider<AsyncValue<ShoppingBuyList>>(
     };
 
     final buyList = _builder.build(
-      weekPlan: planValue.value!,
-      recipes: recipesValue.value!,
+      weeklyConsumptionByIngredient: consumptionValue.value!,
       ingredientsById: ingredientsValue.value!,
       pantryByIngredientId: pantryByIngredientId,
     );
@@ -52,9 +53,8 @@ final shoppingListProvider = Provider<AsyncValue<ShoppingBuyList>>(
     return AsyncData(buyList);
   },
   dependencies: [
-    planControllerProvider,
     pantryControllerProvider,
-    recipeListProvider,
+    weeklyConsumptionByIngredientProvider,
     ingredientsByIdProvider,
   ],
 );

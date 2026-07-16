@@ -1,4 +1,6 @@
+import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/shopping/presentation/models/shopping_row.dart';
 import 'package:menuario/src/features/shopping/presentation/providers/shopping_list_builder.dart';
 import 'package:menuario/src/shared/shared.dart';
@@ -19,17 +21,6 @@ void main() {
     booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
-  const recipeHuevo = Recipe(
-    id: 'recipe-huevo',
-    name: 'Huevo revuelto',
-    bomLines: [
-      BomLine(
-        recipeId: 'recipe-huevo',
-        ingredientId: 'ing-huevo',
-        quantity: Quantity(value: 17, unit: Unit.count),
-      ),
-    ],
-  );
 
   const platano = Ingredient(
     id: 'ing-platano',
@@ -39,17 +30,6 @@ void main() {
     booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
-  const recipePlatano = Recipe(
-    id: 'recipe-platano',
-    name: 'Plátano frito',
-    bomLines: [
-      BomLine(
-        recipeId: 'recipe-platano',
-        ingredientId: 'ing-platano',
-        quantity: Quantity(value: 9, unit: Unit.count),
-      ),
-    ],
-  );
 
   const arroz = Ingredient(
     id: 'ing-arroz',
@@ -57,17 +37,6 @@ void main() {
     category: Category.cereal,
     measurementKind: MeasurementKind.bulk,
     booleanTracked: false,
-  );
-  const recipeArroz = Recipe(
-    id: 'recipe-arroz',
-    name: 'Arroz blanco',
-    bomLines: [
-      BomLine(
-        recipeId: 'recipe-arroz',
-        ingredientId: 'ing-arroz',
-        quantity: Quantity(value: 2, unit: taza),
-      ),
-    ],
   );
 
   const comino = Ingredient(
@@ -102,17 +71,8 @@ void main() {
     test(
       'a short ingredient appears with the correct purchase quantity display',
       () {
-        // Arrange
-        const weekPlan = WeekPlan(
-          entries: [
-            PlanEntry(
-              day: DayOfWeek.lun,
-              mealSlot: MealSlot.almuerzo,
-              recipeId: 'recipe-platano',
-              cooked: false,
-            ),
-          ],
-        );
+        // Arrange — weekly need pinned from the (already-tested) shared
+        // weekly-consumption join: platano's single recipe demands 9.
         const platanoStock = PantryItem.quantityTracked(
           ingredientId: 'ing-platano',
           category: Category.fruta,
@@ -122,8 +82,9 @@ void main() {
 
         // Act
         final result = builder.build(
-          weekPlan: weekPlan,
-          recipes: const [recipePlatano],
+          weeklyConsumptionByIngredient: const {
+            'ing-platano': Right(Quantity(value: 9, unit: Unit.count)),
+          },
           ingredientsById: const {'ing-platano': platano},
           pantryByIngredientId: const {'ing-platano': platanoStock},
         );
@@ -142,16 +103,6 @@ void main() {
 
     test('a fully-stocked ingredient does not appear', () {
       // Arrange
-      const weekPlan = WeekPlan(
-        entries: [
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.desayuno,
-            recipeId: 'recipe-huevo',
-            cooked: false,
-          ),
-        ],
-      );
       const huevoStock = PantryItem.quantityTracked(
         ingredientId: 'ing-huevo',
         category: Category.proteina,
@@ -164,8 +115,9 @@ void main() {
 
       // Act
       final result = builder.build(
-        weekPlan: weekPlan,
-        recipes: const [recipeHuevo],
+        weeklyConsumptionByIngredient: const {
+          'ing-huevo': Right(Quantity(value: 17, unit: Unit.count)),
+        },
         ingredientsById: const {'ing-huevo': huevo},
         pantryByIngredientId: const {'ing-huevo': huevoStock},
       );
@@ -177,22 +129,11 @@ void main() {
 
     test('an ingredient absent from the pantry is assumed at zero stock and '
         'appears at full demand', () {
-      // Arrange
-      const weekPlan = WeekPlan(
-        entries: [
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.desayuno,
-            recipeId: 'recipe-huevo',
-            cooked: false,
-          ),
-        ],
-      );
-
       // Act
       final result = builder.build(
-        weekPlan: weekPlan,
-        recipes: const [recipeHuevo],
+        weeklyConsumptionByIngredient: const {
+          'ing-huevo': Right(Quantity(value: 17, unit: Unit.count)),
+        },
         ingredientsById: const {'ing-huevo': huevo},
         pantryByIngredientId: const {},
       );
@@ -211,8 +152,7 @@ void main() {
       () {
         // Act
         final result = builder.build(
-          weekPlan: const WeekPlan(entries: []),
-          recipes: const [],
+          weeklyConsumptionByIngredient: const {},
           ingredientsById: const {'ing-comino': comino},
           pantryByIngredientId: const {'ing-comino': cominoItem},
         );
@@ -228,8 +168,7 @@ void main() {
     test('a "tengo" boolean-tracked item does not appear', () {
       // Act
       final result = builder.build(
-        weekPlan: const WeekPlan(entries: []),
-        recipes: const [],
+        weeklyConsumptionByIngredient: const {},
         ingredientsById: const {'ing-sal': sal},
         pantryByIngredientId: const {'ing-sal': salItem},
       );
@@ -241,22 +180,6 @@ void main() {
     test('a per-ingredient calculation failure skips only that row and the '
         'rest still render', () {
       // Arrange
-      const weekPlan = WeekPlan(
-        entries: [
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.almuerzo,
-            recipeId: 'recipe-arroz',
-            cooked: false,
-          ),
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.cena,
-            recipeId: 'recipe-platano',
-            cooked: false,
-          ),
-        ],
-      );
       const platanoStock = PantryItem.quantityTracked(
         ingredientId: 'ing-platano',
         category: Category.fruta,
@@ -266,8 +189,10 @@ void main() {
 
       // Act
       final result = builder.build(
-        weekPlan: weekPlan,
-        recipes: const [recipeArroz, recipePlatano],
+        weeklyConsumptionByIngredient: <String, Either<Failure, Quantity>>{
+          'ing-arroz': Left(Failure.missingConversionFactor('Arroz')),
+          'ing-platano': const Right(Quantity(value: 9, unit: Unit.count)),
+        },
         ingredientsById: const {'ing-arroz': arroz, 'ing-platano': platano},
         pantryByIngredientId: const {'ing-platano': platanoStock},
       );
@@ -282,7 +207,9 @@ void main() {
 
     test('a shortfall unit-mismatch skip is named with the "other" reason, '
         'distinct from a missing-factor skip', () {
-      // Arrange
+      // Arrange — arroz's stock is tracked in taza while its (already
+      // converted) weekly need is expressed in grams, mirroring a real
+      // shortfall unitMismatch.
       const mismatchedStock = PantryItem.quantityTracked(
         ingredientId: 'ing-arroz',
         category: Category.cereal,
@@ -298,21 +225,12 @@ void main() {
         measurementMode: MeasurementMode.mass,
         conversionFactor: 50,
       );
-      const weekPlan = WeekPlan(
-        entries: [
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.almuerzo,
-            recipeId: 'recipe-arroz',
-            cooked: false,
-          ),
-        ],
-      );
 
       // Act
       final result = builder.build(
-        weekPlan: weekPlan,
-        recipes: const [recipeArroz],
+        weeklyConsumptionByIngredient: const {
+          'ing-arroz': Right(Quantity(value: 100, unit: Unit.gram)),
+        },
         ingredientsById: const {'ing-arroz': arrozWithFactor},
         pantryByIngredientId: const {'ing-arroz': mismatchedStock},
       );
@@ -326,28 +244,12 @@ void main() {
 
     test('rows are grouped by Category.values fixed order, empty categories '
         'omitted', () {
-      // Arrange
-      const weekPlan = WeekPlan(
-        entries: [
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.desayuno,
-            recipeId: 'recipe-huevo',
-            cooked: false,
-          ),
-          PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.almuerzo,
-            recipeId: 'recipe-platano',
-            cooked: false,
-          ),
-        ],
-      );
-
       // Act
       final result = builder.build(
-        weekPlan: weekPlan,
-        recipes: const [recipeHuevo, recipePlatano],
+        weeklyConsumptionByIngredient: const {
+          'ing-huevo': Right(Quantity(value: 17, unit: Unit.count)),
+          'ing-platano': Right(Quantity(value: 9, unit: Unit.count)),
+        },
         ingredientsById: const {
           'ing-huevo': huevo,
           'ing-platano': platano,
@@ -363,6 +265,23 @@ void main() {
         Category.fruta,
         Category.condimento,
       ]);
+    });
+
+    test('a weekly-consumption entry whose ingredient is unresolved is '
+        'skipped without a crash (defensive — should not happen once '
+        'ingredientsById is complete)', () {
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-unknown': Right(Quantity(value: 1, unit: Unit.count)),
+        },
+        ingredientsById: const {},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.groups, isEmpty);
+      expect(result.skipped, isEmpty);
     });
   });
 

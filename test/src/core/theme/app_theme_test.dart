@@ -43,5 +43,15 @@ void main() {
       expect(darkExtension, isNotNull);
       expect(lightExtension, isNotNull);
     });
+
+    test('the coverage-colors ThemeExtension resolves on both themes', () {
+      final darkExtension = MenuarioTheme.dark
+          .extension<MenuarioCoverageColors>();
+      final lightExtension = MenuarioTheme.light
+          .extension<MenuarioCoverageColors>();
+
+      expect(darkExtension, isNotNull);
+      expect(lightExtension, isNotNull);
+    });
   });
 }
