@@ -162,8 +162,9 @@ void main() {
       expect(result, const [Unit.count]);
     });
 
-    test('packageBase mode with a count base dimension and a factor adds '
-        'taza/cda even though count has no metric sibling (huevo cartón, '
+    test('packageBase mode with a count base dimension and a factor still '
+        'returns {u} only — the dimension gate excludes taza/cda for a '
+        'counted package regardless of conversionFactor (huevo cartón, '
         'cf=1)', () {
       // Arrange
       const huevoCarton = Ingredient(
@@ -185,10 +186,7 @@ void main() {
       final result = recipeUnitsFor(huevoCarton);
 
       // Assert
-      expect(
-        result,
-        unorderedEquals(<Unit>[Unit.count, Unit.cup, Unit.tablespoon]),
-      );
+      expect(result, const [Unit.count]);
     });
 
     test('packageAbstract mode without a factor returns {paq} only '

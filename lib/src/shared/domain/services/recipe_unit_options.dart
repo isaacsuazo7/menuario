@@ -25,11 +25,20 @@ final Map<Unit, Unit> _metricSiblingOf = {
 ///   normalizes to the canonical `g` via the converter's metric pre-pass,
 ///   needing no factor), plus `{Unit.cup, Unit.tablespoon}` only when
 ///   [Ingredient.conversionFactor] is set.
-/// - [MeasurementMode.packageBase] / [MeasurementMode.packageAbstract]:
-///   the canonical unit ([StockLensService.canonicalUnitFor]) plus its
-///   metric sibling when one exists (`kg` for `g`, `ml` for `L`; none for
-///   `u`/`paq`), plus `{Unit.cup, Unit.tablespoon}` only when a factor is
-///   set.
+/// - [MeasurementMode.packageBase]: the canonical unit
+///   ([StockLensService.canonicalUnitFor]) plus its metric sibling when one
+///   exists (`kg` for `g`, `ml` for `L`; none for `u`), plus
+///   `{Unit.cup, Unit.tablespoon}` only when a factor is set AND the
+///   canonical unit's dimension is NOT [UnitDimension.count] — a counted
+///   package (e.g. huevo cartón) has no sensible volume/mass soft unit even
+///   with a `conversionFactor` set; the factor there scales something else
+///   (grams-per-egg via `mass` mode, not this package's `u`).
+/// - [MeasurementMode.packageAbstract]: the canonical unit (always
+///   `Unit.package`, no metric sibling) plus `{Unit.cup, Unit.tablespoon}`
+///   when a factor is set — NOT dimension-gated like `packageBase`: an
+///   abstract package (e.g. lechuga bolsa) has no known base-unit yield, so
+///   a `taza`/`cda` factor is the intended way to size it, unlike a
+///   packageBase package whose base dimension is knowably `count`.
 /// - [MeasurementMode.boolean]: `{}` — never numerically tracked, so no
 ///   BOM unit makes sense (pre-existing `unknownUnit` behavior).
 List<Unit> recipeUnitsFor(
@@ -47,6 +56,15 @@ List<Unit> recipeUnitsFor(
         if (hasFactor) ...[Unit.cup, Unit.tablespoon],
       ];
     case MeasurementMode.packageBase:
+      final canonical = lensService.canonicalUnitFor(ingredient);
+      final sibling = _metricSiblingOf[canonical];
+      final allowsSoftUnits =
+          hasFactor && canonical.dimension != UnitDimension.count;
+      return [
+        canonical,
+        ?sibling,
+        if (allowsSoftUnits) ...[Unit.cup, Unit.tablespoon],
+      ];
     case MeasurementMode.packageAbstract:
       final canonical = lensService.canonicalUnitFor(ingredient);
       final sibling = _metricSiblingOf[canonical];
