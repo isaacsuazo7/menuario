@@ -113,16 +113,27 @@ class StockLensService {
   }
 
   /// The stepper delta for [ingredient], expressed in its canonical stock
-  /// unit — a quarter of the default lens's unit for continuous modes
-  /// (mass, packageBase), exactly 1 whole unit for count, a
-  /// percent-granular 0.01 for packageAbstract, and 0 (n/a) for boolean.
+  /// unit:
+  /// - `mass`: a FIXED quarter pound (`Mass.gramsPerPound / 4`), regardless
+  ///   of the default lens — a lens override to `g` must not shrink the
+  ///   step to a fraction of a gram.
+  /// - `count`: exactly 1 whole unit.
+  /// - `packageBase` with a discrete (count) base dimension (e.g. huevo
+  ///   cartón/u, jamón bolsa/u): exactly 1 whole unit — no half-eggs.
+  /// - `packageBase` with a continuous base dimension (e.g. leche
+  ///   bolsa/L, requesón pana/g): a quarter of the pack lens
+  ///   (`defaultLensFor(ingredient).canonicalPerUnit / 4`).
+  /// - `packageAbstract`: a quarter package (0.25).
+  /// - `boolean`: 0 (n/a).
   num stockStep(Ingredient ingredient) {
     return switch (ingredient.measurementMode) {
-      MeasurementMode.mass => defaultLensFor(ingredient).canonicalPerUnit / 4,
+      MeasurementMode.mass => Mass.gramsPerPound / 4,
       MeasurementMode.count => 1,
       MeasurementMode.packageBase =>
-        defaultLensFor(ingredient).canonicalPerUnit / 4,
-      MeasurementMode.packageAbstract => 0.01,
+        ingredient.package?.baseDimension?.dimension == UnitDimension.count
+            ? 1
+            : defaultLensFor(ingredient).canonicalPerUnit / 4,
+      MeasurementMode.packageAbstract => 0.25,
       MeasurementMode.boolean => 0,
     };
   }
@@ -144,14 +155,23 @@ class StockLensService {
   }
 
   /// Renders [stock] through [ingredient]'s default lens using the smart
-  /// fraction/percent formatter: (1) if the lens value's fractional part
-  /// is within [_fractionEpsilon] of a clean fraction (½ ¼ ⅓ ¾ ⅕), render
-  /// the glyph (with a leading whole-part digit for mixed numbers); (2)
-  /// else, for packageAbstract, render a percent; (3) else render a
+  /// fraction/percent formatter: (0) an exact-zero value always renders as
+  /// a clean `'0 <label>'`, never a percent; (1) else, if the lens value's
+  /// fractional part is within [_fractionEpsilon] of a clean fraction (½ ¼
+  /// ⅓ ¾ ⅕), render the glyph (with a leading whole-part digit for mixed
+  /// numbers); (2) else, for packageAbstract, render a percent ONLY when
+  /// the value is under one whole package (`whole == 0`) — a value of a
+  /// whole package or more (e.g. `1.7`) renders a trimmed decimal instead,
+  /// so it never inflates into something like `"170%"`; (3) else render a
   /// trimmed 2-decimal-place number. Always suffixed with the lens label.
   String formatStock(Ingredient ingredient, Quantity stock) {
     final lens = defaultLensFor(ingredient);
     final natural = lens.fromCanonical(stock.value);
+
+    if (natural == 0) {
+      return '0 ${lens.label}';
+    }
+
     final whole = natural.truncate();
     final fraction = (natural - whole).abs();
     final glyph = _matchFractionGlyph(fraction);
@@ -161,7 +181,8 @@ class StockLensService {
       return '$wholePart$glyph ${lens.label}';
     }
 
-    if (ingredient.measurementMode == MeasurementMode.packageAbstract) {
+    if (ingredient.measurementMode == MeasurementMode.packageAbstract &&
+        whole == 0) {
       final percent = (natural * 100).round();
       return '$percent% ${lens.label}';
     }
