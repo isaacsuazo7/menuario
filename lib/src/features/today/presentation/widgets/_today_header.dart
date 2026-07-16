@@ -18,7 +18,10 @@ class TodayHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final now = ref.watch(nowProvider);
-    final firstName = firstNameFrom(user?.displayName);
+    final firstName = greetingNameFrom(
+      displayName: user?.displayName,
+      email: user?.email,
+    );
     final greeting = firstName.isEmpty
         ? '¡Bienvenido!'
         : 'Bienvenido $firstName';
@@ -28,11 +31,11 @@ class TodayHeader extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(greeting, style: MenuarioTypography.h4),
+          Text(greeting, style: MenuarioTypography.h2),
           MenuarioSpacing.gapV4,
           Text(
             spanishLongDate(now),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: MenuarioTypography.h6.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
