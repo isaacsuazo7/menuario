@@ -25,6 +25,33 @@ class MeasurementConverter {
 
   final StockLensService _lens;
 
+  /// Fixed intra-dimension normalization ratios, applied as a pre-pass by
+  /// [_applyMetricPrePass] before [toStockUnit]'s mode-driven switch runs.
+  /// Units NOT in this table (`g`, `L`, `u`, `taza`, `cda`, `paq`) pass
+  /// through unchanged, so every branch below stays byte-identical for
+  /// every unit already in use today — this table only ever ADDS new
+  /// convertible units, never changes existing behavior.
+  ///
+  /// `static final`, not `static const`: [Unit] overrides `==`/`hashCode`
+  /// (Freezed value equality), so it lacks the PRIMITIVE equality a
+  /// canonicalized `const` map key requires.
+  static final Map<Unit, (Unit, num)> _metricPrePass = {
+    Unit.kilogram: (Unit.gram, 1000),
+    Unit.milliliter: (Unit.liter, 0.001),
+  };
+
+  /// Normalizes [quantity] into its fixed metric sibling per
+  /// [_metricPrePass] (e.g. `kg` -> `g`), or returns it unchanged when its
+  /// unit is not in the table.
+  Quantity _applyMetricPrePass(Quantity quantity) {
+    final normalized = _metricPrePass[quantity.unit];
+    if (normalized == null) {
+      return quantity;
+    }
+    final (unit, factor) = normalized;
+    return Quantity(value: quantity.value * factor, unit: unit);
+  }
+
   /// Converts [recipeQuantity] (as written on a `BomLine`) into its
   /// stock-unit equivalent for [ingredient], per
   /// [Ingredient.measurementMode]. The output [Quantity.unit] is always
@@ -60,28 +87,29 @@ class MeasurementConverter {
     required Quantity recipeQuantity,
     required Ingredient ingredient,
   }) {
+    final normalizedQuantity = _applyMetricPrePass(recipeQuantity);
     final stockUnit = _lens.canonicalUnitFor(ingredient);
     switch (ingredient.measurementMode) {
       case MeasurementMode.count:
-        if (recipeQuantity.unit != Unit.count) {
-          return Left(Failure.unknownUnit(recipeQuantity.unit.symbol));
+        if (normalizedQuantity.unit != Unit.count) {
+          return Left(Failure.unknownUnit(normalizedQuantity.unit.symbol));
         }
-        return Right(recipeQuantity);
+        return Right(normalizedQuantity);
       case MeasurementMode.mass:
       case MeasurementMode.packageBase:
       case MeasurementMode.packageAbstract:
-        if (recipeQuantity.unit == stockUnit) {
-          return Right(recipeQuantity);
+        if (normalizedQuantity.unit == stockUnit) {
+          return Right(normalizedQuantity);
         }
         final factor = ingredient.conversionFactor;
         if (factor == null) {
           return Left(Failure.missingConversionFactor(ingredient.name));
         }
         return Right(
-          Quantity(value: recipeQuantity.value * factor, unit: stockUnit),
+          Quantity(value: normalizedQuantity.value * factor, unit: stockUnit),
         );
       case MeasurementMode.boolean:
-        return Left(Failure.unknownUnit(recipeQuantity.unit.symbol));
+        return Left(Failure.unknownUnit(normalizedQuantity.unit.symbol));
     }
   }
 
