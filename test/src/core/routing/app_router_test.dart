@@ -10,6 +10,9 @@ import 'package:menuario/src/core/auth/auth_service.dart';
 import 'package:menuario/src/core/routing/routing.dart';
 import 'package:menuario/src/features/ingredients/presentation/screens/ingredients_list_screen.dart';
 import 'package:menuario/src/features/provisioning/presentation/screens/provisioning_screen.dart';
+import 'package:menuario/src/features/today/data/repositories/cook_schedule_repository_impl.dart';
+import 'package:menuario/src/features/today/domain/repositories/cook_schedule_repository.dart';
+import 'package:menuario/src/features/today/presentation/screens/cook_schedule_screen.dart';
 import 'package:menuario/src/features/today/presentation/today_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
@@ -26,12 +29,16 @@ class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
+class MockCookScheduleRepository extends Mock
+    implements CookScheduleRepository {}
+
 void main() {
   late MockAuthService mockAuthService;
   late MockPantryRepository mockPantryRepository;
   late MockIngredientRepository mockIngredientRepository;
   late MockWeekPlanRepository mockWeekPlanRepository;
   late MockRecipeRepository mockRecipeRepository;
+  late MockCookScheduleRepository mockCookScheduleRepository;
 
   setUp(() {
     mockAuthService = MockAuthService();
@@ -39,6 +46,7 @@ void main() {
     mockIngredientRepository = MockIngredientRepository();
     mockWeekPlanRepository = MockWeekPlanRepository();
     mockRecipeRepository = MockRecipeRepository();
+    mockCookScheduleRepository = MockCookScheduleRepository();
     when(
       () => mockPantryRepository.list(),
     ).thenAnswer((_) async => const Right([]));
@@ -51,6 +59,9 @@ void main() {
     when(
       () => mockRecipeRepository.list(),
     ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockCookScheduleRepository.getActive(),
+    ).thenAnswer((_) async => const Right(null));
   });
 
   Future<void> pumpApp(WidgetTester tester) async {
@@ -64,6 +75,9 @@ void main() {
           ),
           weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          cookScheduleRepositoryProvider.overrideWithValue(
+            mockCookScheduleRepository,
+          ),
         ],
         child: Consumer(
           builder: (context, ref, _) {
@@ -200,4 +214,24 @@ void main() {
 
     expect(find.byType(IngredientsListScreen), findsOneWidget);
   });
+
+  testWidgets(
+    'drawer Calendario de cocina tile opens the cook schedule editor',
+    (tester) async {
+      final mockUser = MockUser();
+      when(
+        () => mockAuthService.authStateChanges,
+      ).thenAnswer((_) => Stream.value(mockUser));
+
+      await pumpApp(tester);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Calendario de cocina'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CookScheduleScreen), findsOneWidget);
+    },
+  );
 }

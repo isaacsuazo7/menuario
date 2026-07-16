@@ -22,8 +22,9 @@ final cookListProvider = Provider<AsyncValue<CookLists>>(
   (ref) {
     final planValue = ref.watch(planControllerProvider);
     final recipesValue = ref.watch(recipeListProvider);
+    final scheduleValue = ref.watch(cookScheduleProvider);
 
-    final upstream = [planValue, recipesValue];
+    final upstream = [planValue, recipesValue, scheduleValue];
     if (upstream.any((value) => value.isLoading)) {
       return const AsyncLoading();
     }
@@ -42,8 +43,8 @@ final cookListProvider = Provider<AsyncValue<CookLists>>(
     };
 
     final now = ref.watch(nowProvider);
-    final schedule = ref.watch(cookScheduleProvider);
-    final targets = schedule[now.weekday] ?? const [];
+    final schedule = scheduleValue.value!;
+    final targets = schedule.targetsFor(now.weekday);
 
     final hoy = <CookItem>[];
     final manana = <CookItem>[];
