@@ -121,21 +121,9 @@ void main() {
     final targets = targetsFor(DateTime(2024, 1, 6)); // Saturday
 
     expect(targets, [
-      (
-        targetDay: DayOfWeek.sab,
-        slot: MealSlot.desayuno,
-        group: CookGroup.hoy,
-      ),
-      (
-        targetDay: DayOfWeek.sab,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.hoy,
-      ),
-      (
-        targetDay: DayOfWeek.sab,
-        slot: MealSlot.merienda,
-        group: CookGroup.hoy,
-      ),
+      (targetDay: DayOfWeek.sab, slot: MealSlot.desayuno, group: CookGroup.hoy),
+      (targetDay: DayOfWeek.sab, slot: MealSlot.almuerzo, group: CookGroup.hoy),
+      (targetDay: DayOfWeek.sab, slot: MealSlot.merienda, group: CookGroup.hoy),
       (targetDay: DayOfWeek.sab, slot: MealSlot.cena, group: CookGroup.hoy),
     ]);
   });

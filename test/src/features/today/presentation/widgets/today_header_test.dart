@@ -51,21 +51,18 @@ void main() {
     },
   );
 
-  testWidgets(
-    'falls back to a generic greeting when displayName is empty',
-    (tester) async {
-      final mockUser = MockUser();
-      when(() => mockUser.displayName).thenReturn('');
-
-      await pumpHeader(tester, user: mockUser);
-
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets('renders the date even without a signed-in user', (
+  testWidgets('falls back to a generic greeting when displayName is empty', (
     tester,
   ) async {
+    final mockUser = MockUser();
+    when(() => mockUser.displayName).thenReturn('');
+
+    await pumpHeader(tester, user: mockUser);
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('renders the date even without a signed-in user', (tester) async {
     await pumpHeader(tester, user: null, now: DateTime(2024, 1, 2));
 
     expect(tester.takeException(), isNull);

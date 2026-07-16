@@ -41,30 +41,20 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('Sunday shows "Domingo, día libre" with no list', (
-    tester,
-  ) async {
+  testWidgets('Sunday shows "Domingo, día libre" with no list', (tester) async {
     await pumpBody(tester, today: null, meals: const AsyncData([]));
 
     expect(find.text('Domingo, día libre'), findsOneWidget);
     expect(find.text('Nada planeado — planificá en Semana'), findsNothing);
   });
 
-  testWidgets(
-    'a weekday with zero planned meals shows the planning hint',
-    (tester) async {
-      await pumpBody(
-        tester,
-        today: DayOfWeek.mar,
-        meals: const AsyncData([]),
-      );
+  testWidgets('a weekday with zero planned meals shows the planning hint', (
+    tester,
+  ) async {
+    await pumpBody(tester, today: DayOfWeek.mar, meals: const AsyncData([]));
 
-      expect(
-        find.text('Nada planeado — planificá en Semana'),
-        findsOneWidget,
-      );
-    },
-  );
+    expect(find.text('Nada planeado — planificá en Semana'), findsOneWidget);
+  });
 
   testWidgets(
     'a weekday with entries renders every row (already slot-ordered by '

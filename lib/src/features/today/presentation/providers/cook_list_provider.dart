@@ -34,7 +34,9 @@ final cookListProvider = Provider<AsyncValue<CookLists>>(
     }
 
     final plan = planValue.value!;
-    final recipesById = {for (final recipe in recipesValue.value!) recipe.id: recipe};
+    final recipesById = {
+      for (final recipe in recipesValue.value!) recipe.id: recipe,
+    };
     final entryByKey = {
       for (final entry in plan.entries) (entry.day, entry.mealSlot): entry,
     };
@@ -65,8 +67,9 @@ final cookListProvider = Provider<AsyncValue<CookLists>>(
       }
     }
 
-    int bySlot(CookItem a, CookItem b) =>
-        MealSlot.values.indexOf(a.slot).compareTo(MealSlot.values.indexOf(b.slot));
+    int bySlot(CookItem a, CookItem b) => MealSlot.values
+        .indexOf(a.slot)
+        .compareTo(MealSlot.values.indexOf(b.slot));
     hoy.sort(bySlot);
     manana.sort(bySlot);
 

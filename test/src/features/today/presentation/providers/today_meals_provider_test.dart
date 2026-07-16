@@ -166,10 +166,9 @@ void main() {
 
     final container = makeContainer(today: DayOfWeek.mar);
     container.listen(planControllerProvider, (_, _) {});
-    await container.read(planControllerProvider.future).then(
-      (_) {},
-      onError: (_) {},
-    );
+    await container
+        .read(planControllerProvider.future)
+        .then((_) {}, onError: (_) {});
     await container.read(recipeListProvider.future);
 
     final result = container.read(todayMealsProvider);

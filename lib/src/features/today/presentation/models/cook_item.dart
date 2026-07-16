@@ -16,4 +16,9 @@ typedef CookTarget = ({DayOfWeek targetDay, MealSlot slot, CookGroup group});
 /// A resolved schedule target (Cocinar) or planned meal (Comer): the
 /// planned [recipe] for [day]/[slot], carrying its source [entry] so the
 /// caller can open `TodayMealDetailSheet` without a second lookup.
-typedef CookItem = ({Recipe recipe, DayOfWeek day, MealSlot slot, PlanEntry entry});
+typedef CookItem = ({
+  Recipe recipe,
+  DayOfWeek day,
+  MealSlot slot,
+  PlanEntry entry,
+});

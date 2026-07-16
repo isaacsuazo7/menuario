@@ -19,7 +19,9 @@ class TodayHeader extends ConsumerWidget {
     final user = ref.watch(authStateProvider).value;
     final now = ref.watch(nowProvider);
     final firstName = firstNameFrom(user?.displayName);
-    final greeting = firstName.isEmpty ? '¡Bienvenido!' : 'Bienvenido $firstName';
+    final greeting = firstName.isEmpty
+        ? '¡Bienvenido!'
+        : 'Bienvenido $firstName';
 
     return Padding(
       padding: MenuarioSpacing.paddingAll16,

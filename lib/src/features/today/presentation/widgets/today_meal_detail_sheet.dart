@@ -136,8 +136,7 @@ class _Ingredients extends ConsumerWidget {
                 MenuarioSpacing.gapH8,
                 Expanded(
                   child: Text(
-                    ingredientsById[line.ingredientId]?.name ??
-                        'Ingrediente',
+                    ingredientsById[line.ingredientId]?.name ?? 'Ingrediente',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

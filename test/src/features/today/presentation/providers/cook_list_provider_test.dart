@@ -40,103 +40,97 @@ void main() {
     return container;
   }
 
-  test(
-    'Monday: resolves cena=hoy and Martes d/a/m=mañana, skipping unplanned '
-    'merienda and ordering by slot',
-    () async {
-      when(() => mockWeekPlanRepository.getActive()).thenAnswer(
-        (_) async => const Right(
-          WeekPlan(
-            entries: [
-              PlanEntry(
-                day: DayOfWeek.lun,
-                mealSlot: MealSlot.cena,
-                recipeId: 'r-cena-lun',
-                cooked: false,
-              ),
-              PlanEntry(
-                day: DayOfWeek.mar,
-                mealSlot: MealSlot.almuerzo,
-                recipeId: 'r-alm-mar',
-                cooked: false,
-              ),
-              PlanEntry(
-                day: DayOfWeek.mar,
-                mealSlot: MealSlot.desayuno,
-                recipeId: 'r-des-mar',
-                cooked: false,
-              ),
-              // Merienda Martes intentionally unplanned.
-            ],
-          ),
+  test('Monday: resolves cena=hoy and Martes d/a/m=mañana, skipping unplanned '
+      'merienda and ordering by slot', () async {
+    when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+      (_) async => const Right(
+        WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.cena,
+              recipeId: 'r-cena-lun',
+              cooked: false,
+            ),
+            PlanEntry(
+              day: DayOfWeek.mar,
+              mealSlot: MealSlot.almuerzo,
+              recipeId: 'r-alm-mar',
+              cooked: false,
+            ),
+            PlanEntry(
+              day: DayOfWeek.mar,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'r-des-mar',
+              cooked: false,
+            ),
+            // Merienda Martes intentionally unplanned.
+          ],
         ),
-      );
-      when(
-        () => mockRecipeRepository.list(),
-      ).thenAnswer((_) async => const Right([cenaLun, desMar, almMar]));
+      ),
+    );
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([cenaLun, desMar, almMar]));
 
-      final container = makeContainer(now: DateTime(2024, 1, 1)); // Monday
-      // Warm up upstream providers.
-      await container.read(planControllerProvider.future);
-      await container.read(recipeListProvider.future);
+    final container = makeContainer(now: DateTime(2024, 1, 1)); // Monday
+    // Warm up upstream providers.
+    await container.read(planControllerProvider.future);
+    await container.read(recipeListProvider.future);
 
-      final result = container.read(cookListProvider);
+    final result = container.read(cookListProvider);
 
-      expect(result.value!.hoy, [
-        (
-          recipe: cenaLun,
+    expect(result.value!.hoy, [
+      (
+        recipe: cenaLun,
+        day: DayOfWeek.lun,
+        slot: MealSlot.cena,
+        entry: const PlanEntry(
           day: DayOfWeek.lun,
-          slot: MealSlot.cena,
-          entry: const PlanEntry(
-            day: DayOfWeek.lun,
-            mealSlot: MealSlot.cena,
-            recipeId: 'r-cena-lun',
-            cooked: false,
-          ),
+          mealSlot: MealSlot.cena,
+          recipeId: 'r-cena-lun',
+          cooked: false,
         ),
-      ]);
-      expect(
-        result.value!.manana.map((item) => item.slot),
-        [MealSlot.desayuno, MealSlot.almuerzo],
-      );
-      expect(
-        result.value!.manana.map((item) => item.recipe.id),
-        ['r-des-mar', 'r-alm-mar'],
-      );
-    },
-  );
+      ),
+    ]);
+    expect(result.value!.manana.map((item) => item.slot), [
+      MealSlot.desayuno,
+      MealSlot.almuerzo,
+    ]);
+    expect(result.value!.manana.map((item) => item.recipe.id), [
+      'r-des-mar',
+      'r-alm-mar',
+    ]);
+  });
 
-  test(
-    'a target whose entry has a dangling recipeId is skipped',
-    () async {
-      when(() => mockWeekPlanRepository.getActive()).thenAnswer(
-        (_) async => const Right(
-          WeekPlan(
-            entries: [
-              PlanEntry(
-                day: DayOfWeek.vie,
-                mealSlot: MealSlot.cena,
-                recipeId: 'missing-recipe',
-                cooked: false,
-              ),
-            ],
-          ),
+  test('a target whose entry has a dangling recipeId is skipped', () async {
+    when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+      (_) async => const Right(
+        WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.vie,
+              mealSlot: MealSlot.cena,
+              recipeId: 'missing-recipe',
+              cooked: false,
+            ),
+          ],
         ),
-      );
-      when(
-        () => mockRecipeRepository.list(),
-      ).thenAnswer((_) async => const Right([]));
+      ),
+    );
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
 
-      final container = makeContainer(now: DateTime(2024, 1, 5)); // Friday
-      await container.read(planControllerProvider.future);
-      await container.read(recipeListProvider.future);
+    final container = makeContainer(now: DateTime(2024, 1, 5)); // Friday
+    await container.read(planControllerProvider.future);
+    await container.read(recipeListProvider.future);
 
-      final result = container.read(cookListProvider);
+    final result = container.read(cookListProvider);
 
-      expect(result.value!.hoy, isEmpty);
-      expect(result.value!.manana, isEmpty);
-    },
-  );
+    expect(result.value!.hoy, isEmpty);
+    expect(result.value!.manana, isEmpty);
+  });
 
   test('Sunday resolves Monday d/a/m into mañana, with no hoy group', () async {
     when(() => mockWeekPlanRepository.getActive()).thenAnswer(
@@ -196,10 +190,9 @@ void main() {
 
     final container = makeContainer(now: DateTime(2024, 1, 1));
     container.listen(planControllerProvider, (_, _) {});
-    await container.read(planControllerProvider.future).then(
-      (_) {},
-      onError: (_) {},
-    );
+    await container
+        .read(planControllerProvider.future)
+        .then((_) {}, onError: (_) {});
     await container.read(recipeListProvider.future);
 
     final result = container.read(cookListProvider);

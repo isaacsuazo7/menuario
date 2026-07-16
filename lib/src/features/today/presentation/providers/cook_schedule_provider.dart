@@ -83,21 +83,9 @@ const _seed = <int, List<CookTarget>>{
     (targetDay: DayOfWeek.vie, slot: MealSlot.cena, group: CookGroup.hoy),
   ],
   DateTime.saturday: [
-    (
-      targetDay: DayOfWeek.sab,
-      slot: MealSlot.desayuno,
-      group: CookGroup.hoy,
-    ),
-    (
-      targetDay: DayOfWeek.sab,
-      slot: MealSlot.almuerzo,
-      group: CookGroup.hoy,
-    ),
-    (
-      targetDay: DayOfWeek.sab,
-      slot: MealSlot.merienda,
-      group: CookGroup.hoy,
-    ),
+    (targetDay: DayOfWeek.sab, slot: MealSlot.desayuno, group: CookGroup.hoy),
+    (targetDay: DayOfWeek.sab, slot: MealSlot.almuerzo, group: CookGroup.hoy),
+    (targetDay: DayOfWeek.sab, slot: MealSlot.merienda, group: CookGroup.hoy),
     (targetDay: DayOfWeek.sab, slot: MealSlot.cena, group: CookGroup.hoy),
   ],
   DateTime.sunday: [
