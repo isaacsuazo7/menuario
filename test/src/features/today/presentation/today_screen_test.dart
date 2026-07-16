@@ -7,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/auth/auth_providers.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/features/today/data/repositories/cook_schedule_repository_impl.dart';
+import 'package:menuario/src/features/today/domain/repositories/cook_schedule_repository.dart';
 import 'package:menuario/src/features/today/presentation/providers/now_provider.dart';
 import 'package:menuario/src/features/today/presentation/today_screen.dart';
 import 'package:menuario/src/features/week/presentation/providers/today_provider.dart';
@@ -17,21 +19,28 @@ class MockWeekPlanRepository extends Mock implements WeekPlanRepository {}
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
+class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
+
 class MockUser extends Mock implements User {}
 
 void main() {
   late MockWeekPlanRepository mockWeekPlanRepository;
   late MockRecipeRepository mockRecipeRepository;
+  late MockCookScheduleRepository mockCookScheduleRepository;
 
   setUp(() {
     mockWeekPlanRepository = MockWeekPlanRepository();
     mockRecipeRepository = MockRecipeRepository();
+    mockCookScheduleRepository = MockCookScheduleRepository();
     when(
       () => mockWeekPlanRepository.getActive(),
     ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
     when(
       () => mockRecipeRepository.list(),
     ).thenAnswer((_) async => const Right([]));
+    when(
+      () => mockCookScheduleRepository.getActive(),
+    ).thenAnswer((_) async => const Right(null));
   });
 
   Future<void> pumpScreen(
@@ -44,6 +53,9 @@ void main() {
         overrides: [
           weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          cookScheduleRepositoryProvider.overrideWithValue(
+            mockCookScheduleRepository,
+          ),
           authStateProvider.overrideWith((ref) => Stream.value(null)),
           nowProvider.overrideWithValue(DateTime(2024, 1, 2)),
           todayProvider.overrideWithValue(today),

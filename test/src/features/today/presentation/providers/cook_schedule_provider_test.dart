@@ -1,152 +1,172 @@
+import 'dart:async';
+
+import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:menuario/src/features/today/presentation/models/cook_item.dart';
+import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/core/error/failure_exception.dart';
+import 'package:menuario/src/features/today/data/repositories/cook_schedule_repository_impl.dart';
+import 'package:menuario/src/features/today/domain/entities/cook_schedule.dart';
+import 'package:menuario/src/features/today/domain/repositories/cook_schedule_repository.dart';
+import 'package:menuario/src/features/today/domain/value_objects/cook_target.dart';
 import 'package:menuario/src/features/today/presentation/providers/cook_schedule_provider.dart';
-import 'package:menuario/src/features/today/presentation/providers/now_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
+import 'package:mocktail/mocktail.dart';
+
+class MockCookScheduleRepository extends Mock implements CookScheduleRepository {}
 
 void main() {
-  List<CookTarget> targetsFor(DateTime now) {
+  late MockCookScheduleRepository mockCookScheduleRepository;
+
+  const savedSchedule = CookSchedule(
+    byWeekday: {
+      DateTime.friday: [
+        (targetDay: DayOfWeek.vie, slot: MealSlot.cena, group: CookGroup.hoy),
+      ],
+    },
+  );
+  final failure = Failure(message: 'no se pudo guardar', code: 'save-fail');
+
+  setUpAll(() {
+    registerFallbackValue(CookSchedule.seed);
+  });
+
+  setUp(() {
+    mockCookScheduleRepository = MockCookScheduleRepository();
+  });
+
+  ProviderContainer makeContainer() {
     final container = ProviderContainer(
-      overrides: [nowProvider.overrideWithValue(now)],
+      overrides: [
+        cookScheduleRepositoryProvider.overrideWithValue(
+          mockCookScheduleRepository,
+        ),
+      ],
     );
     addTearDown(container.dispose);
-
-    final resolvedNow = container.read(nowProvider);
-    final schedule = container.read(cookScheduleProvider);
-    return schedule[resolvedNow.weekday] ?? const [];
+    return container;
   }
 
-  test('Monday: hoy=cena, mañana=Martes d/a/m', () {
-    final targets = targetsFor(DateTime(2024, 1, 1)); // Monday
+  group('build', () {
+    test('falls back to the seed schedule when no doc exists', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(null));
 
-    expect(targets, [
-      (targetDay: DayOfWeek.lun, slot: MealSlot.cena, group: CookGroup.hoy),
-      (
-        targetDay: DayOfWeek.mar,
-        slot: MealSlot.desayuno,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.mar,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.mar,
-        slot: MealSlot.merienda,
-        group: CookGroup.manana,
-      ),
-    ]);
+      final container = makeContainer();
+
+      final schedule = await container.read(cookScheduleProvider.future);
+
+      expect(schedule, CookSchedule.seed);
+    });
+
+    test('loads the saved schedule when a doc exists', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(savedSchedule));
+
+      final container = makeContainer();
+
+      final schedule = await container.read(cookScheduleProvider.future);
+
+      expect(schedule, savedSchedule);
+    });
+
+    test('throws a FailureException when the repository fails', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => Left(failure));
+
+      final container = makeContainer();
+
+      await expectLater(
+        container.read(cookScheduleProvider.future),
+        throwsA(isA<FailureException>()),
+      );
+    });
   });
 
-  test('Tuesday: hoy=cena, mañana=Miércoles d/a/m', () {
-    final targets = targetsFor(DateTime(2024, 1, 2)); // Tuesday
+  group('save', () {
+    test('applies optimistically and persists on success', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockCookScheduleRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-    expect(targets, [
-      (targetDay: DayOfWeek.mar, slot: MealSlot.cena, group: CookGroup.hoy),
-      (
-        targetDay: DayOfWeek.mie,
-        slot: MealSlot.desayuno,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.mie,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.mie,
-        slot: MealSlot.merienda,
-        group: CookGroup.manana,
-      ),
-    ]);
+      final container = makeContainer();
+      await container.read(cookScheduleProvider.future);
+      final notifier = container.read(cookScheduleProvider.notifier);
+
+      final result = await notifier.save(savedSchedule);
+
+      expect(result, isNull);
+      expect(container.read(cookScheduleProvider).value, savedSchedule);
+      verify(() => mockCookScheduleRepository.save(savedSchedule)).called(1);
+    });
+
+    test('reverts to the pre-edit snapshot and returns the Failure on save '
+        'failure', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(null));
+      when(
+        () => mockCookScheduleRepository.save(any()),
+      ).thenAnswer((_) async => Left(failure));
+
+      final container = makeContainer();
+      await container.read(cookScheduleProvider.future);
+      final notifier = container.read(cookScheduleProvider.notifier);
+
+      final result = await notifier.save(savedSchedule);
+
+      expect(result, failure);
+      expect(container.read(cookScheduleProvider).value, CookSchedule.seed);
+    });
+
+    test('applies to state before save() resolves (optimistic)', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(null));
+      final saveCompleter = Completer<Either<Failure, void>>();
+      when(
+        () => mockCookScheduleRepository.save(any()),
+      ).thenAnswer((_) => saveCompleter.future);
+
+      final container = makeContainer();
+      await container.read(cookScheduleProvider.future);
+      final notifier = container.read(cookScheduleProvider.notifier);
+
+      final resultFuture = notifier.save(savedSchedule);
+
+      expect(container.read(cookScheduleProvider).value, savedSchedule);
+
+      saveCompleter.complete(const Right(null));
+      await resultFuture;
+    });
   });
 
-  test('Wednesday: hoy=cena, mañana=Jueves d/a/m', () {
-    final targets = targetsFor(DateTime(2024, 1, 3)); // Wednesday
+  group('reset', () {
+    test('persists the seed schedule', () async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(savedSchedule));
+      when(
+        () => mockCookScheduleRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-    expect(targets, [
-      (targetDay: DayOfWeek.mie, slot: MealSlot.cena, group: CookGroup.hoy),
-      (
-        targetDay: DayOfWeek.jue,
-        slot: MealSlot.desayuno,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.jue,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.jue,
-        slot: MealSlot.merienda,
-        group: CookGroup.manana,
-      ),
-    ]);
-  });
+      final container = makeContainer();
+      await container.read(cookScheduleProvider.future);
+      final notifier = container.read(cookScheduleProvider.notifier);
 
-  test('Thursday: hoy=cena, mañana=Viernes d/a/m', () {
-    final targets = targetsFor(DateTime(2024, 1, 4)); // Thursday
+      final result = await notifier.reset();
 
-    expect(targets, [
-      (targetDay: DayOfWeek.jue, slot: MealSlot.cena, group: CookGroup.hoy),
-      (
-        targetDay: DayOfWeek.vie,
-        slot: MealSlot.desayuno,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.vie,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.vie,
-        slot: MealSlot.merienda,
-        group: CookGroup.manana,
-      ),
-    ]);
-  });
-
-  test('Friday: hoy=cena only, no mañana', () {
-    final targets = targetsFor(DateTime(2024, 1, 5)); // Friday
-
-    expect(targets, [
-      (targetDay: DayOfWeek.vie, slot: MealSlot.cena, group: CookGroup.hoy),
-    ]);
-  });
-
-  test('Saturday: hoy=d/a/m/cena, no mañana', () {
-    final targets = targetsFor(DateTime(2024, 1, 6)); // Saturday
-
-    expect(targets, [
-      (targetDay: DayOfWeek.sab, slot: MealSlot.desayuno, group: CookGroup.hoy),
-      (targetDay: DayOfWeek.sab, slot: MealSlot.almuerzo, group: CookGroup.hoy),
-      (targetDay: DayOfWeek.sab, slot: MealSlot.merienda, group: CookGroup.hoy),
-      (targetDay: DayOfWeek.sab, slot: MealSlot.cena, group: CookGroup.hoy),
-    ]);
-  });
-
-  test('Sunday: mañana=Lunes d/a/m only, no hoy', () {
-    final targets = targetsFor(DateTime(2024, 1, 7)); // Sunday
-
-    expect(targets, [
-      (
-        targetDay: DayOfWeek.lun,
-        slot: MealSlot.desayuno,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.lun,
-        slot: MealSlot.almuerzo,
-        group: CookGroup.manana,
-      ),
-      (
-        targetDay: DayOfWeek.lun,
-        slot: MealSlot.merienda,
-        group: CookGroup.manana,
-      ),
-    ]);
+      expect(result, isNull);
+      expect(container.read(cookScheduleProvider).value, CookSchedule.seed);
+      verify(
+        () => mockCookScheduleRepository.save(CookSchedule.seed),
+      ).called(1);
+    });
   });
 }
