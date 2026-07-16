@@ -5,11 +5,15 @@ import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/entities/recipe.dart';
 import 'package:menuario/src/shared/domain/entities/week_plan.dart';
 import 'package:menuario/src/shared/domain/services/measurement_converter.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/services/stock_lens_service.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
+
+/// Pure and dependency-free — safe to hold as a single const instance, same
+/// as [MeasurementConverter].
+const _lensService = StockLensService();
 
 /// Computes weekly consumption, shortfall and purchase quantities for
 /// quantity-tracked ingredients, and decides which boolean-tracked
@@ -35,9 +39,7 @@ class ProvisioningCalculator {
     required List<Recipe> recipes,
     required WeekPlan weekPlan,
   }) {
-    final defaultUnit = ingredient.measurementKind == MeasurementKind.unit
-        ? Unit.count
-        : Unit.gram;
+    final defaultUnit = _lensService.canonicalUnitFor(ingredient);
     Unit resultUnit = defaultUnit;
     num total = 0;
 

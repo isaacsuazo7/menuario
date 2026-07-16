@@ -52,6 +52,7 @@ void main() {
     category: Category.fruta,
     measurementKind: MeasurementKind.unit,
     booleanTracked: false,
+    measurementMode: MeasurementMode.count,
   );
   const platanoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-platano',

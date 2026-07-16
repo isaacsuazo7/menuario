@@ -11,9 +11,14 @@ _IngredientDTO _$IngredientDTOFromJson(Map<String, dynamic> json) =>
       name: json['name'] as String,
       emoji: json['emoji'] as String?,
       category: json['category'] as String,
-      measurementKind: json['measurementKind'] as String,
-      booleanTracked: json['booleanTracked'] as bool,
+      measurementKind: json['measurementKind'] as String?,
+      booleanTracked: json['booleanTracked'] as bool?,
       conversionFactor: json['conversionFactor'] as num?,
+      measurementMode: json['measurementMode'] as String?,
+      package: json['package'] == null
+          ? null
+          : PackageSpecDTO.fromJson(json['package'] as Map<String, dynamic>),
+      defaultLensLabel: json['defaultLensLabel'] as String?,
     );
 
 Map<String, dynamic> _$IngredientDTOToJson(_IngredientDTO instance) =>
@@ -24,4 +29,7 @@ Map<String, dynamic> _$IngredientDTOToJson(_IngredientDTO instance) =>
       'measurementKind': instance.measurementKind,
       'booleanTracked': instance.booleanTracked,
       'conversionFactor': instance.conversionFactor,
+      'measurementMode': instance.measurementMode,
+      'package': instance.package?.toJson(),
+      'defaultLensLabel': instance.defaultLensLabel,
     };

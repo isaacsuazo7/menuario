@@ -5,6 +5,7 @@ export 'data/datasources/recipe_data_source.dart';
 export 'data/datasources/week_plan_data_source.dart';
 export 'data/models/bom_line_dto.dart';
 export 'data/models/ingredient_dto.dart';
+export 'data/models/package_spec_dto.dart';
 export 'data/models/pantry_item_dto.dart';
 export 'data/models/plan_entry_dto.dart';
 export 'data/models/presentation_dto.dart';
