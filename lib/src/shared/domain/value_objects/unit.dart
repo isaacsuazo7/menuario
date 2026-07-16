@@ -28,4 +28,12 @@ abstract class Unit with _$Unit {
 
   /// The canonical count stock unit: whole units.
   static const Unit count = Unit(symbol: 'u', dimension: UnitDimension.count);
+
+  /// The canonical stock unit for packageAbstract-mode ingredients: a
+  /// decimal package count with no known base-unit yield (e.g. lechuga
+  /// bolsa, requesón pana).
+  static const Unit package = Unit(
+    symbol: 'paq',
+    dimension: UnitDimension.count,
+  );
 }

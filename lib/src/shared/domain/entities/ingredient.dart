@@ -1,6 +1,8 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 
 part 'ingredient.freezed.dart';
 
@@ -12,6 +14,17 @@ part 'ingredient.freezed.dart';
 /// [MeasurementKind.bulk] ingredients; [MeasurementKind.unit] ingredients
 /// need none, since their recipe unit already equals their stock unit.
 /// Seeded values are loaded later at pantry data-entry time.
+///
+/// [measurementMode], [package] and [defaultLensLabel] are the flexible-
+/// units replacement for the [measurementKind]/[booleanTracked] pair,
+/// added additively here (default `mass`, `package`/`defaultLensLabel`
+/// nullable) so every existing call site keeps compiling; the legacy
+/// fields are dropped and DTOs updated in a later PR once consumers move
+/// over. [measurementMode] drives `StockLensService`'s lens set,
+/// canonical unit and formatter; [package] describes a packageBase/
+/// packageAbstract ingredient's pack (label, yield, base dimension);
+/// [defaultLensLabel] overrides the mode's default-lens heuristic
+/// (e.g. forcing `g` instead of `lb`), persisted per ingredient.
 @freezed
 abstract class Ingredient with _$Ingredient {
   const factory Ingredient({
@@ -22,5 +35,8 @@ abstract class Ingredient with _$Ingredient {
     required MeasurementKind measurementKind,
     required bool booleanTracked,
     num? conversionFactor,
+    @Default(MeasurementMode.mass) MeasurementMode measurementMode,
+    PackageSpec? package,
+    String? defaultLensLabel,
   }) = _Ingredient;
 }
