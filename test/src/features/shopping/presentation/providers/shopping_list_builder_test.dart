@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:menuario/src/features/shopping/presentation/models/shopping_row.dart';
 import 'package:menuario/src/features/shopping/presentation/providers/shopping_list_builder.dart';
 import 'package:menuario/src/shared/shared.dart';
 
@@ -36,6 +37,7 @@ void main() {
     category: Category.fruta,
     measurementKind: MeasurementKind.unit,
     booleanTracked: false,
+    measurementMode: MeasurementMode.count,
   );
   const recipePlatano = Recipe(
     id: 'recipe-platano',
@@ -271,9 +273,55 @@ void main() {
       );
 
       // Assert
-      expect(result.skipped, ['ing-arroz']);
+      expect(result.skipped, hasLength(1));
+      expect(result.skipped.single.name, 'Arroz');
+      expect(result.skipped.single.reason, SkipReason.needsFactor);
       expect(result.groups, hasLength(1));
       expect(result.groups.single.rows.single.ingredientId, 'ing-platano');
+    });
+
+    test('a shortfall unit-mismatch skip is named with the "other" reason, '
+        'distinct from a missing-factor skip', () {
+      // Arrange
+      const mismatchedStock = PantryItem.quantityTracked(
+        ingredientId: 'ing-arroz',
+        category: Category.cereal,
+        presentation: Presentation.counter(),
+        stock: Quantity(value: 2, unit: taza),
+      );
+      const arrozWithFactor = Ingredient(
+        id: 'ing-arroz',
+        name: 'Arroz',
+        category: Category.cereal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.mass,
+        conversionFactor: 50,
+      );
+      const weekPlan = WeekPlan(
+        entries: [
+          PlanEntry(
+            day: DayOfWeek.lun,
+            mealSlot: MealSlot.almuerzo,
+            recipeId: 'recipe-arroz',
+            cooked: false,
+          ),
+        ],
+      );
+
+      // Act
+      final result = builder.build(
+        weekPlan: weekPlan,
+        recipes: const [recipeArroz],
+        ingredientsById: const {'ing-arroz': arrozWithFactor},
+        pantryByIngredientId: const {'ing-arroz': mismatchedStock},
+      );
+
+      // Assert
+      expect(result.skipped, hasLength(1));
+      expect(result.skipped.single.name, 'Arroz');
+      expect(result.skipped.single.reason, SkipReason.other);
+      expect(result.groups, isEmpty);
     });
 
     test('rows are grouped by Category.values fixed order, empty categories '

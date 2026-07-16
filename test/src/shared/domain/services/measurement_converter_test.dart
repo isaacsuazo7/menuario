@@ -5,6 +5,8 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/services/measurement_converter.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -16,7 +18,34 @@ void main() {
 
   group('MeasurementConverter', () {
     group('toStockUnit', () {
-      test('should convert a bulk ingredient via its conversionFactor '
+      test('mass mode multiplies recipe quantity by conversionFactor into '
+          'grams (pollo, cf=1, 100 g -> 100 g)', () {
+        // Arrange
+        const pollo = Ingredient(
+          id: 'ingredient-pollo',
+          name: 'Pollo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
+          conversionFactor: 1,
+        );
+        const recipeQuantity = Quantity(value: 100, unit: Unit.gram);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: pollo,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 100, unit: Unit.gram)),
+        );
+      });
+
+      test('mass mode multiplies by a different factor '
           '(avena 8 taza x 85 g/taza = 680 g)', () {
         // Arrange
         const avena = Ingredient(
@@ -25,6 +54,7 @@ void main() {
           category: Category.cereal,
           measurementKind: MeasurementKind.bulk,
           booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
           conversionFactor: 85,
         );
         const recipeQuantity = Quantity(value: 8, unit: taza);
@@ -42,34 +72,31 @@ void main() {
         );
       });
 
-      test('should convert a different bulk ingredient with its own factor '
-          '(arroz 3 taza x 50 g/taza = 150 g)', () {
+      test('count mode passes the recipe quantity through unchanged '
+          '(banano 2 u)', () {
         // Arrange
-        const arroz = Ingredient(
-          id: 'ingredient-arroz',
-          name: 'Arroz',
-          category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
+        const banano = Ingredient(
+          id: 'ingredient-banano',
+          name: 'Banano',
+          category: Category.fruta,
+          measurementKind: MeasurementKind.unit,
           booleanTracked: false,
-          conversionFactor: 50,
+          measurementMode: MeasurementMode.count,
         );
-        const recipeQuantity = Quantity(value: 3, unit: taza);
+        const recipeQuantity = Quantity(value: 2, unit: Unit.count);
 
         // Act
         final result = converter.toStockUnit(
           recipeQuantity: recipeQuantity,
-          ingredient: arroz,
+          ingredient: banano,
         );
 
         // Assert
-        expect(
-          result,
-          const Right<Failure, Quantity>(Quantity(value: 150, unit: Unit.gram)),
-        );
+        expect(result, const Right<Failure, Quantity>(recipeQuantity));
       });
 
-      test('should leave a unit-exact ingredient recipe quantity unchanged '
-          '(huevo 17 u)', () {
+      test('count mode returns Left(unknownUnit) for a non-count recipe '
+          'unit (huevo given taza)', () {
         // Arrange
         const huevo = Ingredient(
           id: 'ingredient-huevo',
@@ -77,8 +104,9 @@ void main() {
           category: Category.proteina,
           measurementKind: MeasurementKind.unit,
           booleanTracked: false,
+          measurementMode: MeasurementMode.count,
         );
-        const recipeQuantity = Quantity(value: 17, unit: Unit.count);
+        const recipeQuantity = Quantity(value: 3, unit: taza);
 
         // Act
         final result = converter.toStockUnit(
@@ -87,11 +115,114 @@ void main() {
         );
 
         // Assert
-        expect(result, const Right<Failure, Quantity>(recipeQuantity));
+        expect(
+          result,
+          isA<Left<Failure, Quantity>>().having(
+            (left) => left.value.code,
+            'code',
+            'unknownUnit',
+          ),
+        );
       });
 
-      test('should return Left(missingConversionFactor) for a bulk ingredient '
-          'with no factor', () {
+      test('packageBase mode with a volume base dimension multiplies into '
+          'that base unit, not grams (leche 0.5 taza x 0.24 = 0.12 L)', () {
+        // Arrange
+        const leche = Ingredient(
+          id: 'ingredient-leche',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          conversionFactor: 0.24,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 0.5, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: leche,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.12, unit: Unit.liter),
+          ),
+        );
+      });
+
+      test('packageBase mode with a count base dimension matches the '
+          'recipe unit (huevo cartón, cf=1, 1 u -> 1 u)', () {
+        // Arrange
+        const huevoCarton = Ingredient(
+          id: 'ingredient-huevo-carton',
+          name: 'Huevo',
+          category: Category.proteina,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          conversionFactor: 1,
+          package: PackageSpec(
+            label: 'cartón',
+            yieldQty: 15,
+            baseDimension: Unit.count,
+          ),
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: huevoCarton,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 1, unit: Unit.count)),
+        );
+      });
+
+      test('packageAbstract mode multiplies into a package fraction '
+          '(espinaca cf=0.1, 1 recipe unit -> 0.1 paq)', () {
+        // Arrange
+        const espinaca = Ingredient(
+          id: 'ingredient-espinaca',
+          name: 'Espinaca',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageAbstract,
+          conversionFactor: 0.1,
+          package: PackageSpec(label: 'bolsa'),
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: espinaca,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.1, unit: Unit.package),
+          ),
+        );
+      });
+
+      test('mass mode returns Left(missingConversionFactor) when the '
+          'ingredient has no factor', () {
         // Arrange
         const arroz = Ingredient(
           id: 'ingredient-arroz',
@@ -99,6 +230,7 @@ void main() {
           category: Category.cereal,
           measurementKind: MeasurementKind.bulk,
           booleanTracked: false,
+          measurementMode: MeasurementMode.mass,
         );
         const recipeQuantity = Quantity(value: 2, unit: taza);
 
@@ -119,22 +251,55 @@ void main() {
         );
       });
 
-      test('should return Left(unknownUnit) for a unit-exact ingredient given '
-          'a non-count recipe unit', () {
+      test('packageAbstract mode returns Left(missingConversionFactor) when '
+          'the ingredient has no factor (espinaca not yet backfilled)', () {
         // Arrange
-        const huevo = Ingredient(
-          id: 'ingredient-huevo',
-          name: 'Huevo',
-          category: Category.proteina,
-          measurementKind: MeasurementKind.unit,
+        const espinaca = Ingredient(
+          id: 'ingredient-espinaca',
+          name: 'Espinaca',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.bulk,
           booleanTracked: false,
+          measurementMode: MeasurementMode.packageAbstract,
+          package: PackageSpec(label: 'bolsa'),
         );
-        const recipeQuantity = Quantity(value: 3, unit: taza);
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
 
         // Act
         final result = converter.toStockUnit(
           recipeQuantity: recipeQuantity,
-          ingredient: huevo,
+          ingredient: espinaca,
+        );
+
+        // Assert
+        expect(
+          result,
+          isA<Left<Failure, Quantity>>().having(
+            (left) => left.value.code,
+            'code',
+            'missingConversionFactor',
+          ),
+        );
+      });
+
+      test('boolean mode defensively returns Left(unknownUnit) — never '
+          'reached in practice, boolean items route via '
+          'shouldSurfaceBooleanItem instead', () {
+        // Arrange
+        const sal = Ingredient(
+          id: 'ingredient-sal',
+          name: 'Sal',
+          category: Category.condimento,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: true,
+          measurementMode: MeasurementMode.boolean,
+        );
+        const recipeQuantity = Quantity(value: 1, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: sal,
         );
 
         // Assert

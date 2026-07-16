@@ -56,19 +56,30 @@ class ShoppingListBuilder {
     }
 
     final rows = <ShoppingRow>[];
-    final skipped = <String>[];
+    final skipped = <SkippedItem>[];
 
     for (final ingredientId in quantityIngredientIds) {
-      final row = _buildQuantityRow(
+      final ingredient = ingredientsById[ingredientId]!;
+      final result = _buildQuantityRow(
         ingredientId: ingredientId,
-        ingredient: ingredientsById[ingredientId]!,
+        ingredient: ingredient,
         recipes: recipes,
         weekPlan: weekPlan,
         pantryByIngredientId: pantryByIngredientId,
       );
-      if (row == null) {
-        skipped.add(ingredientId);
-      } else if (row.quantityDisplay != null) {
+      if (result case Left(value: final failure)) {
+        skipped.add(
+          SkippedItem(
+            name: ingredient.name,
+            reason: failure.code == 'missingConversionFactor'
+                ? SkipReason.needsFactor
+                : SkipReason.other,
+          ),
+        );
+        continue;
+      }
+      final row = (result as Right<Failure, ShoppingRow?>).value;
+      if (row != null && row.quantityDisplay != null) {
         rows.add(row);
       }
     }
@@ -103,12 +114,12 @@ class ShoppingListBuilder {
     return ShoppingBuyList(groups: groups, skipped: skipped);
   }
 
-  /// Computes the quantity-tracked row for [ingredientId], or `null` when
-  /// any pipeline step returns `Left(Failure)` (caller records it as
-  /// skipped). A non-null row with a `null` [ShoppingRow.quantityDisplay]
-  /// means there is nothing to buy (`purchaseQuantity` returned
-  /// `Right(null)`) and the caller omits it.
-  ShoppingRow? _buildQuantityRow({
+  /// Computes the quantity-tracked row for [ingredientId], propagating the
+  /// typed `Left(Failure)` (caller records it as a named [SkippedItem])
+  /// when any pipeline step fails. A `Right(row)` with a `null`
+  /// [ShoppingRow.quantityDisplay] means there is nothing to buy
+  /// (`purchaseQuantity` returned `Right(null)`) and the caller omits it.
+  Either<Failure, ShoppingRow?> _buildQuantityRow({
     required String ingredientId,
     required Ingredient ingredient,
     required List<Recipe> recipes,
@@ -120,7 +131,9 @@ class ShoppingListBuilder {
       recipes: recipes,
       weekPlan: weekPlan,
     );
-    if (consumptionResult case Left()) return null;
+    if (consumptionResult case Left(value: final failure)) {
+      return Left(failure);
+    }
     final consumption = (consumptionResult as Right<Failure, Quantity>).value;
 
     final existing = pantryByIngredientId[ingredientId];
@@ -144,25 +157,31 @@ class ShoppingListBuilder {
       consumption: consumption,
       stock: pantryItem.stock,
     );
-    if (shortfallResult case Left()) return null;
+    if (shortfallResult case Left(value: final failure)) {
+      return Left(failure);
+    }
     final shortfall = (shortfallResult as Right<Failure, Quantity>).value;
 
     final purchaseResult = _calculator.purchaseQuantity(
       shortfall: shortfall,
       presentation: pantryItem.presentation,
     );
-    if (purchaseResult case Left()) return null;
+    if (purchaseResult case Left(value: final failure)) {
+      return Left(failure);
+    }
     final purchase =
         (purchaseResult as Right<Failure, PurchaseQuantity?>).value;
 
-    return ShoppingRow(
-      ingredientId: ingredientId,
-      ingredient: ingredient,
-      category: ingredient.category,
-      isBooleanTracked: false,
-      pantryItem: pantryItem,
-      pantryExists: pantryExists,
-      quantityDisplay: purchase?.display,
+    return Right(
+      ShoppingRow(
+        ingredientId: ingredientId,
+        ingredient: ingredient,
+        category: ingredient.category,
+        isBooleanTracked: false,
+        pantryItem: pantryItem,
+        pantryExists: pantryExists,
+        quantityDisplay: purchase?.display,
+      ),
     );
   }
 }

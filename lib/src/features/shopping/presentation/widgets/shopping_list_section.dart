@@ -11,7 +11,8 @@ import 'package:menuario/src/features/week/presentation/providers/plan_controlle
 import 'package:menuario/src/shared/shared.dart';
 
 /// The "Comprar" tab body: the derived buy list, grouped by category, with
-/// a skipped-count badge when a per-ingredient calculation failed.
+/// a named skipped-diagnostics badge when a per-ingredient calculation
+/// failed.
 class ShoppingListSection extends ConsumerWidget {
   const ShoppingListSection({super.key});
 
@@ -34,7 +35,7 @@ class ShoppingListSection extends ConsumerWidget {
         return ListView(
           children: [
             if (buyList.skipped.isNotEmpty)
-              _SkippedBadge(count: buyList.skipped.length),
+              _SkippedBadge(items: buyList.skipped),
             for (final group in buyList.groups)
               ShoppingCategorySection(group: group),
           ],
@@ -53,24 +54,41 @@ class _EmptyShoppingList extends StatelessWidget {
   }
 }
 
+/// Renders [items] as named diagnostics, grouped by [SkipReason] — e.g.
+/// "Necesitan factor: espinaca, escarola" — instead of a bare skipped
+/// count.
 class _SkippedBadge extends StatelessWidget {
-  const _SkippedBadge({required this.count});
+  const _SkippedBadge({required this.items});
 
-  final int count;
+  final List<SkippedItem> items;
 
   @override
   Widget build(BuildContext context) {
-    final label = count == 1
-        ? '1 artículo no se pudo calcular'
-        : '$count artículos no se pudieron calcular';
+    final needsFactorNames = [
+      for (final item in items)
+        if (item.reason == SkipReason.needsFactor) item.name,
+    ];
+    final otherNames = [
+      for (final item in items)
+        if (item.reason == SkipReason.other) item.name,
+    ];
+
+    final lines = [
+      if (needsFactorNames.isNotEmpty)
+        'Necesitan factor: ${needsFactorNames.join(', ')}',
+      if (otherNames.isNotEmpty)
+        'No se pudieron calcular: ${otherNames.join(', ')}',
+    ];
+
+    final textStyle = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.error);
 
     return Padding(
       padding: MenuarioSpacing.paddingAll16,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.error,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [for (final line in lines) Text(line, style: textStyle)],
       ),
     );
   }
