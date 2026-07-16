@@ -1,16 +1,65 @@
-import 'package:dartz/dartz.dart' hide Unit;
+import 'package:dartz/dartz.dart' hide State, Unit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
+class MockIngredientRepository extends Mock implements IngredientRepository {}
+
+/// Stands in for `IngredientFormScreen` in the inline add-ingredient flow:
+/// immediately pops with a fixed id when built, exercising the picker's
+/// `pop(id)` handoff without needing the real ingredient form's fields
+/// (mirrors `_recipe_ingredient_picker_sheet_test.dart`'s fake).
+class _FakeIngredientFormScreen extends StatefulWidget {
+  const _FakeIngredientFormScreen();
+
+  @override
+  State<_FakeIngredientFormScreen> createState() =>
+      _FakeIngredientFormScreenState();
+}
+
+class _FakeIngredientFormScreenState extends State<_FakeIngredientFormScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).pop('ing-new');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: SizedBox());
+}
+
 void main() {
   late MockRecipeRepository mockRecipeRepository;
+  late MockIngredientRepository mockIngredientRepository;
+
+  const pollo = Ingredient(
+    id: 'i1',
+    name: 'Pollo',
+    emoji: '🍗',
+    category: Category.proteina,
+    measurementKind: MeasurementKind.unit,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.count,
+  );
+  const huevo = Ingredient(
+    id: 'ing-huevo',
+    name: 'Huevo',
+    emoji: '🥚',
+    category: Category.proteina,
+    measurementKind: MeasurementKind.unit,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.count,
+  );
 
   setUpAll(() {
     registerFallbackValue(const Recipe(id: '', name: '', bomLines: []));
@@ -18,10 +67,15 @@ void main() {
 
   setUp(() {
     mockRecipeRepository = MockRecipeRepository();
+    mockIngredientRepository = MockIngredientRepository();
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([pollo, huevo]));
   });
 
   overrides() => [
     recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+    ingredientRepositoryProvider.overrideWithValue(mockIngredientRepository),
   ];
 
   Future<void> pumpScreen(WidgetTester tester, {String? recipeId}) {
@@ -33,29 +87,49 @@ void main() {
     );
   }
 
-  /// Pumps the form behind a pushable route so pop-on-success is
-  /// observable (mirrors `ingredient_form_screen_test.dart`).
+  /// Pumps the form behind a [GoRouter] so pop-on-success is observable
+  /// (mirrors `ingredient_form_screen_test.dart`) AND [IngredientRoutes.form]
+  /// is a real, navigable route — needed for the BOM picker's inline
+  /// add-ingredient escape hatch.
   Future<void> pumpPushableScreen(
     WidgetTester tester, {
     String? recipeId,
   }) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: overrides(),
-        child: MaterialApp(
-          home: Builder(
-            builder: (context) => Scaffold(
-              body: ElevatedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => RecipeFormScreen(recipeId: recipeId),
-                  ),
+    final router = GoRouter(
+      initialLocation: '/host',
+      routes: [
+        GoRoute(
+          path: '/host',
+          builder: (context, state) => Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => context.pushNamed(
+                  RecipeRoutes.form,
+                  queryParameters: recipeId == null ? {} : {'id': recipeId},
                 ),
                 child: const Text('open'),
               ),
             ),
           ),
         ),
+        GoRoute(
+          path: RecipeRoutes.form,
+          name: RecipeRoutes.form,
+          builder: (context, state) =>
+              RecipeFormScreen(recipeId: state.uri.queryParameters['id']),
+        ),
+        GoRoute(
+          path: IngredientRoutes.form,
+          name: IngredientRoutes.form,
+          builder: (context, state) => const _FakeIngredientFormScreen(),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: overrides(),
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
     await tester.pumpAndSettle();
@@ -92,9 +166,7 @@ void main() {
     expect(find.byKey(const Key('recipe-enabled-field')), findsOneWidget);
   });
 
-  testWidgets('shows the edit title when recipeId is provided', (
-    tester,
-  ) async {
+  testWidgets('shows the edit title when recipeId is provided', (tester) async {
     when(
       () => mockRecipeRepository.getById('r1'),
     ).thenAnswer((_) async => const Right(existingRecipe));
@@ -142,10 +214,7 @@ void main() {
         find.byKey(const Key('recipe-video-source-field-0')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const Key('recipe-video-url-field-0')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('recipe-video-url-field-0')), findsOneWidget);
     });
 
     testWidgets('removing a video row drops its fields', (tester) async {
@@ -156,10 +225,7 @@ void main() {
       await tester.tap(find.text('Agregar video'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('recipe-video-url-field-0')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('recipe-video-url-field-0')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('recipe-video-remove-0')));
       await tester.pumpAndSettle();
@@ -246,35 +312,34 @@ void main() {
       },
     );
 
-    testWidgets(
-      'disabling Activa and confirming persists enabled: false',
-      (tester) async {
-        when(() => mockRecipeRepository.newId()).thenReturn('r-new');
-        when(
-          () => mockRecipeRepository.save(any()),
-        ).thenAnswer((_) async => const Right(null));
+    testWidgets('disabling Activa and confirming persists enabled: false', (
+      tester,
+    ) async {
+      when(() => mockRecipeRepository.newId()).thenReturn('r-new');
+      when(
+        () => mockRecipeRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
 
-        await pumpPushableScreen(tester);
+      await pumpPushableScreen(tester);
 
-        await tester.enterText(
-          find.byKey(const Key('recipe-name-field')),
-          'Aderezo',
-        );
-        await tester.tap(find.byKey(const Key('recipe-enabled-field')));
-        await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('recipe-name-field')),
+        'Aderezo',
+      );
+      await tester.tap(find.byKey(const Key('recipe-enabled-field')));
+      await tester.pumpAndSettle();
 
-        await tester.ensureVisible(find.text('Confirmar'));
-        await tester.tap(find.text('Confirmar'));
-        await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Confirmar'));
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
 
-        final captured = verify(
-          () => mockRecipeRepository.save(captureAny()),
-        ).captured;
-        final saved = captured.single as Recipe;
+      final captured = verify(
+        () => mockRecipeRepository.save(captureAny()),
+      ).captured;
+      final saved = captured.single as Recipe;
 
-        expect(saved.enabled, isFalse);
-      },
-    );
+      expect(saved.enabled, isFalse);
+    });
 
     testWidgets(
       'shows a SnackBar and stays on the form when save returns a Failure',
@@ -312,14 +377,8 @@ void main() {
       await pumpScreen(tester, recipeId: 'r1');
       await tester.pumpAndSettle();
 
-      expect(
-        find.widgetWithText(TextField, 'Avena con leche'),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('recipe-video-url-field-0')),
-        findsOneWidget,
-      );
+      expect(find.widgetWithText(TextField, 'Avena con leche'), findsOneWidget);
+      expect(find.byKey(const Key('recipe-video-url-field-0')), findsOneWidget);
     });
 
     testWidgets(
@@ -355,6 +414,297 @@ void main() {
         expect(saved.name, 'Avena con leche y miel');
         expect(saved.bomLines, existingRecipe.bomLines);
         verifyNever(() => mockRecipeRepository.newId());
+      },
+    );
+  });
+
+  group('BOM editor', () {
+    testWidgets('renders existing BOM lines on edit', (tester) async {
+      when(
+        () => mockRecipeRepository.getById('r1'),
+      ).thenAnswer((_) async => const Right(existingRecipe));
+
+      await pumpScreen(tester, recipeId: 'r1');
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Pollo'), findsOneWidget);
+      expect(find.widgetWithText(TextField, '2'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Agregar ingrediente opens the picker; picking an ingredient fills '
+      'the line',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Seleccionar ingrediente'), findsNothing);
+
+        await tester.ensureVisible(find.text('Agregar ingrediente'));
+        await tester.tap(find.text('Agregar ingrediente'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Seleccionar ingrediente'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('recipe-bom-ingredient-field-0')),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Huevo'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Huevo'), findsOneWidget);
+        expect(find.text('Seleccionar ingrediente'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'save persists a new BOM line with the picked ingredient, quantity '
+      'and curated unit',
+      (tester) async {
+        when(() => mockRecipeRepository.newId()).thenReturn('r-new');
+        when(
+          () => mockRecipeRepository.save(any()),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-name-field')),
+          'Tortilla',
+        );
+
+        await tester.ensureVisible(find.text('Agregar ingrediente'));
+        await tester.tap(find.text('Agregar ingrediente'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('recipe-bom-ingredient-field-0')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Huevo'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-bom-quantity-field-0')),
+          '3',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Litros (L)').last);
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockRecipeRepository.save(captureAny()),
+        ).captured;
+        final saved = captured.single as Recipe;
+
+        expect(saved.bomLines, [
+          const BomLine(
+            recipeId: 'r-new',
+            ingredientId: 'ing-huevo',
+            quantity: Quantity(value: 3, unit: Unit.liter),
+          ),
+        ]);
+      },
+    );
+
+    testWidgets('removing a BOM line drops it from the saved recipe', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.getById('r1'),
+      ).thenAnswer((_) async => const Right(existingRecipe));
+      when(
+        () => mockRecipeRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
+
+      await pumpPushableScreen(tester, recipeId: 'r1');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('recipe-bom-remove-0')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Pollo'), findsNothing);
+
+      await tester.ensureVisible(find.text('Confirmar'));
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockRecipeRepository.save(captureAny()),
+      ).captured;
+      final saved = captured.single as Recipe;
+
+      expect(saved.bomLines, isEmpty);
+    });
+
+    testWidgets(
+      'editing an existing line quantity and unit persists the new values',
+      (tester) async {
+        when(
+          () => mockRecipeRepository.getById('r1'),
+        ).thenAnswer((_) async => const Right(existingRecipe));
+        when(
+          () => mockRecipeRepository.save(any()),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester, recipeId: 'r1');
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-bom-quantity-field-0')),
+          '5',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Taza').last);
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockRecipeRepository.save(captureAny()),
+        ).captured;
+        final saved = captured.single as Recipe;
+
+        expect(saved.bomLines, [
+          const BomLine(
+            recipeId: 'r1',
+            ingredientId: 'i1',
+            quantity: Quantity(
+              value: 5,
+              unit: Unit(symbol: 'taza', dimension: UnitDimension.volume),
+            ),
+          ),
+        ]);
+      },
+    );
+
+    group('validation', () {
+      testWidgets('a line with no ingredient selected disables Confirm', (
+        tester,
+      ) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-name-field')),
+          'Sopa',
+        );
+        await tester.ensureVisible(find.text('Agregar ingrediente'));
+        await tester.tap(find.text('Agregar ingrediente'));
+        await tester.pumpAndSettle();
+
+        final confirmButton = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Confirmar'),
+        );
+        expect(confirmButton.onPressed, isNull);
+      });
+
+      testWidgets('a line with an empty quantity disables Confirm', (
+        tester,
+      ) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-name-field')),
+          'Sopa',
+        );
+        await tester.ensureVisible(find.text('Agregar ingrediente'));
+        await tester.tap(find.text('Agregar ingrediente'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('recipe-bom-ingredient-field-0')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Huevo'));
+        await tester.pumpAndSettle();
+
+        final confirmButton = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Confirmar'),
+        );
+        expect(confirmButton.onPressed, isNull);
+      });
+    });
+
+    testWidgets(
+      'Nuevo ingrediente in the picker auto-selects the newly-created '
+      'ingredient into the BOM line, which then saves correctly',
+      (tester) async {
+        const ingNew = Ingredient(
+          id: 'ing-new',
+          name: 'Ingrediente Nuevo',
+          category: Category.otro,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+        );
+        // The real ingredientsListProvider re-fetch (triggered by the
+        // picker's post-inline-create invalidate) would include the
+        // just-persisted ingredient — simulate that here so the row can
+        // resolve its name, instead of always returning the fixed list.
+        var listCallCount = 0;
+        when(() => mockIngredientRepository.list()).thenAnswer((_) async {
+          listCallCount++;
+          return Right(
+            listCallCount == 1 ? [pollo, huevo] : [pollo, huevo, ingNew],
+          );
+        });
+
+        when(() => mockRecipeRepository.newId()).thenReturn('r-new');
+        when(
+          () => mockRecipeRepository.save(any()),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-name-field')),
+          'Panqueques',
+        );
+        await tester.ensureVisible(find.text('Agregar ingrediente'));
+        await tester.tap(find.text('Agregar ingrediente'));
+        await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('recipe-bom-ingredient-field-0')),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('＋ Nuevo ingrediente'));
+        await tester.pumpAndSettle();
+
+        // The fake ingredient form auto-pops('ing-new'); back on the recipe
+        // form, the BOM line should already carry that id and resolve its
+        // (now-refetched) name.
+        expect(find.text('Seleccionar ingrediente'), findsNothing);
+        expect(find.textContaining('Ingrediente Nuevo'), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('recipe-bom-quantity-field-0')),
+          '1',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockRecipeRepository.save(captureAny()),
+        ).captured;
+        final saved = captured.single as Recipe;
+
+        expect(saved.bomLines.single.ingredientId, 'ing-new');
       },
     );
   });

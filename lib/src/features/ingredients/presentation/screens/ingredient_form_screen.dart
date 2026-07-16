@@ -417,7 +417,7 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
         ref.invalidate(ingredientRepositoryProvider);
         ref.invalidate(ingredientsByIdProvider);
         ref.invalidate(pantryControllerProvider);
-        navigator.pop();
+        navigator.pop(id);
       },
     );
   }

@@ -6,6 +6,8 @@ import 'package:menuario/src/features/recipes/presentation/providers/ingredients
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_edit_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
+import 'package:menuario/src/features/recipes/presentation/widgets/_bom_editor.dart';
+import 'package:menuario/src/features/recipes/presentation/widgets/_recipe_ingredient_picker_sheet.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 /// A single video-list row's editable draft state: the platform selector
@@ -22,9 +24,11 @@ class _VideoDraft {
 /// `ingredient_form_screen.dart`'s idiom (prefill guard, `_canConfirm`
 /// gate, atomic save -> invalidate -> pop).
 ///
-/// PR2 scope: core fields (name/emoji/mealType/enabled) + video list only.
-/// BOM editing is PR3 — any existing [Recipe.bomLines] are prefilled once
-/// and round-tripped unchanged on save, never rendered or mutated here.
+/// Core fields (name/emoji/mealType/enabled) + video list (PR2) + BOM
+/// editor (PR3): each BOM line picks an ingredient via
+/// [RecipeIngredientPickerSheet] and a quantity/curated-[Unit] pair via
+/// [BomEditorSection], mirroring the video-row idiom (row added first via
+/// "Agregar ingrediente", then filled in place).
 class RecipeFormScreen extends ConsumerStatefulWidget {
   const RecipeFormScreen({super.key, this.recipeId});
 
@@ -43,9 +47,10 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
   bool _enabled = true;
   final List<_VideoDraft> _videos = [];
 
-  /// The recipe's existing [Recipe.bomLines], carried through unchanged —
-  /// BOM editing ships in PR3.
-  List<BomLine> _bomLines = const [];
+  /// The recipe's BOM lines being edited. Prefilled once from
+  /// [Recipe.bomLines] on edit, mutated via [BomEditorSection]'s
+  /// add/remove/pick/unit callbacks, and rebuilt into [BomLine]s on save.
+  final List<BomDraft> _bom = [];
 
   bool _prefilled = false;
 
@@ -64,6 +69,9 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     for (final video in _videos) {
       video.urlController.dispose();
     }
+    for (final draft in _bom) {
+      draft.dispose();
+    }
     super.dispose();
   }
 
@@ -79,11 +87,19 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     _emojiController.text = recipe.emoji ?? '';
     _mealType = recipe.mealType;
     _enabled = recipe.enabled;
-    _bomLines = recipe.bomLines;
     for (final video in recipe.videos) {
       _videos.add(
         _VideoDraft(source: video.source, url: video.url)
           ..urlController.addListener(_handleFieldChanged),
+      );
+    }
+    for (final line in recipe.bomLines) {
+      _bom.add(
+        BomDraft(
+          ingredientId: line.ingredientId,
+          quantity: line.quantity.value,
+          unit: line.quantity.unit,
+        )..quantityController.addListener(_handleFieldChanged),
       );
     }
 
@@ -105,6 +121,38 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     setState(() {});
   }
 
+  /// Appends a new empty [BomDraft] row (no ingredient picked yet, empty
+  /// quantity) — mirrors [_addVideoRow]'s "row first, fill in place" idiom.
+  void _addBomRow() {
+    setState(() {
+      _bom.add(BomDraft()..quantityController.addListener(_handleFieldChanged));
+    });
+  }
+
+  void _removeBomRow(int index) {
+    final removed = _bom.removeAt(index);
+    removed.quantityController.removeListener(_handleFieldChanged);
+    removed.dispose();
+    setState(() {});
+  }
+
+  /// Opens [RecipeIngredientPickerSheet] for the row at [index] and, if the
+  /// user picks (or inline-creates) an ingredient, assigns its id to that
+  /// row.
+  Future<void> _pickIngredientForBomRow(int index) async {
+    final ingredientId = await showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const RecipeIngredientPickerSheet(),
+    );
+    if (ingredientId == null || !mounted) return;
+    setState(() => _bom[index].ingredientId = ingredientId);
+  }
+
+  void _handleBomUnitChanged(int index, Unit unit) {
+    setState(() => _bom[index].unit = unit);
+  }
+
   bool _isValidUrl(String url) =>
       url.isNotEmpty && (url.startsWith('http') || url.contains('.'));
 
@@ -117,6 +165,12 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
       if (!_isValidUrl(url)) return false;
     }
 
+    for (final draft in _bom) {
+      if (draft.ingredientId == null) return false;
+      final quantity = num.tryParse(draft.quantityController.text.trim());
+      if (quantity == null || quantity <= 0) return false;
+    }
+
     return true;
   }
 
@@ -125,6 +179,21 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     for (final video in _videos)
       if (video.urlController.text.trim().isNotEmpty)
         VideoLink(source: video.source, url: video.urlController.text.trim()),
+  ];
+
+  /// The [BomLine]s built from [_bom] for [recipeId] — only called once
+  /// [_canConfirm] has already verified every draft carries a picked
+  /// ingredient and a valid positive quantity.
+  List<BomLine> _resolvedBomLines(String recipeId) => [
+    for (final draft in _bom)
+      BomLine(
+        recipeId: recipeId,
+        ingredientId: draft.ingredientId!,
+        quantity: Quantity(
+          value: num.parse(draft.quantityController.text.trim()),
+          unit: draft.unit,
+        ),
+      ),
   ];
 
   /// Builds the [Recipe] (minting an id on create, reusing it on edit) and
@@ -142,7 +211,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
           ? null
           : _emojiController.text.trim(),
       mealType: _mealType,
-      bomLines: _bomLines,
+      bomLines: _resolvedBomLines(id),
       videos: _resolvedVideos,
       enabled: _enabled,
     );
@@ -173,9 +242,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
         : ref.watch(recipeEditProvider(widget.recipeId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEdit ? 'Editar receta' : 'Nueva receta'),
-      ),
+      appBar: AppBar(title: Text(_isEdit ? 'Editar receta' : 'Nueva receta')),
       body: AppAsyncValueWidget<Recipe?>(
         value: editValue,
         onRetry: () => ref.invalidate(recipeEditProvider(widget.recipeId)),
@@ -190,6 +257,8 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
   }
 
   Widget _buildForm(BuildContext context) {
+    final ingredientsByIdValue = ref.watch(ingredientsByIdProvider);
+
     return SingleChildScrollView(
       padding: MenuarioSpacing.paddingAll16,
       child: Column(
@@ -224,6 +293,19 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
             title: const Text('Activa'),
             value: _enabled,
             onChanged: (value) => setState(() => _enabled = value),
+          ),
+          MenuarioSpacing.gapV24,
+          AppAsyncValueWidget<Map<String, Ingredient>>(
+            value: ingredientsByIdValue,
+            onRetry: () => ref.invalidate(ingredientsByIdProvider),
+            builder: (context, ingredientsById) => BomEditorSection(
+              lines: _bom,
+              ingredientsById: ingredientsById,
+              onAddLine: _addBomRow,
+              onRemoveLine: _removeBomRow,
+              onPickIngredient: _pickIngredientForBomRow,
+              onUnitChanged: _handleBomUnitChanged,
+            ),
           ),
           MenuarioSpacing.gapV24,
           Text('Videos', style: MenuarioTypography.h5),
