@@ -41,6 +41,10 @@ class RecipesScreen extends ConsumerWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.pushNamed(RecipeRoutes.form),
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_detail_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Full-screen recipe detail: header (emoji, name, meal-type chip) plus its
 /// ingredients, each `BomLine` resolved to name/emoji/quantity via
@@ -20,7 +23,19 @@ class RecipeDetailScreen extends ConsumerWidget {
     final recipeValue = ref.watch(recipeDetailProvider(recipeId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de receta')),
+      appBar: AppBar(
+        title: const Text('Detalle de receta'),
+        actions: [
+          IconButton(
+            key: const Key('recipe-detail-edit-button'),
+            icon: const Icon(Icons.edit),
+            onPressed: () => context.pushNamed(
+              RecipeRoutes.form,
+              queryParameters: {'id': recipeId},
+            ),
+          ),
+        ],
+      ),
       body: AppAsyncValueWidget<Recipe>(
         value: recipeValue,
         onRetry: () => ref.invalidate(recipeDetailProvider(recipeId)),
@@ -64,7 +79,29 @@ class _RecipeDetailBody extends StatelessWidget {
             bomLine: bomLine,
             ingredient: ingredientsById[bomLine.ingredientId],
           ),
+        if (recipe.videos.isNotEmpty) ...[
+          MenuarioSpacing.gapV24,
+          Text('Videos', style: MenuarioTypography.h5),
+          MenuarioSpacing.gapV8,
+          for (final video in recipe.videos) _VideoRow(video: video),
+        ],
       ],
+    );
+  }
+}
+
+class _VideoRow extends StatelessWidget {
+  const _VideoRow({required this.video});
+
+  final VideoLink video;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.play_circle_outline),
+      title: Text(video.url),
+      subtitle: Text(video.source.label),
+      onTap: () => launchUrl(Uri.parse(video.url)),
     );
   }
 }

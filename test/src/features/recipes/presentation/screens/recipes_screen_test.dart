@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_detail_screen.dart';
+import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipes_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
@@ -236,5 +237,46 @@ void main() {
 
     expect(find.byType(RecipeDetailScreen), findsOneWidget);
     expect(find.text('Detalle de receta'), findsOneWidget);
+  });
+
+  testWidgets('tapping the FAB opens the create form', (tester) async {
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([]));
+
+    final router = GoRouter(
+      initialLocation: ShellRoutes.recipes,
+      routes: [
+        GoRoute(
+          path: ShellRoutes.recipes,
+          builder: (context, state) => const RecipesScreen(),
+        ),
+        GoRoute(
+          path: RecipeRoutes.form,
+          name: RecipeRoutes.form,
+          builder: (context, state) =>
+              RecipeFormScreen(recipeId: state.uri.queryParameters['id']),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+        ],
+        child: MaterialApp.router(routerConfig: router),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecipeFormScreen), findsOneWidget);
+    final formScreen = tester.widget<RecipeFormScreen>(
+      find.byType(RecipeFormScreen),
+    );
+    expect(formScreen.recipeId, isNull);
   });
 }

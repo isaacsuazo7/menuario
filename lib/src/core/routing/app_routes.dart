@@ -53,3 +53,18 @@ abstract final class CookScheduleRoutes {
 
   static const edit = '/cook-schedule';
 }
+
+/// Route path/name constant for the recipe create/edit form.
+///
+/// Top-level (sibling of [SplashRoutes]/[AuthRoutes], NOT nested inside the
+/// shell's [ShellRoutes] branches) — mirrors [IngredientRoutes]. Deliberately
+/// `/recipe-form`, NOT `/recipes/form`: the latter would collide with the
+/// Recetario shell branch's `/recipes/:id` recipe-detail child route, where
+/// `:id` would capture the literal segment `form`. Serves BOTH create and
+/// edit: an absent `id` query parameter means create, a present one means
+/// edit-by-id.
+abstract final class RecipeRoutes {
+  const RecipeRoutes._();
+
+  static const form = '/recipe-form';
+}
