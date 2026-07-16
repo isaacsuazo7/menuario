@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart' hide Unit;
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
+import 'package:menuario/src/shared/domain/services/stock_lens_service.dart';
 import 'package:menuario/src/shared/domain/value_objects/mass.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -11,44 +12,68 @@ import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 /// The deterministic measurement engine: converts a quantity across
 /// recipe unit -> stock unit -> purchase presentation, per ingredient.
 ///
-/// Pure and dependency-free (no repositories, no Flutter). Every method
-/// returns `Either<Failure, T>` because both conversions can legitimately
-/// fail: an [Ingredient] may be missing its bulk conversion factor, or a
-/// recipe quantity may carry a unit that does not make sense for how the
-/// ingredient is tracked.
+/// Pure and dependency-free (no repositories, no Flutter — [StockLensService]
+/// is itself pure/Flutter-free, so injecting it here preserves that
+/// contract). Every method returns `Either<Failure, T>` because both
+/// conversions can legitimately fail: an [Ingredient] may be missing its
+/// conversion factor, or a recipe quantity may carry a unit that does not
+/// make sense for how the ingredient is tracked.
 class MeasurementConverter {
-  const MeasurementConverter();
+  const MeasurementConverter({
+    StockLensService lensService = const StockLensService(),
+  }) : _lens = lensService;
+
+  final StockLensService _lens;
 
   /// Converts [recipeQuantity] (as written on a `BomLine`) into its
-  /// stock-unit equivalent for [ingredient].
+  /// stock-unit equivalent for [ingredient], per
+  /// [Ingredient.measurementMode]. The output [Quantity.unit] is always
+  /// resolved via [StockLensService.canonicalUnitFor] — the single
+  /// authority for an ingredient's stock unit.
   ///
-  /// - [MeasurementKind.bulk]: multiplies by [Ingredient.conversionFactor],
-  ///   producing a quantity in [Unit.gram]. Returns
-  ///   `Left(Failure.missingConversionFactor)` when the ingredient has no
-  ///   factor.
-  /// - [MeasurementKind.unit]: recipe unit already equals stock unit
+  /// - [MeasurementMode.mass]: multiplies by [Ingredient.conversionFactor],
+  ///   producing a quantity in [Unit.gram].
+  /// - [MeasurementMode.count]: recipe unit already equals stock unit
   ///   ([Unit.count]), so the quantity passes through unchanged. Returns
   ///   `Left(Failure.unknownUnit)` when [recipeQuantity] is not in
-  ///   [Unit.count] — an exact/count ingredient cannot be measured any
-  ///   other way.
+  ///   [Unit.count].
+  /// - [MeasurementMode.packageBase]: multiplies by
+  ///   [Ingredient.conversionFactor] into the package's base-dimension unit
+  ///   (e.g. liters for leche, not always grams).
+  /// - [MeasurementMode.packageAbstract]: multiplies by
+  ///   [Ingredient.conversionFactor] into a decimal package fraction
+  ///   ([Unit.package]).
+  /// - [MeasurementMode.boolean]: never reached in practice — boolean
+  ///   items are gathered via
+  ///   `ProvisioningCalculator.shouldSurfaceBooleanItem` instead. Defensive
+  ///   `Left(Failure.unknownUnit)`.
+  ///
+  /// `mass`, `packageBase` and `packageAbstract` all return
+  /// `Left(Failure.missingConversionFactor)` when the ingredient has no
+  /// [Ingredient.conversionFactor].
   Either<Failure, Quantity> toStockUnit({
     required Quantity recipeQuantity,
     required Ingredient ingredient,
   }) {
-    switch (ingredient.measurementKind) {
-      case MeasurementKind.unit:
+    final stockUnit = _lens.canonicalUnitFor(ingredient);
+    switch (ingredient.measurementMode) {
+      case MeasurementMode.count:
         if (recipeQuantity.unit != Unit.count) {
           return Left(Failure.unknownUnit(recipeQuantity.unit.symbol));
         }
         return Right(recipeQuantity);
-      case MeasurementKind.bulk:
+      case MeasurementMode.mass:
+      case MeasurementMode.packageBase:
+      case MeasurementMode.packageAbstract:
         final factor = ingredient.conversionFactor;
         if (factor == null) {
           return Left(Failure.missingConversionFactor(ingredient.name));
         }
         return Right(
-          Quantity(value: recipeQuantity.value * factor, unit: Unit.gram),
+          Quantity(value: recipeQuantity.value * factor, unit: stockUnit),
         );
+      case MeasurementMode.boolean:
+        return Left(Failure.unknownUnit(recipeQuantity.unit.symbol));
     }
   }
 

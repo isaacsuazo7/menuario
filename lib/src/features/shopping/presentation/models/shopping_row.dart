@@ -57,15 +57,34 @@ class ShoppingCategoryGroup {
   final List<ShoppingRow> rows;
 }
 
-/// The full derived Comprar list: category-grouped rows plus the
-/// ingredient ids skipped due to a per-item calculation failure.
+/// Why a [SkippedItem] was skipped, distilled from the `Failure.code` that
+/// caused its calculation to fail — [needsFactor] is actionable (backfill
+/// the ingredient's `conversionFactor`), [other] covers every other failure
+/// kind (e.g. `unitMismatch`).
+enum SkipReason { needsFactor, other }
+
+/// A single skipped-calculation diagnostic: the ingredient's name and why
+/// it was skipped, so the Comprar tab can name it instead of folding it
+/// into an anonymous count.
+class SkippedItem {
+  const SkippedItem({required this.name, required this.reason});
+
+  /// The skipped ingredient's display name.
+  final String name;
+
+  /// Why the calculation was skipped.
+  final SkipReason reason;
+}
+
+/// The full derived Comprar list: category-grouped rows plus the items
+/// skipped due to a per-item calculation failure.
 class ShoppingBuyList {
   const ShoppingBuyList({required this.groups, required this.skipped});
 
   /// The rows to render, grouped and ordered by [Category.values].
   final List<ShoppingCategoryGroup> groups;
 
-  /// Ingredient ids whose calculation returned `Left(Failure)` and were
-  /// skipped rather than failing the whole list.
-  final List<String> skipped;
+  /// Items whose calculation returned `Left(Failure)` and were skipped
+  /// rather than failing the whole list, named with a [SkipReason].
+  final List<SkippedItem> skipped;
 }

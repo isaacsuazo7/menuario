@@ -32,6 +32,7 @@ void main() {
     category: Category.cereal,
     measurementKind: MeasurementKind.bulk,
     booleanTracked: false,
+    measurementMode: MeasurementMode.mass,
     conversionFactor: 85,
   );
 
@@ -41,6 +42,22 @@ void main() {
     category: Category.proteina,
     measurementKind: MeasurementKind.unit,
     booleanTracked: false,
+    measurementMode: MeasurementMode.count,
+  );
+
+  const leche = Ingredient(
+    id: 'ingredient-leche',
+    name: 'Leche',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageBase,
+    conversionFactor: 0.24,
+    package: PackageSpec(
+      label: 'bolsa',
+      yieldQty: 1,
+      baseDimension: Unit.liter,
+    ),
   );
 
   group('ProvisioningCalculator', () {
@@ -174,6 +191,47 @@ void main() {
         expect(
           result,
           const Right<Failure, Quantity>(Quantity(value: 0, unit: Unit.liter)),
+        );
+      });
+
+      test('should convert a packageBase ingredient into its base-dimension '
+          'unit via the mode-aware bridge (leche 1 taza x0.24 = 0.24 L)', () {
+        // Arrange
+        const recipe = Recipe(
+          id: 'recipe-leche',
+          name: 'Café con leche',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-leche',
+              ingredientId: 'ingredient-leche',
+              quantity: Quantity(value: 1, unit: taza),
+            ),
+          ],
+        );
+        const weekPlan = WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'recipe-leche',
+              cooked: false,
+            ),
+          ],
+        );
+
+        // Act
+        final result = calculator.weeklyConsumption(
+          ingredient: leche,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.24, unit: Unit.liter),
+          ),
         );
       });
 
@@ -356,6 +414,30 @@ void main() {
             'unitMismatch',
           ),
         );
+      });
+
+      test('should compute a real shortfall for a packageBase ingredient '
+          'once consumption and stock both land in the base-dimension unit '
+          '(leche 0.24 L consumption, 0.10 L stock -> 0.14 L, no '
+          'unitMismatch)', () {
+        // Arrange
+        const consumption = Quantity(value: 0.24, unit: Unit.liter);
+        const stock = Quantity(value: 0.10, unit: Unit.liter);
+
+        // Act
+        final result = calculator.shortfall(
+          ingredient: leche,
+          consumption: consumption,
+          stock: stock,
+        );
+
+        // Assert — a closeTo tolerance absorbs the 0.24 - 0.10 binary
+        // floating-point noise (0.13999999999999999), not a real precision
+        // loss.
+        expect(result, isA<Right<Failure, Quantity>>());
+        final quantity = (result as Right<Failure, Quantity>).value;
+        expect(quantity.value, closeTo(0.14, 1e-9));
+        expect(quantity.unit, Unit.liter);
       });
     });
 

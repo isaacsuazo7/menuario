@@ -30,6 +30,7 @@ void main() {
     category: Category.proteina,
     measurementKind: MeasurementKind.unit,
     booleanTracked: false,
+    measurementMode: MeasurementMode.count,
   );
   const recipeHuevo = Recipe(
     id: 'recipe-huevo',
@@ -187,7 +188,8 @@ void main() {
   });
 
   testWidgets(
-    'shows a skipped-count badge when a per-ingredient calculation fails',
+    'names the skipped ingredient and its reason instead of a bare count '
+    '(arroz needs a conversion factor)',
     (tester) async {
       when(
         () => mockPantryRepository.list(),
@@ -216,7 +218,7 @@ void main() {
       await pumpSection(tester);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('1'), findsWidgets);
+      expect(find.textContaining('Arroz'), findsOneWidget);
       expect(find.text('ya tenés todo lo necesario'), findsNothing);
     },
   );
