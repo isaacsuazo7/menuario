@@ -28,6 +28,13 @@ void main() {
     bomLines: [],
   );
   const untaggedRecipe = Recipe(id: 'r4', name: 'Misterio', bomLines: []);
+  const disabledAlmuerzoRecipe = Recipe(
+    id: 'r5',
+    name: 'Vieja receta',
+    mealType: MealType.almuerzo,
+    enabled: false,
+    bomLines: [],
+  );
 
   late MockRecipeRepository mockRecipeRepository;
 
@@ -39,6 +46,7 @@ void main() {
         almuerzoRecipe,
         aderezoRecipe,
         untaggedRecipe,
+        disabledAlmuerzoRecipe,
       ]),
     );
   });
@@ -79,5 +87,14 @@ void main() {
     final result = container.read(recipesForSlotProvider(MealSlot.almuerzo));
 
     expect(result.value, [almuerzoRecipe]);
+  });
+
+  test('excludes disabled recipes even when the mealType matches', () async {
+    final container = makeContainer();
+    await container.read(recipeListProvider.future);
+
+    final result = container.read(recipesForSlotProvider(MealSlot.almuerzo));
+
+    expect(result.value, isNot(contains(disabledAlmuerzoRecipe)));
   });
 }

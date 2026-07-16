@@ -42,6 +42,11 @@ class PlanSlotCell extends StatelessWidget {
 
   bool get _filled => entry != null;
 
+  /// A recipe disabled AFTER being planned keeps its `weekPlan` slot (no
+  /// auto-unplan — see `weekly_consumption_provider.dart`'s enabled
+  /// filtering for the budget side) but reads as visibly muted here.
+  bool get _isDisabledRecipe => recipe != null && !recipe!.enabled;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -49,41 +54,44 @@ class PlanSlotCell extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: MenuarioSpacing.md,
-          vertical: 6,
-        ),
-        child: Row(
-          children: [
-            _AccentBar(color: mealSlot.accent, dim: !_filled),
-            MenuarioSpacing.gapH8,
-            SizedBox(
-              width: 40,
-              child: Text(
-                mealSlot.shortLabel.toUpperCase(),
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  letterSpacing: 0.8,
-                  fontWeight: FontWeight.w600,
+      child: Opacity(
+        opacity: _isDisabledRecipe ? 0.5 : 1,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: MenuarioSpacing.md,
+            vertical: 6,
+          ),
+          child: Row(
+            children: [
+              _AccentBar(color: mealSlot.accent, dim: !_filled),
+              MenuarioSpacing.gapH8,
+              SizedBox(
+                width: 40,
+                child: Text(
+                  mealSlot.shortLabel.toUpperCase(),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
-            MenuarioSpacing.gapH8,
-            MealEmojiTile(
-              slot: mealSlot,
-              emoji: recipe?.emoji ?? '🍽️',
-              filled: _filled,
-            ),
-            MenuarioSpacing.gapH8,
-            Expanded(child: _buildLabel(context)),
-            if (_filled)
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: colorScheme.onSurfaceVariant,
+              MenuarioSpacing.gapH8,
+              MealEmojiTile(
+                slot: mealSlot,
+                emoji: recipe?.emoji ?? '🍽️',
+                filled: _filled,
               ),
-          ],
+              MenuarioSpacing.gapH8,
+              Expanded(child: _buildLabel(context)),
+              if (_filled)
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+            ],
+          ),
         ),
       ),
     );

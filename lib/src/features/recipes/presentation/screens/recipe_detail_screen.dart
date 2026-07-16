@@ -113,19 +113,38 @@ class _RecipeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDisabled = !recipe.enabled;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(recipe.emoji ?? '🍽️', style: MenuarioTypography.h1),
-        MenuarioSpacing.gapV8,
-        Text(
-          recipe.name,
-          style: MenuarioTypography.h3,
-          textAlign: TextAlign.center,
+        Opacity(
+          opacity: isDisabled ? 0.5 : 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(recipe.emoji ?? '🍽️', style: MenuarioTypography.h1),
+              MenuarioSpacing.gapV8,
+              Text(
+                recipe.name,
+                style: MenuarioTypography.h3,
+                textAlign: TextAlign.center,
+              ),
+              if (recipe.mealType != null) ...[
+                MenuarioSpacing.gapV8,
+                Chip(label: Text(recipe.mealType!.label)),
+              ],
+            ],
+          ),
         ),
-        if (recipe.mealType != null) ...[
+        if (isDisabled) ...[
           MenuarioSpacing.gapV8,
-          Chip(label: Text(recipe.mealType!.label)),
+          Chip(
+            key: const Key('recipe-detail-disabled-badge'),
+            label: const Text('Deshabilitada'),
+            backgroundColor: theme.colorScheme.errorContainer,
+          ),
         ],
       ],
     );

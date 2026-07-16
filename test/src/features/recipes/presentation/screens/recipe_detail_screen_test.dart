@@ -232,9 +232,7 @@ void main() {
     expect(find.text('https://tiktok.com/xyz'), findsOneWidget);
   });
 
-  testWidgets('an empty video list renders no Videos section', (
-    tester,
-  ) async {
+  testWidgets('an empty video list renders no Videos section', (tester) async {
     when(
       () => mockRecipeRepository.getById('r1'),
     ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
@@ -246,5 +244,49 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Videos'), findsNothing);
+  });
+
+  testWidgets(
+    'a disabled recipe shows a Deshabilitada badge, greyed header, and '
+    'stays fully openable/editable',
+    (tester) async {
+      const disabledRecipe = Recipe(
+        id: 'r1',
+        name: 'Receta vieja',
+        mealType: MealType.desayuno,
+        enabled: false,
+        bomLines: [],
+      );
+      when(
+        () => mockRecipeRepository.getById('r1'),
+      ).thenAnswer((_) async => const Right(disabledRecipe));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Receta vieja'), findsOneWidget);
+      expect(find.text('Deshabilitada'), findsOneWidget);
+      expect(
+        find.byKey(const Key('recipe-detail-edit-button')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('an enabled recipe shows no Deshabilitada badge', (tester) async {
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, avena, leche]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Deshabilitada'), findsNothing);
   });
 }

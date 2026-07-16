@@ -23,14 +23,25 @@ void main() {
     mealType: MealType.almuerzo,
     bomLines: [],
   );
+  const disabledRecipe = Recipe(
+    id: 'r4',
+    name: 'Vieja receta',
+    mealType: MealType.desayuno,
+    enabled: false,
+    bomLines: [],
+  );
 
   late MockRecipeRepository mockRecipeRepository;
 
   setUp(() {
     mockRecipeRepository = MockRecipeRepository();
     when(() => mockRecipeRepository.list()).thenAnswer(
-      (_) async =>
-          const Right([desayunoRecipe, untaggedRecipe, almuerzoRecipe]),
+      (_) async => const Right([
+        desayunoRecipe,
+        untaggedRecipe,
+        almuerzoRecipe,
+        disabledRecipe,
+      ]),
     );
   });
 
@@ -50,21 +61,35 @@ void main() {
 
     final result = container.read(filteredRecipesProvider);
 
-    expect(
-      result.value,
-      [desayunoRecipe, untaggedRecipe, almuerzoRecipe],
-    );
+    expect(result.value, [desayunoRecipe, untaggedRecipe, almuerzoRecipe]);
   });
 
   test('a specific meal type excludes untagged recipes', () async {
     final container = makeContainer();
     await container.read(recipeListProvider.future);
-    container.read(selectedMealTypeProvider.notifier).select(
-      MealType.desayuno,
-    );
+    container.read(selectedMealTypeProvider.notifier).select(MealType.desayuno);
 
     final result = container.read(filteredRecipesProvider);
 
     expect(result.value, [desayunoRecipe]);
+  });
+
+  test('Todas excludes disabled recipes', () async {
+    final container = makeContainer();
+    await container.read(recipeListProvider.future);
+
+    final result = container.read(filteredRecipesProvider);
+
+    expect(result.value, isNot(contains(disabledRecipe)));
+  });
+
+  test('a specific meal type also excludes disabled recipes', () async {
+    final container = makeContainer();
+    await container.read(recipeListProvider.future);
+    container.read(selectedMealTypeProvider.notifier).select(MealType.desayuno);
+
+    final result = container.read(filteredRecipesProvider);
+
+    expect(result.value, isNot(contains(disabledRecipe)));
   });
 }

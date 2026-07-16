@@ -62,11 +62,25 @@ final weeklyConsumptionByIngredientProvider =
         final recipes = recipesValue.value!;
         final ingredientsById = ingredientsValue.value!;
 
+        // A disabled recipe never contributes to the weekly budget, even
+        // when it still has a `weekPlan` slot (disabling after planning
+        // does not auto-unplan — see `_plan_slot_cell.dart`). Both the
+        // planned-recipes gather AND the `recipes:` argument fed to
+        // `weeklyNeed` below must use this filtered list — the calculator
+        // sums over whatever recipe list it is handed for every matching
+        // ingredient, so passing the raw `recipes` list to `weeklyNeed`
+        // would silently re-include a disabled recipe's contribution to an
+        // ingredient shared with an enabled recipe.
+        final enabledRecipes = [
+          for (final recipe in recipes)
+            if (recipe.enabled) recipe,
+        ];
+
         final plannedRecipeIds = {
           for (final entry in weekPlan.entries) entry.recipeId,
         };
         final plannedRecipes = [
-          for (final recipe in recipes)
+          for (final recipe in enabledRecipes)
             if (plannedRecipeIds.contains(recipe.id)) recipe,
         ];
 
@@ -86,7 +100,7 @@ final weeklyConsumptionByIngredientProvider =
           for (final ingredientId in quantityIngredientIds)
             ingredientId: _calculator.weeklyNeed(
               ingredient: ingredientsById[ingredientId]!,
-              recipes: recipes,
+              recipes: enabledRecipes,
               weekPlan: weekPlan,
             ),
         };
