@@ -197,6 +197,25 @@ void main() {
     expect(toggle.value, isTrue);
   });
 
+  testWidgets(
+    'entering a name does not throw a setState/markNeedsBuild-during-build '
+    'exception (reactive_forms regression guard)',
+    (tester) async {
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('recipe-name-field')),
+        'Batido',
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.widgetWithText(TextField, 'Batido'), findsOneWidget);
+    },
+  );
+
   group('video rows', () {
     testWidgets('Agregar video adds a source selector and url field', (
       tester,
@@ -362,6 +381,14 @@ void main() {
 
         expect(find.text('No se pudo guardar.'), findsOneWidget);
         expect(find.text('Nueva receta'), findsOneWidget);
+
+        // The form stays editable: the name field keeps its typed value and
+        // Confirm is still enabled (form validity untouched by the failure).
+        expect(find.widgetWithText(TextField, 'Fallida'), findsOneWidget);
+        final confirmButton = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Confirmar'),
+        );
+        expect(confirmButton.onPressed, isNotNull);
       },
     );
   });
