@@ -52,6 +52,7 @@ class QuantityPantryRow extends ConsumerWidget {
     void handleOpenSetStock() {
       showModalBottomSheet<void>(
         context: context,
+        isScrollControlled: true,
         builder: (_) => SetStockSheet(row: liveRow),
       );
     }

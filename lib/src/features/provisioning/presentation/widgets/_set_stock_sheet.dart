@@ -139,81 +139,83 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
     final unitSymbol = _item.stock.unit.symbol;
     final canConfirm = _parsedValue != null && _parsedValue! >= 0;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: MenuarioSpacing.md,
-        right: MenuarioSpacing.md,
-        top: MenuarioSpacing.md,
-        bottom: MediaQuery.of(context).viewInsets.bottom + MenuarioSpacing.md,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                widget.row.ingredient.emoji ?? '🥫',
-                style: const TextStyle(fontSize: 24),
-              ),
-              MenuarioSpacing.gapH8,
-              Text(widget.row.ingredient.name, style: MenuarioTypography.h4),
-            ],
-          ),
-          MenuarioSpacing.gapV16,
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            keyboardType: TextInputType.numberWithOptions(
-              decimal: _allowsDecimal,
-            ),
-            inputFormatters: [
-              if (_allowsDecimal)
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
-              else
-                FilteringTextInputFormatter.digitsOnly,
-            ],
-            decoration: InputDecoration(
-              labelText: 'Cantidad',
-              suffixText: _naturalUnitLabel,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          MenuarioSpacing.gapV8,
-          Text(
-            preview == null
-                ? 'Ingresa una cantidad válida'
-                : '≈ ${preview.round()} $unitSymbol',
-            style: MenuarioTypography.body,
-          ),
-          MenuarioSpacing.gapV16,
-          Wrap(
-            spacing: MenuarioSpacing.sm,
-            children: [
-              for (final option in _quickSetOptions)
-                ChoiceChip(
-                  label: Text('${_formatNatural(option)} $_naturalUnitLabel'),
-                  selected: false,
-                  onSelected: (_) => _handleChipTap(option),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: MenuarioSpacing.md,
+          right: MenuarioSpacing.md,
+          top: MenuarioSpacing.md,
+          bottom: MediaQuery.of(context).viewInsets.bottom + MenuarioSpacing.md,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  widget.row.ingredient.emoji ?? '🥫',
+                  style: const TextStyle(fontSize: 24),
                 ),
-            ],
-          ),
-          MenuarioSpacing.gapV16,
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancelar'),
+                MenuarioSpacing.gapH8,
+                Text(widget.row.ingredient.name, style: MenuarioTypography.h4),
+              ],
+            ),
+            MenuarioSpacing.gapV16,
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: TextInputType.numberWithOptions(
+                decimal: _allowsDecimal,
               ),
-              MenuarioSpacing.gapH8,
-              FilledButton(
-                onPressed: canConfirm ? _handleConfirm : null,
-                child: const Text('Confirmar'),
+              inputFormatters: [
+                if (_allowsDecimal)
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
+                else
+                  FilteringTextInputFormatter.digitsOnly,
+              ],
+              decoration: InputDecoration(
+                labelText: 'Cantidad',
+                suffixText: _naturalUnitLabel,
+                border: const OutlineInputBorder(),
               ),
-            ],
-          ),
-        ],
+            ),
+            MenuarioSpacing.gapV8,
+            Text(
+              preview == null
+                  ? 'Ingresa una cantidad válida'
+                  : '≈ ${preview.round()} $unitSymbol',
+              style: MenuarioTypography.body,
+            ),
+            MenuarioSpacing.gapV16,
+            Wrap(
+              spacing: MenuarioSpacing.sm,
+              children: [
+                for (final option in _quickSetOptions)
+                  ChoiceChip(
+                    label: Text('${_formatNatural(option)} $_naturalUnitLabel'),
+                    selected: false,
+                    onSelected: (_) => _handleChipTap(option),
+                  ),
+              ],
+            ),
+            MenuarioSpacing.gapV16,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                MenuarioSpacing.gapH8,
+                FilledButton(
+                  onPressed: canConfirm ? _handleConfirm : null,
+                  child: const Text('Confirmar'),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
