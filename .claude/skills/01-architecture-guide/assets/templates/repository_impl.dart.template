@@ -1,0 +1,80 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dartz/dartz.dart' hide Unit;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:menuario/src/core/core.dart';
+import 'package:menuario/src/features/{{FEATURE_NAME}}/data/models/{{ENTITY_NAME_SNAKE}}_dto.dart';
+import 'package:menuario/src/features/{{FEATURE_NAME}}/domain/entities/{{ENTITY_NAME_SNAKE}}.dart';
+import 'package:menuario/src/features/{{FEATURE_NAME}}/domain/repositories/{{ENTITY_NAME_SNAKE}}_repository.dart';
+
+// -----------------------------------------------------------------------------
+// DataSource: habla directamente con Firestore. Sin capa de UseCase.
+// -----------------------------------------------------------------------------
+final {{ENTITY_NAME_CAMEL}}DataSourceProvider = Provider<{{ENTITY_NAME}}DataSource>(
+  (ref) => {{ENTITY_NAME}}DataSource(
+    firestore: ref.watch(firebaseFirestoreProvider),
+    uid: ref.watch(currentUidProvider),
+  ),
+  dependencies: [firebaseFirestoreProvider, currentUidProvider],
+);
+
+class {{ENTITY_NAME}}DataSource {
+  const {{ENTITY_NAME}}DataSource({
+    required this.firestore,
+    required this.uid,
+  });
+
+  final FirebaseFirestore firestore;
+  final String? uid;
+
+  Future<List<{{ENTITY_NAME}}DTO>> get{{ENTITY_NAME_PLURAL}}() async {
+    // TODO: query Firestore y mapear docs -> DTO.fromJson({...doc.data(), 'id': doc.id})
+    throw UnimplementedError();
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Repository Impl: traduce a Either<Failure, T> y mapea DTO <-> Entity.
+// -----------------------------------------------------------------------------
+final {{ENTITY_NAME_CAMEL}}RepositoryProvider = Provider<{{ENTITY_NAME}}Repository>(
+  (ref) => {{ENTITY_NAME}}RepositoryImpl(
+    dataSource: ref.watch({{ENTITY_NAME_CAMEL}}DataSourceProvider),
+  ),
+  dependencies: [{{ENTITY_NAME_CAMEL}}DataSourceProvider],
+);
+
+class {{ENTITY_NAME}}RepositoryImpl implements {{ENTITY_NAME}}Repository {
+  const {{ENTITY_NAME}}RepositoryImpl({required this.dataSource});
+
+  final {{ENTITY_NAME}}DataSource dataSource;
+
+  @override
+  Future<Either<Failure, List<{{ENTITY_NAME}}>>> get{{ENTITY_NAME_PLURAL}}() async {
+    try {
+      final dtos = await dataSource.get{{ENTITY_NAME_PLURAL}}();
+      return Right(dtos.map((dto) => dto.toEntity()).toList());
+    } on FirebaseException catch (e) {
+      return Left(Failure.firestore(code: e.code, message: e.message));
+    }
+  }
+
+  // TODO: get{{ENTITY_NAME}} / create / update / delete siguiendo el mismo patrón.
+  @override
+  Future<Either<Failure, {{ENTITY_NAME}}>> get{{ENTITY_NAME}}({required String id}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> create{{ENTITY_NAME}}({
+    required {{ENTITY_NAME}} {{ENTITY_NAME_CAMEL}},
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> update{{ENTITY_NAME}}({
+    required {{ENTITY_NAME}} {{ENTITY_NAME_CAMEL}},
+  }) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> delete{{ENTITY_NAME}}({required String id}) =>
+      throw UnimplementedError();
+}

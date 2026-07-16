@@ -1,7 +1,7 @@
 /// Represents a domain-level failure carried end-to-end through
 /// `Either<Failure, T>` pipelines.
 ///
-/// This is a trimmed port of EmsulaRH's `Failure`: it keeps the generic
+/// It keeps the generic
 /// shape (message, code, exception, stackTrace, metadata) but drops the
 /// networking-specific `fromErrorResponse` factory, since this domain
 /// kernel has no HTTP layer.

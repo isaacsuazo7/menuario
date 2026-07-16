@@ -1,34 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:menuario/src/core/error/failure_exception.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_edit_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
+import 'package:menuario/src/features/recipes/presentation/providers/recipe_form_controller.dart';
+import 'package:menuario/src/features/recipes/presentation/providers/recipe_submission_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_bom_editor.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_recipe_ingredient_picker_sheet.dart';
 import 'package:menuario/src/shared/shared.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
-/// A single video-list row's editable draft state: the platform selector
-/// and its url [TextEditingController].
-class _VideoDraft {
-  _VideoDraft({this.source = VideoSource.youtube, String url = ''})
-    : urlController = TextEditingController(text: url);
-
-  VideoSource source;
-  final TextEditingController urlController;
-}
-
-/// Full-screen create/edit form for a [Recipe], mirroring
-/// `ingredient_form_screen.dart`'s idiom (prefill guard, `_canConfirm`
-/// gate, atomic save -> invalidate -> pop).
+/// Best-effort emoji-forward keyboard for the name/emoji fields.
 ///
-/// Core fields (name/emoji/mealType/enabled) + video list (PR2) + BOM
-/// editor (PR3): each BOM line picks an ingredient via
-/// [RecipeIngredientPickerSheet] and a quantity/curated-[Unit] pair via
-/// [BomEditorSection], mirroring the video-row idiom (row added first via
-/// "Agregar ingrediente", then filled in place).
+/// Flutter's public [TextInputType] (this SDK: 3.44.5) exposes a fixed,
+/// index-based set of platform keyboard types with no emoji variant and no
+/// way to construct a custom one — there is no supported way to force an
+/// emoji keyboard without a platform channel or a third-party plugin. This
+/// stays [TextInputType.text] (the default) so the field is ALWAYS fully
+/// functional, matching the spec's "MUST remain fully functional where the
+/// platform can't force emoji-mode" — the "SHOULD force emoji-mode" half
+/// degrades gracefully to a no-op until such a mechanism is added.
+const _emojiKeyboardType = TextInputType.text;
+
+/// Full-screen create/edit form for a [Recipe]: state is owned by
+/// [RecipeFormController]'s reactive_forms `FormGroup` (name/emoji/
+/// mealType/enabled/videos/bomLines), submission by
+/// [recipeSubmissionProvider] — mirrors `ingredient_form_screen.dart`'s
+/// idiom (prefill guard, validity-gated confirm) built on the TARGET
+/// reactive_forms pattern instead of `setState`/`TextEditingController`.
+///
+/// BOM lines still pick an ingredient via [RecipeIngredientPickerSheet] and
+/// a quantity/curated-[Unit] pair via [BomEditorSection] — unchanged in
+/// this slice; only their owning state moved into the form.
 class RecipeFormScreen extends ConsumerStatefulWidget {
   const RecipeFormScreen({super.key, this.recipeId});
 
@@ -40,100 +45,106 @@ class RecipeFormScreen extends ConsumerStatefulWidget {
 }
 
 class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
-  final _nameController = TextEditingController();
-  final _emojiController = TextEditingController();
-
-  MealType? _mealType;
-  bool _enabled = true;
-  final List<_VideoDraft> _videos = [];
-
-  /// The recipe's BOM lines being edited. Prefilled once from
-  /// [Recipe.bomLines] on edit, mutated via [BomEditorSection]'s
-  /// add/remove/pick/unit callbacks, and rebuilt into [BomLine]s on save.
-  final List<BomDraft> _bom = [];
-
   bool _prefilled = false;
 
   bool get _isEdit => widget.recipeId != null;
 
-  @override
-  void initState() {
-    super.initState();
-    _nameController.addListener(_handleFieldChanged);
+  FormGroup get _form => ref.read(recipeFormControllerProvider);
+
+  FormControl<List<VideoDraft>> get _videosControl =>
+      _form.control('videos') as FormControl<List<VideoDraft>>;
+
+  FormControl<List<BomDraft>> get _bomLinesControl =>
+      _form.control('bomLines') as FormControl<List<BomDraft>>;
+
+  /// Wires the recipe-edit prefill and submission-result side effects.
+  ///
+  /// Deliberately called from [build] (NOT `initState`): `flutter_riverpod`
+  /// asserts `debugDoingBuild` inside `ConsumerStatefulElement.listen` —
+  /// `ref.listen` can only run during a build, even for
+  /// `ConsumerStatefulWidget`. Riverpod dedupes the subscription by
+  /// call-site across rebuilds, so calling this every `build()` is safe and
+  /// is the framework's actual supported pattern (this deviates from the
+  /// tasks doc's literal "ref.listen in initState" wording, which does not
+  /// hold against this `flutter_riverpod` version).
+  void _listenForSideEffects(BuildContext context) {
+    final recipeId = widget.recipeId;
+    if (recipeId != null) {
+      ref.listen<AsyncValue<Recipe?>>(recipeEditProvider(recipeId), (
+        previous,
+        next,
+      ) {
+        next.whenData((recipe) {
+          if (recipe == null || _prefilled) return;
+          _prefilled = true;
+          ref.read(recipeFormControllerProvider.notifier).prefill(recipe);
+          for (final draft in _bomLinesControl.value ?? const <BomDraft>[]) {
+            _attachBomListener(draft);
+          }
+        });
+      });
+    }
+
+    ref.listen<AsyncValue<void>>(recipeSubmissionProvider, (previous, next) {
+      next.whenOrNull(
+        error: (error, _) => ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text((error as FailureException).message)),
+        ),
+        data: (_) {
+          if (previous is AsyncLoading) Navigator.of(context).pop();
+        },
+      );
+    });
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emojiController.dispose();
-    for (final video in _videos) {
-      video.urlController.dispose();
-    }
-    for (final draft in _bom) {
-      draft.dispose();
-    }
-    super.dispose();
-  }
-
-  void _handleFieldChanged() => setState(() {});
-
-  /// Copies [recipe]'s fields into local state, once. Mirrors
-  /// `_IngredientFormScreenState._prefill`.
-  void _prefill(Recipe recipe) {
-    _prefilled = true;
-    _nameController.removeListener(_handleFieldChanged);
-
-    _nameController.text = recipe.name;
-    _emojiController.text = recipe.emoji ?? '';
-    _mealType = recipe.mealType;
-    _enabled = recipe.enabled;
-    for (final video in recipe.videos) {
-      _videos.add(
-        _VideoDraft(source: video.source, url: video.url)
-          ..urlController.addListener(_handleFieldChanged),
-      );
-    }
-    for (final line in recipe.bomLines) {
-      _bom.add(
-        BomDraft(
-          ingredientId: line.ingredientId,
-          quantity: line.quantity.value,
-          unit: line.quantity.unit,
-        )..quantityController.addListener(_handleFieldChanged),
-      );
-    }
-
-    _nameController.addListener(_handleFieldChanged);
+  /// Re-validates [_bomLinesControl] whenever a row's quantity text
+  /// changes — [BomDraft] keeps its own [TextEditingController] (unchanged
+  /// from before this slice), so the form only learns about an edit when
+  /// explicitly asked to recompute.
+  void _attachBomListener(BomDraft draft) {
+    draft.quantityController.addListener(
+      () => _bomLinesControl.updateValueAndValidity(),
+    );
   }
 
   void _addVideoRow() {
-    setState(() {
-      _videos.add(
-        _VideoDraft()..urlController.addListener(_handleFieldChanged),
-      );
-    });
+    final control = _videosControl;
+    control.updateValue([...?control.value, const VideoDraft()]);
   }
 
   void _removeVideoRow(int index) {
-    final removed = _videos.removeAt(index);
-    removed.urlController.removeListener(_handleFieldChanged);
-    removed.urlController.dispose();
-    setState(() {});
+    final control = _videosControl;
+    final updated = [...?control.value]..removeAt(index);
+    control.updateValue(updated);
   }
 
-  /// Appends a new empty [BomDraft] row (no ingredient picked yet, empty
-  /// quantity) — mirrors [_addVideoRow]'s "row first, fill in place" idiom.
+  void _handleVideoSourceChanged(int index, VideoSource source) {
+    final control = _videosControl;
+    final updated = [...?control.value];
+    updated[index] = updated[index].copyWith(source: source);
+    control.updateValue(updated);
+  }
+
+  void _handleVideoUrlChanged(int index, String url) {
+    final control = _videosControl;
+    final updated = [...?control.value];
+    updated[index] = updated[index].copyWith(url: url);
+    control.updateValue(updated);
+  }
+
   void _addBomRow() {
-    setState(() {
-      _bom.add(BomDraft()..quantityController.addListener(_handleFieldChanged));
-    });
+    final control = _bomLinesControl;
+    final draft = BomDraft();
+    _attachBomListener(draft);
+    control.updateValue([...?control.value, draft]);
   }
 
   void _removeBomRow(int index) {
-    final removed = _bom.removeAt(index);
-    removed.quantityController.removeListener(_handleFieldChanged);
+    final control = _bomLinesControl;
+    final updated = [...?control.value];
+    final removed = updated.removeAt(index);
     removed.dispose();
-    setState(() {});
+    control.updateValue(updated);
   }
 
   /// Opens [RecipeIngredientPickerSheet] for the row at [index] and, if the
@@ -143,120 +154,93 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
     final ingredientId = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.8,
+      ),
       builder: (_) => const RecipeIngredientPickerSheet(),
     );
     if (ingredientId == null || !mounted) return;
-    setState(() => _bom[index].ingredientId = ingredientId);
+    _bomLinesControl.value![index].ingredientId = ingredientId;
+    _bomLinesControl.updateValueAndValidity();
   }
 
   void _handleBomUnitChanged(int index, Unit unit) {
-    setState(() => _bom[index].unit = unit);
+    _bomLinesControl.value![index].unit = unit;
+    _bomLinesControl.updateValueAndValidity();
   }
 
-  bool _isValidUrl(String url) =>
-      url.isNotEmpty && (url.startsWith('http') || url.contains('.'));
-
-  bool get _canConfirm {
-    if (_nameController.text.trim().isEmpty) return false;
-
-    for (final video in _videos) {
-      final url = video.urlController.text.trim();
-      if (url.isEmpty) continue;
-      if (!_isValidUrl(url)) return false;
-    }
-
-    for (final draft in _bom) {
-      if (draft.ingredientId == null) return false;
-      final quantity = num.tryParse(draft.quantityController.text.trim());
-      if (quantity == null || quantity <= 0) return false;
-    }
-
-    return true;
-  }
-
-  /// The [VideoLink]s built from [_videos], dropping empty rows.
-  List<VideoLink> get _resolvedVideos => [
-    for (final video in _videos)
-      if (video.urlController.text.trim().isNotEmpty)
-        VideoLink(source: video.source, url: video.urlController.text.trim()),
-  ];
-
-  /// The [BomLine]s built from [_bom] for [recipeId] — only called once
-  /// [_canConfirm] has already verified every draft carries a picked
-  /// ingredient and a valid positive quantity.
-  List<BomLine> _resolvedBomLines(String recipeId) => [
-    for (final draft in _bom)
-      BomLine(
-        recipeId: recipeId,
-        ingredientId: draft.ingredientId!,
-        quantity: Quantity(
-          value: num.parse(draft.quantityController.text.trim()),
-          unit: draft.unit,
-        ),
-      ),
-  ];
-
-  /// Builds the [Recipe] (minting an id on create, reusing it on edit) and
-  /// commits it via [RecipeRepository.save]. On success, pops the form and
-  /// invalidates the read surfaces that must reflect it; on `Left(Failure)`,
-  /// shows a `SnackBar` and stays on the form.
+  /// Mints an id on create (reuses it on edit), builds the [Recipe] from
+  /// the form's current values and submits it — success/error/navigation
+  /// react to [recipeSubmissionProvider] via the `ref.listen` set up in
+  /// [initState].
   Future<void> _handleConfirm() async {
     final repository = ref.read(recipeRepositoryProvider);
     final id = widget.recipeId ?? repository.newId();
-
-    final recipe = Recipe(
-      id: id,
-      name: _nameController.text.trim(),
-      emoji: _emojiController.text.trim().isEmpty
-          ? null
-          : _emojiController.text.trim(),
-      mealType: _mealType,
-      bomLines: _resolvedBomLines(id),
-      videos: _resolvedVideos,
-      enabled: _enabled,
-    );
-
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-
-    final result = await repository.save(recipe);
-
-    if (!mounted) return;
-
-    result.fold(
-      (failure) =>
-          messenger.showSnackBar(SnackBar(content: Text(failure.message))),
-      (_) {
-        ref.invalidate(recipeListProvider);
-        ref.invalidate(filteredRecipesProvider);
-        ref.invalidate(ingredientsByIdProvider);
-        navigator.pop();
-      },
-    );
+    final recipe = ref.read(recipeFormControllerProvider.notifier).toEntity(id);
+    await ref.read(recipeSubmissionProvider.notifier).submit(recipe);
   }
 
   @override
   Widget build(BuildContext context) {
+    _listenForSideEffects(context);
+
     final editValue = widget.recipeId == null
         ? const AsyncValue<Recipe?>.data(null)
         : ref.watch(recipeEditProvider(widget.recipeId));
+    final form = ref.watch(recipeFormControllerProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(_isEdit ? 'Editar receta' : 'Nueva receta')),
-      body: AppAsyncValueWidget<Recipe?>(
-        value: editValue,
-        onRetry: () => ref.invalidate(recipeEditProvider(widget.recipeId)),
-        builder: (context, recipe) {
-          if (recipe != null && !_prefilled) {
-            _prefill(recipe);
-          }
-          return _buildForm(context);
-        },
+    return ReactiveForm(
+      formGroup: form,
+      child: Scaffold(
+        appBar: AppBar(title: Text(_isEdit ? 'Editar receta' : 'Nueva receta')),
+        body: AppAsyncValueWidget<Recipe?>(
+          value: editValue,
+          onRetry: () => ref.invalidate(recipeEditProvider(widget.recipeId)),
+          builder: (context, _) => _RecipeFormBody(
+            onAddVideo: _addVideoRow,
+            onRemoveVideo: _removeVideoRow,
+            onVideoSourceChanged: _handleVideoSourceChanged,
+            onVideoUrlChanged: _handleVideoUrlChanged,
+            onAddBom: _addBomRow,
+            onRemoveBom: _removeBomRow,
+            onPickIngredient: _pickIngredientForBomRow,
+            onBomUnitChanged: _handleBomUnitChanged,
+            onConfirm: _handleConfirm,
+          ),
+        ),
       ),
     );
   }
+}
 
-  Widget _buildForm(BuildContext context) {
+/// The form's scrollable body: core fields, BOM editor, video list and the
+/// cancel/confirm action row — extracted from `build()` into its own
+/// widget class per the no-`Widget _foo()`-functions rule.
+class _RecipeFormBody extends ConsumerWidget {
+  const _RecipeFormBody({
+    required this.onAddVideo,
+    required this.onRemoveVideo,
+    required this.onVideoSourceChanged,
+    required this.onVideoUrlChanged,
+    required this.onAddBom,
+    required this.onRemoveBom,
+    required this.onPickIngredient,
+    required this.onBomUnitChanged,
+    required this.onConfirm,
+  });
+
+  final VoidCallback onAddVideo;
+  final void Function(int index) onRemoveVideo;
+  final void Function(int index, VideoSource source) onVideoSourceChanged;
+  final void Function(int index, String url) onVideoUrlChanged;
+  final VoidCallback onAddBom;
+  final void Function(int index) onRemoveBom;
+  final void Function(int index) onPickIngredient;
+  final void Function(int index, Unit unit) onBomUnitChanged;
+  final Future<void> Function() onConfirm;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final ingredientsByIdValue = ref.watch(ingredientsByIdProvider);
 
     return SingleChildScrollView(
@@ -264,55 +248,94 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            key: const Key('recipe-name-field'),
-            controller: _nameController,
-            decoration: const InputDecoration(labelText: 'Nombre'),
+          ReactiveTextField<String>(
+            key: Key('recipe-name-field'),
+            formControlName: 'name',
+            keyboardType: _emojiKeyboardType,
+            decoration: InputDecoration(labelText: 'Nombre'),
           ),
           MenuarioSpacing.gapV16,
-          TextField(
-            key: const Key('recipe-emoji-field'),
-            controller: _emojiController,
-            decoration: const InputDecoration(labelText: 'Emoji (opcional)'),
+          ReactiveTextField<String>(
+            key: Key('recipe-emoji-field'),
+            formControlName: 'emoji',
+            keyboardType: _emojiKeyboardType,
+            decoration: InputDecoration(labelText: 'Emoji (opcional)'),
           ),
           MenuarioSpacing.gapV16,
-          DropdownButtonFormField<MealType?>(
-            key: const Key('recipe-meal-type-field'),
-            initialValue: _mealType,
-            decoration: const InputDecoration(labelText: 'Tipo de comida'),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Sin tipo')),
-              for (final mealType in MealType.values)
-                DropdownMenuItem(value: mealType, child: Text(mealType.label)),
-            ],
-            onChanged: (value) => setState(() => _mealType = value),
+          ReactiveValueListenableBuilder<MealType?>(
+            formControlName: 'mealType',
+            builder: (context, control, child) =>
+                DropdownButtonFormField<MealType?>(
+                  key: const Key('recipe-meal-type-field'),
+                  initialValue: control.value,
+                  decoration: const InputDecoration(
+                    labelText: 'Tipo de comida',
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('Sin tipo'),
+                    ),
+                    for (final mealType in MealType.values)
+                      DropdownMenuItem(
+                        value: mealType,
+                        child: Text(mealType.label),
+                      ),
+                  ],
+                  onChanged: (value) => control.value = value,
+                ),
           ),
           MenuarioSpacing.gapV16,
-          SwitchListTile(
-            key: const Key('recipe-enabled-field'),
-            title: const Text('Activa'),
-            value: _enabled,
-            onChanged: (value) => setState(() => _enabled = value),
+          ReactiveValueListenableBuilder<bool>(
+            formControlName: 'enabled',
+            builder: (context, control, child) => SwitchListTile(
+              key: const Key('recipe-enabled-field'),
+              title: const Text('Activa'),
+              value: control.value ?? true,
+              onChanged: (value) => control.value = value,
+            ),
           ),
           MenuarioSpacing.gapV24,
           AppAsyncValueWidget<Map<String, Ingredient>>(
             value: ingredientsByIdValue,
             onRetry: () => ref.invalidate(ingredientsByIdProvider),
-            builder: (context, ingredientsById) => BomEditorSection(
-              lines: _bom,
-              ingredientsById: ingredientsById,
-              onAddLine: _addBomRow,
-              onRemoveLine: _removeBomRow,
-              onPickIngredient: _pickIngredientForBomRow,
-              onUnitChanged: _handleBomUnitChanged,
-            ),
+            builder: (context, ingredientsById) =>
+                ReactiveValueListenableBuilder<List<BomDraft>>(
+                  formControlName: 'bomLines',
+                  builder: (context, control, child) => BomEditorSection(
+                    lines: control.value ?? const [],
+                    ingredientsById: ingredientsById,
+                    onAddLine: onAddBom,
+                    onRemoveLine: onRemoveBom,
+                    onPickIngredient: onPickIngredient,
+                    onUnitChanged: onBomUnitChanged,
+                  ),
+                ),
           ),
           MenuarioSpacing.gapV24,
           Text('Videos', style: MenuarioTypography.h5),
           MenuarioSpacing.gapV8,
-          for (var i = 0; i < _videos.length; i++) _buildVideoRow(i),
+          ReactiveValueListenableBuilder<List<VideoDraft>>(
+            formControlName: 'videos',
+            builder: (context, control, child) {
+              final videos = control.value ?? const <VideoDraft>[];
+              return Column(
+                children: [
+                  for (var i = 0; i < videos.length; i++)
+                    _VideoRow(
+                      index: i,
+                      draft: videos[i],
+                      onSourceChanged: (source) =>
+                          onVideoSourceChanged(i, source),
+                      onUrlChanged: (url) => onVideoUrlChanged(i, url),
+                      onRemove: () => onRemoveVideo(i),
+                    ),
+                ],
+              );
+            },
+          ),
           TextButton.icon(
-            onPressed: _addVideoRow,
+            onPressed: onAddVideo,
             icon: const Icon(Icons.add),
             label: const Text('Agregar video'),
           ),
@@ -325,9 +348,11 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                 child: const Text('Cancelar'),
               ),
               MenuarioSpacing.gapH8,
-              FilledButton(
-                onPressed: _canConfirm ? _handleConfirm : null,
-                child: const Text('Confirmar'),
+              ReactiveFormConsumer(
+                builder: (context, formGroup, child) => FilledButton(
+                  onPressed: formGroup.valid ? () => onConfirm() : null,
+                  child: const Text('Confirmar'),
+                ),
               ),
             ],
           ),
@@ -335,9 +360,50 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
       ),
     );
   }
+}
 
-  Widget _buildVideoRow(int index) {
-    final video = _videos[index];
+/// A single video-list row: platform selector + url field + remove button.
+///
+/// Owns its own seeded [TextEditingController] for the url field (the
+/// underlying [VideoDraft] is immutable), reporting edits back via
+/// [onUrlChanged] — mirrors [BomDraft]'s row idiom without needing the
+/// draft itself to hold controller state.
+class _VideoRow extends StatefulWidget {
+  const _VideoRow({
+    required this.index,
+    required this.draft,
+    required this.onSourceChanged,
+    required this.onUrlChanged,
+    required this.onRemove,
+  });
+
+  final int index;
+  final VideoDraft draft;
+  final ValueChanged<VideoSource> onSourceChanged;
+  final ValueChanged<String> onUrlChanged;
+  final VoidCallback onRemove;
+
+  @override
+  State<_VideoRow> createState() => _VideoRowState();
+}
+
+class _VideoRowState extends State<_VideoRow> {
+  late final TextEditingController _urlController;
+
+  @override
+  void initState() {
+    super.initState();
+    _urlController = TextEditingController(text: widget.draft.url);
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: MenuarioSpacing.md),
       child: Row(
@@ -346,8 +412,8 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
           Expanded(
             flex: 2,
             child: DropdownButtonFormField<VideoSource>(
-              key: Key('recipe-video-source-field-$index'),
-              initialValue: video.source,
+              key: Key('recipe-video-source-field-${widget.index}'),
+              initialValue: widget.draft.source,
               isExpanded: true,
               decoration: const InputDecoration(labelText: 'Plataforma'),
               items: [
@@ -355,7 +421,7 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
                   DropdownMenuItem(value: source, child: Text(source.label)),
               ],
               onChanged: (value) {
-                if (value != null) setState(() => video.source = value);
+                if (value != null) widget.onSourceChanged(value);
               },
             ),
           ),
@@ -363,15 +429,16 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
           Expanded(
             flex: 3,
             child: TextField(
-              key: Key('recipe-video-url-field-$index'),
-              controller: video.urlController,
+              key: Key('recipe-video-url-field-${widget.index}'),
+              controller: _urlController,
+              onChanged: widget.onUrlChanged,
               decoration: const InputDecoration(labelText: 'URL'),
             ),
           ),
           IconButton(
-            key: Key('recipe-video-remove-$index'),
+            key: Key('recipe-video-remove-${widget.index}'),
             icon: const Icon(Icons.delete_outline),
-            onPressed: () => _removeVideoRow(index),
+            onPressed: widget.onRemove,
           ),
         ],
       ),

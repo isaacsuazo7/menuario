@@ -1,0 +1,19 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part '{{ENTITY_NAME_SNAKE}}.freezed.dart';
+
+/// {{ENTITY_DESCRIPTION}}
+@freezed
+abstract class {{ENTITY_NAME}} with _${{ENTITY_NAME}} {
+  const factory {{ENTITY_NAME}}({
+    // TODO: Add entity fields (Firestore doc id is a String)
+    required String id,
+    required String name,
+  }) = _{{ENTITY_NAME}};
+
+  const {{ENTITY_NAME}}._();
+
+  // TODO: Add business logic as getters/methods
+  // Example:
+  // bool get isValid => name.isNotEmpty;
+}

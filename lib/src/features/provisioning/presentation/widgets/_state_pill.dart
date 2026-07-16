@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 ///
 /// Public despite the leading-underscore filename: it is shared across the
 /// quantity- and boolean-tracked rows within this feature, so it must be
-/// importable across files, per the EmsulaRH widget-colocation convention
+/// importable across files, per the widget-colocation convention
 /// (2+ screens/rows in the same feature -> `presentation/widgets/`).
 class StatePill extends StatelessWidget {
   const StatePill({super.key, required this.isPositive});

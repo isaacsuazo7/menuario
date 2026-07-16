@@ -50,6 +50,10 @@ dependencies:
   google_sign_in: ^7.2.0
   url_launcher: ^6.3.2
 
+  # Reactive forms (TARGET pattern for menuario forms) — first consumer is
+  # the recipe create/edit form (sdd/recipes-remediation).
+  reactive_forms: ^18.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

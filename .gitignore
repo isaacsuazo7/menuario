@@ -50,6 +50,9 @@ app.*.map.json
 # Local tooling artifacts (skill registry, generated per-developer)
 .atl/
 
+# CodeGraph index (generated per-developer)
+.codegraph/
+
 # Firebase / signing secrets — never committed (public repo).
 **/*.jks
 **/key.properties
