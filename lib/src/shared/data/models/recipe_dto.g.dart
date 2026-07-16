@@ -13,6 +13,10 @@ _RecipeDTO _$RecipeDTOFromJson(Map<String, dynamic> json) => _RecipeDTO(
   bomLines: (json['bomLines'] as List<dynamic>)
       .map((e) => BomLineDTO.fromJson(e as Map<String, dynamic>))
       .toList(),
+  videos: (json['videos'] as List<dynamic>?)
+      ?.map((e) => VideoLinkDTO.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  enabled: json['enabled'] as bool?,
 );
 
 Map<String, dynamic> _$RecipeDTOToJson(_RecipeDTO instance) =>
@@ -21,4 +25,6 @@ Map<String, dynamic> _$RecipeDTOToJson(_RecipeDTO instance) =>
       'emoji': instance.emoji,
       'mealType': instance.mealType,
       'bomLines': instance.bomLines.map((e) => e.toJson()).toList(),
+      'videos': instance.videos?.map((e) => e.toJson()).toList(),
+      'enabled': instance.enabled,
     };

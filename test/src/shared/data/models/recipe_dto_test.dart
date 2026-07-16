@@ -5,6 +5,8 @@ import 'package:menuario/src/shared/domain/entities/recipe.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
+import 'package:menuario/src/shared/domain/value_objects/video_link.dart';
+import 'package:menuario/src/shared/domain/value_objects/video_source.dart';
 
 void main() {
   group('RecipeDTO round-trip', () {
@@ -100,6 +102,76 @@ void main() {
 
       // Assert
       expect(result.mealType, isNull);
+    });
+
+    test('a recipe with videos survives '
+        'fromEntity->toJson->fromJson->toEntity', () {
+      // Arrange
+      const entity = Recipe(
+        id: 'recipe-1',
+        name: 'Avena con leche',
+        bomLines: [],
+        videos: [
+          VideoLink(source: VideoSource.youtube, url: 'https://youtu.be/1'),
+          VideoLink(
+            source: VideoSource.tiktok,
+            url: 'https://tiktok.com/@x/video/2',
+          ),
+        ],
+      );
+
+      // Act
+      final json = RecipeDTO.fromEntity(entity).toJson();
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result, entity);
+      expect(result.videos.map((v) => v.source).toList(), [
+        VideoSource.youtube,
+        VideoSource.tiktok,
+      ]);
+    });
+
+    test('a Firestore doc with no videos key deserializes to an empty list',
+        () {
+      // Arrange
+      final json = <String, dynamic>{'name': 'Vacía', 'bomLines': <Object?>[]};
+
+      // Act
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result.videos, isEmpty);
+    });
+
+    test('a Firestore doc with no enabled key deserializes to enabled true',
+        () {
+      // Arrange
+      final json = <String, dynamic>{'name': 'Vacía', 'bomLines': <Object?>[]};
+
+      // Act
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(result.enabled, isTrue);
+    });
+
+    test('an explicit enabled:false is preserved through the round-trip', () {
+      // Arrange
+      const entity = Recipe(
+        id: 'recipe-1',
+        name: 'Avena',
+        bomLines: [],
+        enabled: false,
+      );
+
+      // Act
+      final json = RecipeDTO.fromEntity(entity).toJson();
+      final result = RecipeDTO.fromJson(json).toEntity(id: 'recipe-1');
+
+      // Assert
+      expect(json['enabled'], isFalse);
+      expect(result.enabled, isFalse);
     });
   });
 }

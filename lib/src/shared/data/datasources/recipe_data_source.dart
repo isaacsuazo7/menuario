@@ -13,6 +13,9 @@ import 'package:menuario/src/shared/data/models/recipe_dto.dart';
 /// `RecipeRepositoryImpl`'s job). Every operation catches Firestore/platform
 /// exceptions and returns `Either<Failure, T>` — nothing is ever rethrown.
 abstract class RecipeDataSource {
+  /// Mints a fresh Firestore-generated id, without writing a document.
+  String newId();
+
   /// Reads the recipe document with [id].
   Future<Either<Failure, RecipeDTO>> getById(String id);
 
@@ -37,6 +40,18 @@ class RecipeDataSourceImpl implements RecipeDataSource {
 
   CollectionReference<Map<String, dynamic>> _collection(String uid) {
     return _firestore.collection('users/$uid/recipes');
+  }
+
+  @override
+  String newId() {
+    final uid = _uid;
+    // Any uid-scoped collection mints an equally valid, unique doc id; the
+    // recipes collection is picked arbitrarily (mirrors
+    // IngredientCatalogDataSourceImpl.newId).
+    final collection = uid == null
+        ? _firestore.collection('users/_/recipes')
+        : _collection(uid);
+    return collection.doc().id;
   }
 
   @override

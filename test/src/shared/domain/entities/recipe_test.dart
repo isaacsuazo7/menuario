@@ -4,6 +4,8 @@ import 'package:menuario/src/shared/domain/entities/recipe.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
+import 'package:menuario/src/shared/domain/value_objects/video_link.dart';
+import 'package:menuario/src/shared/domain/value_objects/video_source.dart';
 
 void main() {
   group('Recipe', () {
@@ -54,6 +56,73 @@ void main() {
 
       // Assert
       expect(recipe.mealType, MealType.desayuno);
+    });
+
+    test('should default videos to an empty list when not provided', () {
+      // Act
+      const recipe = Recipe(id: 'recipe-avena', name: 'Avena', bomLines: []);
+
+      // Assert
+      expect(recipe.videos, isEmpty);
+    });
+
+    test('should carry the given videos when provided', () {
+      // Arrange
+      const video = VideoLink(
+        source: VideoSource.youtube,
+        url: 'https://youtu.be/abc',
+      );
+
+      // Act
+      const recipe = Recipe(
+        id: 'recipe-avena',
+        name: 'Avena',
+        bomLines: [],
+        videos: [video],
+      );
+
+      // Assert
+      expect(recipe.videos, [video]);
+    });
+
+    test('should default enabled to true when not provided', () {
+      // Act
+      const recipe = Recipe(id: 'recipe-avena', name: 'Avena', bomLines: []);
+
+      // Assert
+      expect(recipe.enabled, isTrue);
+    });
+
+    test('should carry enabled as false when explicitly disabled', () {
+      // Act
+      const recipe = Recipe(
+        id: 'recipe-avena',
+        name: 'Avena',
+        bomLines: [],
+        enabled: false,
+      );
+
+      // Assert
+      expect(recipe.enabled, isFalse);
+    });
+
+    test('should not expose a mutator: copyWith produces a new immutable '
+        'instance without altering the original', () {
+      // Arrange
+      const original = Recipe(
+        id: 'recipe-avena',
+        name: 'Avena',
+        bomLines: [],
+        enabled: true,
+      );
+
+      // Act
+      final replaced = original.copyWith(enabled: false);
+
+      // Assert
+      expect(original.enabled, isTrue);
+      expect(replaced.enabled, isFalse);
+      expect(identical(original, replaced), isFalse);
     });
   });
 }
