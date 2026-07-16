@@ -24,6 +24,20 @@ void main() {
     recipeId: 'r-deleted',
     cooked: false,
   );
+  const disabledRecipe = Recipe(
+    id: 'r-disabled',
+    name: 'Vieja receta',
+    emoji: '🥘',
+    mealType: MealType.almuerzo,
+    enabled: false,
+    bomLines: [],
+  );
+  const disabledEntry = PlanEntry(
+    day: DayOfWeek.mar,
+    mealSlot: MealSlot.almuerzo,
+    recipeId: 'r-disabled',
+    cooked: false,
+  );
 
   Future<void> pumpCell(
     WidgetTester tester, {
@@ -87,6 +101,25 @@ void main() {
     expect(find.text('Agregar'), findsNothing);
     expect(find.byIcon(Icons.chevron_right), findsOneWidget);
   });
+
+  testWidgets(
+    'a disabled planned recipe still reads as filled (name + chevron) but '
+    'is visibly greyed — it stays assigned, not unplanned',
+    (tester) async {
+      await pumpCell(tester, entry: disabledEntry, recipe: disabledRecipe);
+
+      expect(find.text('Vieja receta'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+      final opacityFinder = find.ancestor(
+        of: find.text('Vieja receta'),
+        matching: find.byType(Opacity),
+      );
+      expect(opacityFinder, findsWidgets);
+      final opacity = tester.widget<Opacity>(opacityFinder.first);
+      expect(opacity.opacity, lessThan(1.0));
+    },
+  );
 
   testWidgets('tapping the cell invokes onTap', (tester) async {
     var tapped = false;

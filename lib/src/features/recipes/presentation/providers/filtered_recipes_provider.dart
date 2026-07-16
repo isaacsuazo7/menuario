@@ -14,8 +14,9 @@ final filteredRecipesProvider = Provider<AsyncValue<List<Recipe>>>((ref) {
   final selectedMealType = ref.watch(selectedMealTypeProvider);
 
   return recipesValue.whenData((recipes) {
-    if (selectedMealType == null) return recipes;
-    return recipes
+    final visible = recipes.where((recipe) => recipe.enabled).toList();
+    if (selectedMealType == null) return visible;
+    return visible
         .where((recipe) => recipe.mealType == selectedMealType)
         .toList();
   });

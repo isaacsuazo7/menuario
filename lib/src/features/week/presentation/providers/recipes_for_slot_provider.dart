@@ -17,7 +17,8 @@ final recipesForSlotProvider =
       final mealType = mealTypeForSlot(slot);
 
       return recipesValue.whenData(
-        (recipes) =>
-            recipes.where((recipe) => recipe.mealType == mealType).toList(),
+        (recipes) => recipes
+            .where((recipe) => recipe.mealType == mealType && recipe.enabled)
+            .toList(),
       );
     }, dependencies: [recipeListProvider]);
