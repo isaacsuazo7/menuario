@@ -19,6 +19,7 @@ _IngredientDTO _$IngredientDTOFromJson(Map<String, dynamic> json) =>
           ? null
           : PackageSpecDTO.fromJson(json['package'] as Map<String, dynamic>),
       defaultLensLabel: json['defaultLensLabel'] as String?,
+      needType: json['needType'] as String?,
     );
 
 Map<String, dynamic> _$IngredientDTOToJson(_IngredientDTO instance) =>
@@ -32,4 +33,5 @@ Map<String, dynamic> _$IngredientDTOToJson(_IngredientDTO instance) =>
       'measurementMode': instance.measurementMode,
       'package': instance.package?.toJson(),
       'defaultLensLabel': instance.defaultLensLabel,
+      'needType': instance.needType,
     };

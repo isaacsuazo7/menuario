@@ -27,6 +27,16 @@ final _calculator = ProvisioningCalculator(
 /// zero weekly need (see [CoverageCalculator.statusFor]'s `null`
 /// handling). Boolean-tracked ingredients are never gathered here; they
 /// have no numeric weekly need.
+///
+/// [Ingredient.needType] drives HOW each entry's value is computed (via
+/// [ProvisioningCalculator.weeklyNeed]): [NeedType.recipeDriven] (default)
+/// sums planned-recipe consumption same as before; [NeedType.weeklyFixed]
+/// needs exactly 1 whole package once planned this week (still gathered
+/// through the same BomLine-membership check — "planned" is unchanged,
+/// only the need VALUE differs). [NeedType.optional] ingredients are
+/// excluded from the gather entirely, regardless of whether they appear
+/// in a planned recipe — they never get a map entry, are never a `Left`
+/// skip, and never enter the weekly budget/shopping auto-calc.
 final weeklyConsumptionByIngredientProvider =
     Provider<AsyncValue<Map<String, Either<Failure, Quantity>>>>(
       (ref) {
@@ -64,7 +74,9 @@ final weeklyConsumptionByIngredientProvider =
         for (final recipe in plannedRecipes) {
           for (final line in recipe.bomLines) {
             final ingredient = ingredientsById[line.ingredientId];
-            if (ingredient != null && !ingredient.booleanTracked) {
+            if (ingredient != null &&
+                !ingredient.booleanTracked &&
+                ingredient.needType != NeedType.optional) {
               quantityIngredientIds.add(line.ingredientId);
             }
           }
@@ -72,7 +84,7 @@ final weeklyConsumptionByIngredientProvider =
 
         final result = <String, Either<Failure, Quantity>>{
           for (final ingredientId in quantityIngredientIds)
-            ingredientId: _calculator.weeklyConsumption(
+            ingredientId: _calculator.weeklyNeed(
               ingredient: ingredientsById[ingredientId]!,
               recipes: recipes,
               weekPlan: weekPlan,

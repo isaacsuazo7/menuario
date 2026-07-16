@@ -698,6 +698,9 @@ void main() {
           '1',
         );
         await tester.pumpAndSettle();
+        await tester.ensureVisible(
+          find.byKey(const Key('ingredient-package-base-unit-field')),
+        );
         await tester.tap(
           find.byKey(const Key('ingredient-package-base-unit-field')),
         );
@@ -1046,6 +1049,110 @@ void main() {
       expect(savedIngredient.id, 'ing-huevo');
       expect(savedPantryItem.ingredientId, 'ing-huevo');
       verifyNever(() => mockIngredientCatalogRepository.newId());
+    });
+  });
+
+  group('NeedType selector', () {
+    testWidgets(
+      'renders the "Tipo de necesidad" selector, defaulting to '
+      'recipeDriven ("Por recetas") on create',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('ingredient-need-type-field')),
+          findsOneWidget,
+        );
+        final selector = tester.widget<SegmentedButton<NeedType>>(
+          find.byKey(const Key('ingredient-need-type-field')),
+        );
+        expect(selector.selected, {NeedType.recipeDriven});
+        expect(find.text('Por recetas'), findsOneWidget);
+        expect(find.text('1 por semana'), findsOneWidget);
+        expect(find.text('Opcional'), findsOneWidget);
+      },
+    );
+
+    testWidgets('prefills the existing needType on edit (weeklyFixed)', (
+      tester,
+    ) async {
+      const espinaca = Ingredient(
+        id: 'ing-espinaca',
+        name: 'Espinaca',
+        emoji: '🥬',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        conversionFactor: 1,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+        needType: NeedType.weeklyFixed,
+      );
+      const espinacaPantry = PantryItem.quantityTracked(
+        ingredientId: 'ing-espinaca',
+        category: Category.vegetal,
+        presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
+        stock: Quantity(value: 0.5, unit: Unit.package),
+      );
+      when(
+        () => mockIngredientRepository.getById('ing-espinaca'),
+      ).thenAnswer((_) async => const Right(espinaca));
+      when(
+        () => mockPantryRepository.getById('ing-espinaca'),
+      ).thenAnswer((_) async => const Right(espinacaPantry));
+
+      await pumpScreen(tester, ingredientId: 'ing-espinaca');
+      await tester.pumpAndSettle();
+
+      final selector = tester.widget<SegmentedButton<NeedType>>(
+        find.byKey(const Key('ingredient-need-type-field')),
+      );
+      expect(selector.selected, {NeedType.weeklyFixed});
+    });
+
+    testWidgets('selecting "Opcional" and confirming persists needType', (
+      tester,
+    ) async {
+      when(
+        () => mockIngredientCatalogRepository.newId(),
+      ).thenReturn('ing-new-id');
+      when(
+        () => mockIngredientCatalogRepository.saveWithPantry(
+          ingredient: any(named: 'ingredient'),
+          pantryItem: any(named: 'pantryItem'),
+        ),
+      ).thenAnswer((_) async => const Right(null));
+
+      await pumpPushableScreen(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('ingredient-name-field')),
+        'Fresas',
+      );
+      await tester.tap(find.text('Por unidad'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('ingredient-stock-field')),
+        '1',
+      );
+      await tester.ensureVisible(find.text('Opcional'));
+      await tester.tap(find.text('Opcional'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('Confirmar'));
+      await tester.tap(find.text('Confirmar'));
+      await tester.pumpAndSettle();
+
+      final captured = verify(
+        () => mockIngredientCatalogRepository.saveWithPantry(
+          ingredient: captureAny(named: 'ingredient'),
+          pantryItem: captureAny(named: 'pantryItem'),
+        ),
+      ).captured;
+      final savedIngredient = captured[0] as Ingredient;
+
+      expect(savedIngredient.needType, NeedType.optional);
     });
   });
 }

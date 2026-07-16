@@ -6,6 +6,8 @@ import 'package:menuario/src/shared/domain/entities/recipe.dart';
 import 'package:menuario/src/shared/domain/entities/week_plan.dart';
 import 'package:menuario/src/shared/domain/services/measurement_converter.dart';
 import 'package:menuario/src/shared/domain/services/stock_lens_service.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -67,6 +69,49 @@ class ProvisioningCalculator {
     }
 
     return Right(Quantity(value: total, unit: resultUnit));
+  }
+
+  /// Computes the weekly need for [ingredient] according to its
+  /// [Ingredient.needType]:
+  /// - [NeedType.recipeDriven] (default) delegates straight to
+  ///   [weeklyConsumption] — the sum of planned-recipe consumption,
+  ///   unchanged.
+  /// - [NeedType.weeklyFixed] short-circuits to exactly 1 whole package in
+  ///   the ingredient's canonical stock unit ("comprás uno, dura la
+  ///   semana") — it never calls [MeasurementConverter.toStockUnit], so it
+  ///   needs no [Ingredient.conversionFactor] and can never return
+  ///   `Left(missingConversionFactor)`.
+  ///
+  /// [NeedType.optional] ingredients must never reach this method —
+  /// callers (`weeklyConsumptionByIngredientProvider`) exclude them
+  /// upstream, since they are excluded from the weekly budget entirely.
+  Either<Failure, Quantity> weeklyNeed({
+    required Ingredient ingredient,
+    required List<Recipe> recipes,
+    required WeekPlan weekPlan,
+  }) {
+    if (ingredient.needType == NeedType.weeklyFixed) {
+      return Right(_oneWeeklyPackage(ingredient));
+    }
+    return weeklyConsumption(
+      ingredient: ingredient,
+      recipes: recipes,
+      weekPlan: weekPlan,
+    );
+  }
+
+  /// "1 whole package" for [ingredient], in its canonical stock unit: for
+  /// `packageBase`, the package's own `yieldQty` expressed in its base
+  /// dimension (e.g. leche bolsa=1 L -> 1 L); for every other mode, a bare
+  /// `1` in the canonical unit (`packageAbstract` -> 1 'paq', `count` -> 1
+  /// unit, `mass` -> 1 g as a defensive fallback — `weeklyFixed` is not
+  /// expected on mass-mode ingredients in practice).
+  Quantity _oneWeeklyPackage(Ingredient ingredient) {
+    final unit = _lensService.canonicalUnitFor(ingredient);
+    final value = ingredient.measurementMode == MeasurementMode.packageBase
+        ? (ingredient.package?.yieldQty ?? 1)
+        : 1;
+    return Quantity(value: value, unit: unit);
   }
 
   /// The positive shortfall between [consumption] and [stock], never

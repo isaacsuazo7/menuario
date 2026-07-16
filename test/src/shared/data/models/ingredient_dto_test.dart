@@ -4,6 +4,7 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
@@ -92,6 +93,54 @@ void main() {
       expect(json['defaultLensLabel'], 'L');
       expect(json['package'], isA<Map<String, dynamic>>());
     });
+
+    test('a weeklyFixed ingredient round-trips its needType exactly', () {
+      // Arrange
+      const entity = Ingredient(
+        id: 'ingredient-espinaca',
+        name: 'Espinaca',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+        needType: NeedType.weeklyFixed,
+      );
+
+      // Act
+      final json = IngredientDTO.fromEntity(entity).toJson();
+      final result = IngredientDTO.fromJson(
+        json,
+      ).toEntity(id: 'ingredient-espinaca');
+
+      // Assert
+      expect(result, entity);
+      expect(json['needType'], 'weeklyFixed');
+    });
+
+    test('an optional ingredient round-trips its needType exactly', () {
+      // Arrange
+      const entity = Ingredient(
+        id: 'ingredient-fresas',
+        name: 'Fresas',
+        category: Category.fruta,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'caja'),
+        needType: NeedType.optional,
+      );
+
+      // Act
+      final json = IngredientDTO.fromEntity(entity).toJson();
+      final result = IngredientDTO.fromJson(
+        json,
+      ).toEntity(id: 'ingredient-fresas');
+
+      // Assert
+      expect(result, entity);
+      expect(json['needType'], 'optional');
+    });
   });
 
   group('IngredientDTO back-compat read (old-shape document, no '
@@ -157,5 +206,27 @@ void main() {
       // Assert
       expect(result.measurementMode, MeasurementMode.boolean);
     });
+
+    test(
+      'an old-shape doc with no needType key defaults to recipeDriven',
+      () {
+        // Arrange
+        final json = {
+          'name': 'Arroz',
+          'category': 'cereal',
+          'measurementKind': 'bulk',
+          'booleanTracked': false,
+          'conversionFactor': 50,
+        };
+
+        // Act
+        final result = IngredientDTO.fromJson(
+          json,
+        ).toEntity(id: 'ingredient-arroz');
+
+        // Assert
+        expect(result.needType, NeedType.recipeDriven);
+      },
+    );
   });
 }

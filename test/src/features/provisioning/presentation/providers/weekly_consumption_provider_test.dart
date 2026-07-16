@@ -283,5 +283,164 @@ void main() {
         expect(result.value, isNot(contains('ing-pollo')));
       },
     );
+
+    group('NeedType routing', () {
+      const espinaca = Ingredient(
+        id: 'ing-espinaca',
+        name: 'Espinaca',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+        needType: NeedType.weeklyFixed,
+      );
+      const recipeEspinaca = Recipe(
+        id: 'recipe-espinaca',
+        name: 'Tortilla de espinaca',
+        bomLines: [
+          BomLine(
+            recipeId: 'recipe-espinaca',
+            ingredientId: 'ing-espinaca',
+            quantity: Quantity(value: 3, unit: Unit.gram),
+          ),
+        ],
+      );
+
+      const fresas = Ingredient(
+        id: 'ing-fresas',
+        name: 'Fresas',
+        category: Category.fruta,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'caja'),
+        needType: NeedType.optional,
+      );
+      const recipeFresas = Recipe(
+        id: 'recipe-fresas',
+        name: 'Batido de fresas',
+        bomLines: [
+          BomLine(
+            recipeId: 'recipe-fresas',
+            ingredientId: 'ing-fresas',
+            quantity: Quantity(value: 1, unit: Unit.gram),
+          ),
+        ],
+      );
+
+      test(
+        'a weeklyFixed ingredient planned this week needs exactly 1 whole '
+        'package (Right(1 paq)), no conversionFactor involved',
+        () async {
+          when(
+            () => mockWeekPlanRepository.getActive(),
+          ).thenAnswer(
+            (_) async => const Right(
+              WeekPlan(
+                entries: [
+                  PlanEntry(
+                    day: DayOfWeek.lun,
+                    mealSlot: MealSlot.almuerzo,
+                    recipeId: 'recipe-espinaca',
+                    cooked: false,
+                  ),
+                ],
+              ),
+            ),
+          );
+          when(
+            () => mockRecipeRepository.list(),
+          ).thenAnswer((_) async => const Right([recipeEspinaca]));
+          when(
+            () => mockIngredientRepository.list(),
+          ).thenAnswer((_) async => const Right([espinaca]));
+
+          final container = makeContainer();
+          await container.read(planControllerProvider.future);
+          await container.read(recipeListProvider.future);
+          await container.read(ingredientsByIdProvider.future);
+
+          final result = container.read(
+            weeklyConsumptionByIngredientProvider,
+          );
+
+          final map = result.value!;
+          expect(
+            map['ing-espinaca'],
+            const Right<Failure, Quantity>(
+              Quantity(value: 1, unit: Unit.package),
+            ),
+          );
+        },
+      );
+
+      test(
+        'a weeklyFixed ingredient NOT planned this week has no entry '
+        '(neutral, not falta)',
+        () async {
+          when(
+            () => mockWeekPlanRepository.getActive(),
+          ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+          when(
+            () => mockRecipeRepository.list(),
+          ).thenAnswer((_) async => const Right([recipeEspinaca]));
+          when(
+            () => mockIngredientRepository.list(),
+          ).thenAnswer((_) async => const Right([espinaca]));
+
+          final container = makeContainer();
+          await container.read(planControllerProvider.future);
+          await container.read(recipeListProvider.future);
+          await container.read(ingredientsByIdProvider.future);
+
+          final result = container.read(
+            weeklyConsumptionByIngredientProvider,
+          );
+
+          expect(result.value, isNot(contains('ing-espinaca')));
+        },
+      );
+
+      test(
+        'an optional ingredient is excluded from the map entirely even '
+        'when planned this week — never a Left/skip, never in the budget',
+        () async {
+          when(
+            () => mockWeekPlanRepository.getActive(),
+          ).thenAnswer(
+            (_) async => const Right(
+              WeekPlan(
+                entries: [
+                  PlanEntry(
+                    day: DayOfWeek.lun,
+                    mealSlot: MealSlot.desayuno,
+                    recipeId: 'recipe-fresas',
+                    cooked: false,
+                  ),
+                ],
+              ),
+            ),
+          );
+          when(
+            () => mockRecipeRepository.list(),
+          ).thenAnswer((_) async => const Right([recipeFresas]));
+          when(
+            () => mockIngredientRepository.list(),
+          ).thenAnswer((_) async => const Right([fresas]));
+
+          final container = makeContainer();
+          await container.read(planControllerProvider.future);
+          await container.read(recipeListProvider.future);
+          await container.read(ingredientsByIdProvider.future);
+
+          final result = container.read(
+            weeklyConsumptionByIngredientProvider,
+          );
+
+          expect(result.value, isNot(contains('ing-fresas')));
+        },
+      );
+    });
   });
 }

@@ -283,6 +283,46 @@ void main() {
       expect(result.groups, isEmpty);
       expect(result.skipped, isEmpty);
     });
+
+    test(
+      'a weeklyFixed ingredient with less than 1 package in stock appears '
+      'in Comprar (buy 1) — the map already carries its 1-package need, '
+      'the builder needs no NeedType branching of its own',
+      () {
+        // Arrange
+        const espinaca = Ingredient(
+          id: 'ing-espinaca',
+          name: 'Espinaca',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageAbstract,
+          package: PackageSpec(label: 'bolsa'),
+          needType: NeedType.weeklyFixed,
+        );
+        const espinacaStock = PantryItem.quantityTracked(
+          ingredientId: 'ing-espinaca',
+          category: Category.vegetal,
+          presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
+          stock: Quantity(value: 0.5, unit: Unit.package),
+        );
+
+        // Act
+        final result = builder.build(
+          weeklyConsumptionByIngredient: const {
+            'ing-espinaca': Right(Quantity(value: 1, unit: Unit.package)),
+          },
+          ingredientsById: const {'ing-espinaca': espinaca},
+          pantryByIngredientId: const {'ing-espinaca': espinacaStock},
+        );
+
+        // Assert
+        expect(result.skipped, isEmpty);
+        final row = result.groups.single.rows.single;
+        expect(row.ingredientId, 'ing-espinaca');
+        expect(row.quantityDisplay, '1 bolsa');
+      },
+    );
   });
 
   group('presentationForPurchase adapter', () {
