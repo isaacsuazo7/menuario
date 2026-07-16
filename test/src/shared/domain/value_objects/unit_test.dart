@@ -49,6 +49,13 @@ void main() {
         expect(Unit.count.symbol, 'u');
         expect(Unit.count.dimension, UnitDimension.count);
       });
+
+      test('package should be the count dimension with symbol paq '
+          '(canonical unit for packageAbstract-mode ingredients)', () {
+        // Act & Assert
+        expect(Unit.package.symbol, 'paq');
+        expect(Unit.package.dimension, UnitDimension.count);
+      });
     });
   });
 }

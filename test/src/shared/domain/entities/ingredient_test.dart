@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
+import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
 void main() {
   group('Ingredient', () {
@@ -52,6 +55,49 @@ void main() {
 
       // Assert
       expect(comino.booleanTracked, isTrue);
+    });
+
+    test('measurementMode defaults to mass when not specified '
+        '(additive rollout — legacy call sites keep compiling)', () {
+      // Arrange & Act
+      const huevo = Ingredient(
+        id: 'ingredient-huevo',
+        name: 'Huevo',
+        category: Category.proteina,
+        measurementKind: MeasurementKind.unit,
+        booleanTracked: false,
+      );
+
+      // Assert
+      expect(huevo.measurementMode, MeasurementMode.mass);
+      expect(huevo.package, isNull);
+      expect(huevo.defaultLensLabel, isNull);
+    });
+
+    test('an ingredient may carry the new measurementMode, package and '
+        'defaultLensLabel fields alongside the legacy ones', () {
+      // Arrange & Act
+      const leche = Ingredient(
+        id: 'ingredient-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: 1,
+          baseDimension: Unit.liter,
+        ),
+        defaultLensLabel: 'L',
+      );
+
+      // Assert
+      expect(leche.measurementMode, MeasurementMode.packageBase);
+      expect(leche.package?.label, 'bolsa');
+      expect(leche.package?.yieldQty, 1);
+      expect(leche.package?.baseDimension, Unit.liter);
+      expect(leche.defaultLensLabel, 'L');
     });
   });
 }
