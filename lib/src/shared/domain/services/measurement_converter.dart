@@ -48,9 +48,14 @@ class MeasurementConverter {
   ///   `ProvisioningCalculator.shouldSurfaceBooleanItem` instead. Defensive
   ///   `Left(Failure.unknownUnit)`.
   ///
-  /// `mass`, `packageBase` and `packageAbstract` all return
-  /// `Left(Failure.missingConversionFactor)` when the ingredient has no
-  /// [Ingredient.conversionFactor].
+  /// `mass`, `packageBase` and `packageAbstract` are identity pass-throughs
+  /// (like `count`) whenever [recipeQuantity] is already expressed in the
+  /// ingredient's canonical stock unit — e.g. a count-base `packageBase`
+  /// ingredient (huevo cartón/u, jamón bolsa/u) recipe-driven in `u`
+  /// needs no factor at all. Only a genuine cross-dimension conversion
+  /// (e.g. leche recipe in `taza` -> base `L`, pollo recipe in `taza` ->
+  /// `g`) requires [Ingredient.conversionFactor], returning
+  /// `Left(Failure.missingConversionFactor)` when it is missing.
   Either<Failure, Quantity> toStockUnit({
     required Quantity recipeQuantity,
     required Ingredient ingredient,
@@ -65,6 +70,9 @@ class MeasurementConverter {
       case MeasurementMode.mass:
       case MeasurementMode.packageBase:
       case MeasurementMode.packageAbstract:
+        if (recipeQuantity.unit == stockUnit) {
+          return Right(recipeQuantity);
+        }
         final factor = ingredient.conversionFactor;
         if (factor == null) {
           return Left(Failure.missingConversionFactor(ingredient.name));
