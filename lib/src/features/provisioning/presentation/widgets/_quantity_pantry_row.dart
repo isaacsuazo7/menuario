@@ -7,13 +7,9 @@ import 'package:menuario/src/features/provisioning/presentation/widgets/_set_sto
 import 'package:menuario/src/features/provisioning/presentation/widgets/_state_pill.dart';
 import 'package:menuario/src/shared/shared.dart';
 
-/// Pure and dependency-free (see [StockPresentationService]'s "no DI
-/// needed" design decision) — safe to hold as a single const instance.
-const _stockPresentation = StockPresentationService();
-
-/// Pure and dependency-free, same as [_stockPresentation] — drives the
-/// pill's mode-aware effective-zero status independently of the still
-/// presentation-driven [_stockPresentation.display].
+/// Pure and dependency-free (see [StockLensService]'s "no DI needed"
+/// design decision) — safe to hold as a single const instance. Drives the
+/// row's mode-aware stock display, step and effective-zero status.
 const _stockLensService = StockLensService();
 
 /// A quantity-tracked Despensa row: emoji, name, purchase-unit stock
@@ -39,8 +35,8 @@ class QuantityPantryRow extends ConsumerWidget {
         row;
     final item = liveRow.item as QuantityTrackedPantryItem;
     final ingredient = liveRow.ingredient;
-    final step = _stockPresentation.stockStep(item);
-    final display = _stockPresentation.display(item.stock, item.presentation);
+    final step = _stockLensService.stockStep(ingredient);
+    final display = _stockLensService.formatStock(ingredient, item.stock);
 
     Future<void> handleAdjust(num delta) async {
       final failure = await ref
@@ -68,7 +64,7 @@ class QuantityPantryRow extends ConsumerWidget {
         style: const TextStyle(fontSize: 24),
       ),
       title: Text(ingredient.name),
-      subtitle: InkWell(onTap: handleOpenSetStock, child: Text(display.label)),
+      subtitle: InkWell(onTap: handleOpenSetStock, child: Text(display)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
