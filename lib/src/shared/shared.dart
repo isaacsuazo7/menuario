@@ -31,7 +31,6 @@ export 'domain/repositories/week_plan_repository.dart';
 export 'domain/services/measurement_converter.dart';
 export 'domain/services/provisioning_calculator.dart';
 export 'domain/services/stock_lens_service.dart';
-export 'domain/services/stock_presentation_service.dart';
 export 'domain/value_objects/category.dart';
 export 'domain/value_objects/day_of_week.dart';
 export 'domain/value_objects/mass.dart';
