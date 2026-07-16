@@ -14,6 +14,7 @@ import 'package:menuario/src/shared/domain/value_objects/day_of_week.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_slot.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
@@ -321,6 +322,154 @@ void main() {
             'code',
             'missingConversionFactor',
           ),
+        );
+      });
+    });
+
+    group('weeklyNeed', () {
+      test('recipeDriven delegates to weeklyConsumption unchanged '
+          '(2 taza Avena x4 in week = 680 g)', () {
+        // Arrange
+        const recipe = Recipe(
+          id: 'recipe-avena',
+          name: 'Avena con leche',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-avena',
+              ingredientId: 'ingredient-avena',
+              quantity: Quantity(value: 2, unit: taza),
+            ),
+          ],
+        );
+        final weekPlan = WeekPlan(
+          entries: List.generate(
+            4,
+            (_) => const PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'recipe-avena',
+              cooked: false,
+            ),
+          ),
+        );
+
+        // Act
+        final result = calculator.weeklyNeed(
+          ingredient: avena,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 680, unit: Unit.gram)),
+        );
+      });
+
+      test('weeklyFixed (packageAbstract) short-circuits to 1 whole package '
+          'in Unit.package, ignoring BomLine quantities and needing no '
+          'conversionFactor', () {
+        // Arrange
+        const espinaca = Ingredient(
+          id: 'ingredient-espinaca',
+          name: 'Espinaca',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageAbstract,
+          package: PackageSpec(label: 'bolsa'),
+          needType: NeedType.weeklyFixed,
+        );
+        const recipe = Recipe(
+          id: 'recipe-tortilla',
+          name: 'Tortilla de espinaca',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-tortilla',
+              ingredientId: 'ingredient-espinaca',
+              quantity: Quantity(value: 3, unit: taza),
+            ),
+          ],
+        );
+        const weekPlan = WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.almuerzo,
+              recipeId: 'recipe-tortilla',
+              cooked: false,
+            ),
+          ],
+        );
+
+        // Act
+        final result = calculator.weeklyNeed(
+          ingredient: espinaca,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert — no missingConversionFactor Left even though espinaca
+        // has no conversionFactor at all.
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 1, unit: Unit.package),
+          ),
+        );
+      });
+
+      test('weeklyFixed (packageBase) needs 1 whole package expressed as '
+          "the package's yieldQty in its base dimension (leche bolsa=1 L)", () {
+        // Arrange
+        const lecheFixed = Ingredient(
+          id: 'ingredient-leche-fixed',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+          needType: NeedType.weeklyFixed,
+        );
+        const recipe = Recipe(
+          id: 'recipe-cafe',
+          name: 'Café con leche',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-cafe',
+              ingredientId: 'ingredient-leche-fixed',
+              quantity: Quantity(value: 1, unit: taza),
+            ),
+          ],
+        );
+        const weekPlan = WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'recipe-cafe',
+              cooked: false,
+            ),
+          ],
+        );
+
+        // Act
+        final result = calculator.weeklyNeed(
+          ingredient: lecheFixed,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 1, unit: Unit.liter)),
         );
       });
     });

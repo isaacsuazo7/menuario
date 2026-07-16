@@ -4,6 +4,7 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 
 part 'ingredient_dto.freezed.dart';
 part 'ingredient_dto.g.dart';
@@ -21,6 +22,12 @@ part 'ingredient_dto.g.dart';
 /// (rather than dropped) so an old-shape document written before this
 /// rollout — which has them but no [measurementMode] — still loads; see
 /// [IngredientDTOX.toEntity] for the back-compat derivation.
+///
+/// [needType] is nullable for the same reason: an old-shape document
+/// written before the NeedType rollout has no such key, and
+/// [IngredientDTOX.toEntity] defaults it to `NeedType.recipeDriven` —
+/// today's behavior, unchanged for every ingredient that never opts into
+/// `weeklyFixed`/`optional`.
 @freezed
 abstract class IngredientDTO with _$IngredientDTO {
   const factory IngredientDTO({
@@ -33,6 +40,7 @@ abstract class IngredientDTO with _$IngredientDTO {
     String? measurementMode,
     PackageSpecDTO? package,
     String? defaultLensLabel,
+    String? needType,
   }) = _IngredientDTO;
 
   const IngredientDTO._();
@@ -54,6 +62,7 @@ abstract class IngredientDTO with _$IngredientDTO {
           ? null
           : PackageSpecDTO.fromEntity(entity.package!),
       defaultLensLabel: entity.defaultLensLabel,
+      needType: entity.needType.name,
     );
   }
 }
@@ -97,6 +106,9 @@ extension IngredientDTOX on IngredientDTO {
       measurementMode: mode,
       package: package?.toEntity(),
       defaultLensLabel: defaultLensLabel,
+      needType: needType != null
+          ? NeedType.values.byName(needType!)
+          : NeedType.recipeDriven,
     );
   }
 

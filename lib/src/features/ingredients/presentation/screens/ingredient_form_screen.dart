@@ -41,7 +41,9 @@ const _stockLensService = StockLensService();
 /// fields (package name/yield/base-unit for `Por paquete`, a
 /// [StockLens]-driven default-lens selector doubling as the initial-stock
 /// entry lens, and `Factor de conversión` relocated behind a collapsed
-/// "Avanzado" section). Confirm still wires atomically to
+/// "Avanzado" section), plus a "Tipo de necesidad" selector driving
+/// [NeedType] (Por recetas / 1 por semana / Opcional) for the weekly
+/// budget's coverage/shopping calc. Confirm still wires atomically to
 /// [IngredientCatalogRepository.saveWithPantry].
 class IngredientFormScreen extends ConsumerStatefulWidget {
   const IngredientFormScreen({super.key, this.ingredientId});
@@ -66,6 +68,7 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
   _ModeChoice _modeChoice = _ModeChoice.mass;
   Unit? _packageBaseUnit;
   bool _haveIt = false;
+  NeedType _needType = NeedType.recipeDriven;
 
   /// The current entry/default lens, as a label. `null` means "use the
   /// mode's heuristic default" ([StockLensService.defaultLensFor]);
@@ -117,6 +120,7 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
     _category = ingredient.category;
     _modeChoice = _modeChoiceFor(ingredient.measurementMode);
     _lensOverrideLabel = ingredient.defaultLensLabel;
+    _needType = ingredient.needType;
     if (ingredient.conversionFactor != null) {
       _conversionFactorController.text = ingredient.conversionFactor.toString();
     }
@@ -375,6 +379,7 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
       measurementMode: _measurementMode,
       package: _package,
       defaultLensLabel: _lensOverrideLabel,
+      needType: _needType,
     );
 
     final pantryItem = _modeChoice == _ModeChoice.boolean
@@ -520,6 +525,31 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
             showSelectedIcon: false,
             onSelectionChanged: (selection) =>
                 _handleModeChanged(selection.first),
+          ),
+          MenuarioSpacing.gapV16,
+          Text('Tipo de necesidad', style: MenuarioTypography.body),
+          MenuarioSpacing.gapV8,
+          SegmentedButton<NeedType>(
+            key: const Key('ingredient-need-type-field'),
+            style: const ButtonStyle(
+              visualDensity: VisualDensity.compact,
+              textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 12)),
+            ),
+            segments: const [
+              ButtonSegment(
+                value: NeedType.recipeDriven,
+                label: Text('Por recetas'),
+              ),
+              ButtonSegment(
+                value: NeedType.weeklyFixed,
+                label: Text('1 por semana'),
+              ),
+              ButtonSegment(value: NeedType.optional, label: Text('Opcional')),
+            ],
+            selected: {_needType},
+            showSelectedIcon: false,
+            onSelectionChanged: (selection) =>
+                setState(() => _needType = selection.first),
           ),
           if (_modeChoice == _ModeChoice.package) ...[
             MenuarioSpacing.gapV16,

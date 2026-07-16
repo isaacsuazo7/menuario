@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$IngredientDTO {
 
- String get name; String? get emoji; String get category; String? get measurementKind; bool? get booleanTracked; num? get conversionFactor; String? get measurementMode; PackageSpecDTO? get package; String? get defaultLensLabel;
+ String get name; String? get emoji; String get category; String? get measurementKind; bool? get booleanTracked; num? get conversionFactor; String? get measurementMode; PackageSpecDTO? get package; String? get defaultLensLabel; String? get needType;
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $IngredientDTOCopyWith<IngredientDTO> get copyWith => _$IngredientDTOCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor)&&(identical(other.measurementMode, measurementMode) || other.measurementMode == measurementMode)&&(identical(other.package, package) || other.package == package)&&(identical(other.defaultLensLabel, defaultLensLabel) || other.defaultLensLabel == defaultLensLabel));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor)&&(identical(other.measurementMode, measurementMode) || other.measurementMode == measurementMode)&&(identical(other.package, package) || other.package == package)&&(identical(other.defaultLensLabel, defaultLensLabel) || other.defaultLensLabel == defaultLensLabel)&&(identical(other.needType, needType) || other.needType == needType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor,measurementMode,package,defaultLensLabel);
+int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor,measurementMode,package,defaultLensLabel,needType);
 
 @override
 String toString() {
-  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor, measurementMode: $measurementMode, package: $package, defaultLensLabel: $defaultLensLabel)';
+  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor, measurementMode: $measurementMode, package: $package, defaultLensLabel: $defaultLensLabel, needType: $needType)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $IngredientDTOCopyWith<$Res>  {
   factory $IngredientDTOCopyWith(IngredientDTO value, $Res Function(IngredientDTO) _then) = _$IngredientDTOCopyWithImpl;
 @useResult
 $Res call({
- String name, String? emoji, String category, String? measurementKind, bool? booleanTracked, num? conversionFactor, String? measurementMode, PackageSpecDTO? package, String? defaultLensLabel
+ String name, String? emoji, String category, String? measurementKind, bool? booleanTracked, num? conversionFactor, String? measurementMode, PackageSpecDTO? package, String? defaultLensLabel, String? needType
 });
 
 
@@ -65,7 +65,7 @@ class _$IngredientDTOCopyWithImpl<$Res>
 
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = freezed,Object? booleanTracked = freezed,Object? conversionFactor = freezed,Object? measurementMode = freezed,Object? package = freezed,Object? defaultLensLabel = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = freezed,Object? booleanTracked = freezed,Object? conversionFactor = freezed,Object? measurementMode = freezed,Object? package = freezed,Object? defaultLensLabel = freezed,Object? needType = freezed,}) {
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
@@ -76,6 +76,7 @@ as bool?,conversionFactor: freezed == conversionFactor ? _self.conversionFactor 
 as num?,measurementMode: freezed == measurementMode ? _self.measurementMode : measurementMode // ignore: cast_nullable_to_non_nullable
 as String?,package: freezed == package ? _self.package : package // ignore: cast_nullable_to_non_nullable
 as PackageSpecDTO?,defaultLensLabel: freezed == defaultLensLabel ? _self.defaultLensLabel : defaultLensLabel // ignore: cast_nullable_to_non_nullable
+as String?,needType: freezed == needType ? _self.needType : needType // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -173,10 +174,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel,  String? needType)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IngredientDTO() when $default != null:
-return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel,_that.needType);case _:
   return orElse();
 
 }
@@ -194,10 +195,10 @@ return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel,  String? needType)  $default,) {final _that = this;
 switch (_that) {
 case _IngredientDTO():
-return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel,_that.needType);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -214,10 +215,10 @@ return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? emoji,  String category,  String? measurementKind,  bool? booleanTracked,  num? conversionFactor,  String? measurementMode,  PackageSpecDTO? package,  String? defaultLensLabel,  String? needType)?  $default,) {final _that = this;
 switch (_that) {
 case _IngredientDTO() when $default != null:
-return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel);case _:
+return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_that.booleanTracked,_that.conversionFactor,_that.measurementMode,_that.package,_that.defaultLensLabel,_that.needType);case _:
   return null;
 
 }
@@ -229,7 +230,7 @@ return $default(_that.name,_that.emoji,_that.category,_that.measurementKind,_tha
 @JsonSerializable()
 
 class _IngredientDTO extends IngredientDTO {
-  const _IngredientDTO({required this.name, this.emoji, required this.category, this.measurementKind, this.booleanTracked, this.conversionFactor, this.measurementMode, this.package, this.defaultLensLabel}): super._();
+  const _IngredientDTO({required this.name, this.emoji, required this.category, this.measurementKind, this.booleanTracked, this.conversionFactor, this.measurementMode, this.package, this.defaultLensLabel, this.needType}): super._();
   factory _IngredientDTO.fromJson(Map<String, dynamic> json) => _$IngredientDTOFromJson(json);
 
 @override final  String name;
@@ -241,6 +242,7 @@ class _IngredientDTO extends IngredientDTO {
 @override final  String? measurementMode;
 @override final  PackageSpecDTO? package;
 @override final  String? defaultLensLabel;
+@override final  String? needType;
 
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -255,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor)&&(identical(other.measurementMode, measurementMode) || other.measurementMode == measurementMode)&&(identical(other.package, package) || other.package == package)&&(identical(other.defaultLensLabel, defaultLensLabel) || other.defaultLensLabel == defaultLensLabel));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _IngredientDTO&&(identical(other.name, name) || other.name == name)&&(identical(other.emoji, emoji) || other.emoji == emoji)&&(identical(other.category, category) || other.category == category)&&(identical(other.measurementKind, measurementKind) || other.measurementKind == measurementKind)&&(identical(other.booleanTracked, booleanTracked) || other.booleanTracked == booleanTracked)&&(identical(other.conversionFactor, conversionFactor) || other.conversionFactor == conversionFactor)&&(identical(other.measurementMode, measurementMode) || other.measurementMode == measurementMode)&&(identical(other.package, package) || other.package == package)&&(identical(other.defaultLensLabel, defaultLensLabel) || other.defaultLensLabel == defaultLensLabel)&&(identical(other.needType, needType) || other.needType == needType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor,measurementMode,package,defaultLensLabel);
+int get hashCode => Object.hash(runtimeType,name,emoji,category,measurementKind,booleanTracked,conversionFactor,measurementMode,package,defaultLensLabel,needType);
 
 @override
 String toString() {
-  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor, measurementMode: $measurementMode, package: $package, defaultLensLabel: $defaultLensLabel)';
+  return 'IngredientDTO(name: $name, emoji: $emoji, category: $category, measurementKind: $measurementKind, booleanTracked: $booleanTracked, conversionFactor: $conversionFactor, measurementMode: $measurementMode, package: $package, defaultLensLabel: $defaultLensLabel, needType: $needType)';
 }
 
 
@@ -275,7 +277,7 @@ abstract mixin class _$IngredientDTOCopyWith<$Res> implements $IngredientDTOCopy
   factory _$IngredientDTOCopyWith(_IngredientDTO value, $Res Function(_IngredientDTO) _then) = __$IngredientDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String? emoji, String category, String? measurementKind, bool? booleanTracked, num? conversionFactor, String? measurementMode, PackageSpecDTO? package, String? defaultLensLabel
+ String name, String? emoji, String category, String? measurementKind, bool? booleanTracked, num? conversionFactor, String? measurementMode, PackageSpecDTO? package, String? defaultLensLabel, String? needType
 });
 
 
@@ -292,7 +294,7 @@ class __$IngredientDTOCopyWithImpl<$Res>
 
 /// Create a copy of IngredientDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = freezed,Object? booleanTracked = freezed,Object? conversionFactor = freezed,Object? measurementMode = freezed,Object? package = freezed,Object? defaultLensLabel = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? name = null,Object? emoji = freezed,Object? category = null,Object? measurementKind = freezed,Object? booleanTracked = freezed,Object? conversionFactor = freezed,Object? measurementMode = freezed,Object? package = freezed,Object? defaultLensLabel = freezed,Object? needType = freezed,}) {
   return _then(_IngredientDTO(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,emoji: freezed == emoji ? _self.emoji : emoji // ignore: cast_nullable_to_non_nullable
@@ -303,6 +305,7 @@ as bool?,conversionFactor: freezed == conversionFactor ? _self.conversionFactor 
 as num?,measurementMode: freezed == measurementMode ? _self.measurementMode : measurementMode // ignore: cast_nullable_to_non_nullable
 as String?,package: freezed == package ? _self.package : package // ignore: cast_nullable_to_non_nullable
 as PackageSpecDTO?,defaultLensLabel: freezed == defaultLensLabel ? _self.defaultLensLabel : defaultLensLabel // ignore: cast_nullable_to_non_nullable
+as String?,needType: freezed == needType ? _self.needType : needType // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

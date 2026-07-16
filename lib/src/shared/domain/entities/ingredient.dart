@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 
 part 'ingredient.freezed.dart';
@@ -25,6 +26,14 @@ part 'ingredient.freezed.dart';
 /// packageAbstract ingredient's pack (label, yield, base dimension);
 /// [defaultLensLabel] overrides the mode's default-lens heuristic
 /// (e.g. forcing `g` instead of `lb`), persisted per ingredient.
+///
+/// [needType] classifies HOW this ingredient's weekly need is computed for
+/// the weekly budget (coverage + shopping auto-calc): [NeedType.recipeDriven]
+/// (default) sums planned-recipe consumption; [NeedType.weeklyFixed] needs
+/// exactly 1 whole package when planned this week, else 0; [NeedType.optional]
+/// is excluded from the weekly budget entirely. Replaces the
+/// conversionFactor-backfill approach for perishables you buy whole and
+/// that spoil (espinaca, lechuga, fresas, requesón, yogurt sin sabor).
 @freezed
 abstract class Ingredient with _$Ingredient {
   const factory Ingredient({
@@ -38,5 +47,6 @@ abstract class Ingredient with _$Ingredient {
     @Default(MeasurementMode.mass) MeasurementMode measurementMode,
     PackageSpec? package,
     String? defaultLensLabel,
+    @Default(NeedType.recipeDriven) NeedType needType,
   }) = _Ingredient;
 }

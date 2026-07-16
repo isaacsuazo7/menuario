@@ -40,6 +40,7 @@ export 'domain/value_objects/meal_slot.dart';
 export 'domain/value_objects/meal_type.dart';
 export 'domain/value_objects/measurement_kind.dart';
 export 'domain/value_objects/measurement_mode.dart';
+export 'domain/value_objects/need_type.dart';
 export 'domain/value_objects/package_spec.dart';
 export 'domain/value_objects/presentation.dart';
 export 'domain/value_objects/purchase_quantity.dart';

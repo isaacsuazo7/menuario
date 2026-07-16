@@ -3,6 +3,7 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
@@ -98,6 +99,48 @@ void main() {
       expect(leche.package?.yieldQty, 1);
       expect(leche.package?.baseDimension, Unit.liter);
       expect(leche.defaultLensLabel, 'L');
+    });
+
+    test('needType defaults to recipeDriven when not specified', () {
+      // Arrange & Act
+      const huevo = Ingredient(
+        id: 'ingredient-huevo',
+        name: 'Huevo',
+        category: Category.proteina,
+        measurementKind: MeasurementKind.unit,
+        booleanTracked: false,
+      );
+
+      // Assert
+      expect(huevo.needType, NeedType.recipeDriven);
+    });
+
+    test('an ingredient may declare weeklyFixed or optional needType', () {
+      // Arrange & Act
+      const espinaca = Ingredient(
+        id: 'ingredient-espinaca',
+        name: 'Espinaca',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+        needType: NeedType.weeklyFixed,
+      );
+      const fresas = Ingredient(
+        id: 'ingredient-fresas',
+        name: 'Fresas',
+        category: Category.fruta,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'caja'),
+        needType: NeedType.optional,
+      );
+
+      // Assert
+      expect(espinaca.needType, NeedType.weeklyFixed);
+      expect(fresas.needType, NeedType.optional);
     });
   });
 }
