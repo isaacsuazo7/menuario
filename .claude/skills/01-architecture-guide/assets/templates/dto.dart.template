@@ -1,0 +1,39 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:menuario/src/features/{{FEATURE_NAME}}/domain/entities/{{ENTITY_NAME_SNAKE}}.dart';
+
+part '{{ENTITY_NAME_SNAKE}}_dto.freezed.dart';
+part '{{ENTITY_NAME_SNAKE}}_dto.g.dart';
+
+@freezed
+abstract class {{ENTITY_NAME}}DTO with _${{ENTITY_NAME}}DTO {
+  const factory {{ENTITY_NAME}}DTO({
+    // TODO: Add DTO fields (match the Firestore document shape)
+    required String id,
+    required String name,
+  }) = _{{ENTITY_NAME}}DTO;
+
+  const {{ENTITY_NAME}}DTO._();
+
+  factory {{ENTITY_NAME}}DTO.fromJson(Map<String, dynamic> json) =>
+      _${{ENTITY_NAME}}DTOFromJson(json);
+
+  /// Entity -> DTO (para escribir en Firestore)
+  static {{ENTITY_NAME}}DTO fromEntity({{ENTITY_NAME}} entity) {
+    return {{ENTITY_NAME}}DTO(
+      id: entity.id,
+      name: entity.name,
+      // TODO: Map entity fields to DTO fields
+    );
+  }
+}
+
+/// DTO -> Entity (para leer desde Firestore)
+extension {{ENTITY_NAME}}DTOX on {{ENTITY_NAME}}DTO {
+  {{ENTITY_NAME}} toEntity() {
+    return {{ENTITY_NAME}}(
+      id: id,
+      name: name,
+      // TODO: Map DTO fields to entity fields
+    );
+  }
+}

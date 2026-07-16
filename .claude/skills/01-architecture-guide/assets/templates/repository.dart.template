@@ -1,0 +1,30 @@
+import 'package:dartz/dartz.dart' hide Unit;
+import 'package:menuario/src/core/core.dart';
+import 'package:menuario/src/features/{{FEATURE_NAME}}/domain/entities/{{ENTITY_NAME_SNAKE}}.dart';
+
+/// Repository interface - define el contrato (puerto de dominio).
+/// La implementación vive en data/repositories/ y habla con Firestore.
+abstract class {{ENTITY_NAME}}Repository {
+  /// Lista de {{ENTITY_NAME_PLURAL}}
+  Future<Either<Failure, List<{{ENTITY_NAME}}>>> get{{ENTITY_NAME_PLURAL}}();
+
+  /// Un {{ENTITY_NAME}} por id de documento
+  Future<Either<Failure, {{ENTITY_NAME}}>> get{{ENTITY_NAME}}({
+    required String id,
+  });
+
+  /// Crear un nuevo {{ENTITY_NAME}}
+  Future<Either<Failure, void>> create{{ENTITY_NAME}}({
+    required {{ENTITY_NAME}} {{ENTITY_NAME_CAMEL}},
+  });
+
+  /// Actualizar un {{ENTITY_NAME}} existente
+  Future<Either<Failure, void>> update{{ENTITY_NAME}}({
+    required {{ENTITY_NAME}} {{ENTITY_NAME_CAMEL}},
+  });
+
+  /// Eliminar un {{ENTITY_NAME}}
+  Future<Either<Failure, void>> delete{{ENTITY_NAME}}({
+    required String id,
+  });
+}

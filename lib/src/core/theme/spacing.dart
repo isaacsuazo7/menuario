@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-/// Centralized spacing tokens, mirroring the EmsulaSpacing pattern.
+/// Centralized spacing tokens.
 ///
 /// Prefer these constants over ad-hoc [SizedBox]/[EdgeInsets] literals so
 /// gaps and paddings stay consistent across screens.

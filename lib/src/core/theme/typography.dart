@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Centralized text styles, mirroring the EmsulaTypography pattern.
+/// Centralized text styles.
 abstract final class MenuarioTypography {
   const MenuarioTypography._();
 
@@ -13,8 +13,7 @@ abstract final class MenuarioTypography {
   static const body = TextStyle(fontSize: 14, fontWeight: FontWeight.w400);
 }
 
-/// Convenience helpers layered on top of [TextStyle], mirroring
-/// EmsulaTypography's `.bold`/`.withColor` extensions.
+/// Convenience helpers layered on top of [TextStyle].
 extension MenuarioTextStyleX on TextStyle {
   /// Returns a bold variant of this style.
   TextStyle get bold => copyWith(fontWeight: FontWeight.bold);
