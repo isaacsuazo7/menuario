@@ -31,8 +31,11 @@ final recipeFormController =
       dependencies: const [], // ✅ Declarar dependencies explícito
     );
 
-// 2. Controller PURO (sin side effects en build)
-class RecipeFormController extends AutoDisposeNotifier<FormGroup> {
+// 2. Controller PURO (sin side effects en build).
+// Riverpod 3 unificó la API: se extiende `Notifier<T>` y el autoDispose va en
+// el provider (`NotifierProvider.autoDispose`); `AutoDisposeNotifier` ya NO
+// existe como clase base (no compila).
+class RecipeFormController extends Notifier<FormGroup> {
   @override
   FormGroup build() {
     return FormGroup(
@@ -78,7 +81,7 @@ class _ServingsWithinPrepValidator extends Validator<dynamic> {
 ### ❌ INCORRECTO - Anti-patrón con side effects
 
 ```dart
-class BadFormController extends AutoDisposeNotifier<FormGroup> {
+class BadFormController extends Notifier<FormGroup> {
   @override
   FormGroup build() {
     final form = FormGroup({...});

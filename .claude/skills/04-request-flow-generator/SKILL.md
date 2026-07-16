@@ -185,7 +185,7 @@ final recipeSubmissionProvider =
   dependencies: [recipeRepositoryProvider],
 );
 
-class RecipeSubmissionNotifier extends AutoDisposeNotifier<AsyncValue<void>> {
+class RecipeSubmissionNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncData(null);
 
@@ -225,7 +225,7 @@ final recipeFormControllerProvider =
   dependencies: const [],
 );
 
-class RecipeFormController extends AutoDisposeNotifier<FormGroup> {
+class RecipeFormController extends Notifier<FormGroup> {
   @override
   FormGroup build() {
     return FormGroup({

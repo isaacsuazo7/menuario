@@ -34,7 +34,7 @@ final signInSubmissionProvider =
       ],
     );
 
-class SignInSubmissionNotifier extends AutoDisposeNotifier<AsyncValue<void>> {
+class SignInSubmissionNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncData(null);
 
@@ -77,6 +77,9 @@ NotifierProvider.autoDispose<NotifierClass, AsyncValue<void>>
 
 - `autoDispose`: Se limpia cuando no hay listeners
 - `AsyncValue<void>`: Para operaciones sin retorno de datos
+- El notifier extiende `Notifier<T>`. Riverpod 3 unificó la API: el
+  `autoDispose` va en el provider y `AutoDisposeNotifier` ya NO existe como
+  clase base (no compila).
 
 ### 2. Dependencies
 Declarar TODAS las dependencias (recuerda: menuario **no tiene UseCase**, se
@@ -174,7 +177,7 @@ Widget build(BuildContext context) {
 ## Checklist de Submission Providers
 
 - [ ] `NotifierProvider.autoDispose<Notifier, AsyncValue<void>>`
-- [ ] `extends AutoDisposeNotifier<AsyncValue<void>>`
+- [ ] `extends Notifier<AsyncValue<void>>`
 - [ ] `build()` retorna `const AsyncData(null)`
 - [ ] `AsyncValue<void>` como tipo de estado
 - [ ] Dependencies declaradas (repository/servicio + providers a invalidar)
