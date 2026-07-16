@@ -106,10 +106,7 @@ class MeasurementConverter {
           return Left(Failure.missingConversionFactor(ingredient.name));
         }
         return Right(
-          Quantity(
-            value: normalizedQuantity.value * factor,
-            unit: stockUnit,
-          ),
+          Quantity(value: normalizedQuantity.value * factor, unit: stockUnit),
         );
       case MeasurementMode.boolean:
         return Left(Failure.unknownUnit(normalizedQuantity.unit.symbol));
