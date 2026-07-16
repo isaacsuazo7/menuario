@@ -40,10 +40,18 @@ abstract class PresentationDTO with _$PresentationDTO {
 /// Bidirectional mapper: [PresentationDTO] -> [Presentation].
 extension PresentationDTOX on PresentationDTO {
   /// Rebuilds the [Presentation] entity carried by this DTO.
+  ///
+  /// [yieldQty]/[label] are null-safe (not force-unwrapped): an old-shape
+  /// `package` document with a null `yieldQty` (the pre-migration
+  /// packageAbstract crash case, e.g. espinaca/escarola/galletas-marias/
+  /// fresas) falls back to `1`/`'paquete'` instead of throwing.
   Presentation toEntity() {
     return switch (type) {
       'loose' => const Presentation.loose(),
-      'package' => Presentation.package(yieldQty: yieldQty!, label: label!),
+      'package' => Presentation.package(
+        yieldQty: yieldQty ?? 1,
+        label: label ?? 'paquete',
+      ),
       'counter' => const Presentation.counter(),
       _ => throw ArgumentError('Unknown Presentation type: "$type".'),
     };

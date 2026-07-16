@@ -11,6 +11,11 @@ import 'package:menuario/src/shared/shared.dart';
 /// needed" design decision) — safe to hold as a single const instance.
 const _stockPresentation = StockPresentationService();
 
+/// Pure and dependency-free, same as [_stockPresentation] — drives the
+/// pill's mode-aware effective-zero status independently of the still
+/// presentation-driven [_stockPresentation.display].
+const _stockLensService = StockLensService();
+
 /// A quantity-tracked Despensa row: emoji, name, purchase-unit stock
 /// display, a [StatePill], and a +/- stepper wired to
 /// [PantryController.adjustStock] with a presentation-aware smart step.
@@ -67,7 +72,12 @@ class QuantityPantryRow extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          StatePill(isPositive: item.stock.value > 0),
+          StatePill(
+            isPositive: !_stockLensService.isEffectivelyZero(
+              ingredient,
+              item.stock,
+            ),
+          ),
           MenuarioSpacing.gapH8,
           IconButton(
             icon: const Icon(Icons.remove),

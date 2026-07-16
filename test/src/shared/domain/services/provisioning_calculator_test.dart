@@ -13,6 +13,8 @@ import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/day_of_week.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_slot.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
+import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
+import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/purchase_quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -128,6 +130,50 @@ void main() {
         expect(
           result,
           const Right<Failure, Quantity>(Quantity(value: 0, unit: Unit.gram)),
+        );
+      });
+
+      test('should default the zero-consumption unit via '
+          'StockLensService.canonicalUnitFor, not the legacy measurementKind '
+          'ternary (packageBase leche -> its own base dimension, liters)', () {
+        // Arrange
+        const leche = Ingredient(
+          id: 'ingredient-leche',
+          name: 'Leche',
+          category: Category.lacteo,
+          measurementKind: MeasurementKind.bulk,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'bolsa',
+            yieldQty: 1,
+            baseDimension: Unit.liter,
+          ),
+        );
+        const recipe = Recipe(
+          id: 'recipe-leche',
+          name: 'Café con leche',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-leche',
+              ingredientId: 'ingredient-leche',
+              quantity: Quantity(value: 1, unit: taza),
+            ),
+          ],
+        );
+        const weekPlan = WeekPlan(entries: []);
+
+        // Act
+        final result = calculator.weeklyConsumption(
+          ingredient: leche,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 0, unit: Unit.liter)),
         );
       });
 

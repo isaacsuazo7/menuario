@@ -133,7 +133,7 @@ class ShoppingListBuilder {
       pantryItem = QuantityTrackedPantryItem(
         ingredientId: ingredientId,
         category: ingredient.category,
-        presentation: _defaultPresentation(ingredient),
+        presentation: presentationForPurchase(ingredient),
         stock: Quantity(value: 0, unit: consumption.unit),
       );
       pantryExists = false;
@@ -165,15 +165,34 @@ class ShoppingListBuilder {
       quantityDisplay: purchase?.display,
     );
   }
+}
 
-  /// The default [Presentation] synthesized for an ingredient absent from
-  /// the pantry (assume-zero anchor): `bulk` -> `counter`, `unit` ->
-  /// `loose`. `Ingredient` carries no stored presentation, so this cannot
-  /// recover a `package` shape — acceptable, since no stored presentation
-  /// exists for an absent ingredient either way.
-  Presentation _defaultPresentation(Ingredient ingredient) {
-    return ingredient.measurementKind == MeasurementKind.bulk
-        ? const Presentation.counter()
-        : const Presentation.loose();
-  }
+/// The default purchase [Presentation] synthesized for an ingredient absent
+/// from the pantry (assume-zero anchor), derived from
+/// [Ingredient.measurementMode] rather than the legacy `measurementKind`/
+/// `booleanTracked` pair: `mass` -> `counter`, `count` -> `loose`,
+/// `packageBase` -> `package` (its own `yieldQty`/`label`), `packageAbstract`
+/// -> `package` (a single decimal pack of its own `label`).
+///
+/// Keeps [MeasurementConverter.toPurchaseQuantity]'s ceiling behavior fed
+/// with the [Presentation] shape it still expects, without
+/// [MeasurementConverter] itself knowing about [MeasurementMode] — see the
+/// flexible-units design's "Preserve MeasurementConverter" decision.
+/// `boolean`-mode ingredients never reach this adapter (they are gathered
+/// via [ProvisioningCalculator.shouldSurfaceBooleanItem] instead), so
+/// `loose` is only a harmless placeholder for that case.
+Presentation presentationForPurchase(Ingredient ingredient) {
+  return switch (ingredient.measurementMode) {
+    MeasurementMode.mass => const Presentation.counter(),
+    MeasurementMode.count => const Presentation.loose(),
+    MeasurementMode.packageBase => Presentation.package(
+      yieldQty: ingredient.package?.yieldQty ?? 1,
+      label: ingredient.package?.label ?? 'paquete',
+    ),
+    MeasurementMode.packageAbstract => Presentation.package(
+      yieldQty: 1,
+      label: ingredient.package?.label ?? 'paquete',
+    ),
+    MeasurementMode.boolean => const Presentation.loose(),
+  };
 }

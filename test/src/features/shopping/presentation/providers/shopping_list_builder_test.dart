@@ -16,6 +16,7 @@ void main() {
     category: Category.proteina,
     measurementKind: MeasurementKind.unit,
     booleanTracked: false,
+    measurementMode: MeasurementMode.count,
   );
   const recipeHuevo = Recipe(
     id: 'recipe-huevo',
@@ -314,6 +315,74 @@ void main() {
         Category.fruta,
         Category.condimento,
       ]);
+    });
+  });
+
+  group('presentationForPurchase adapter', () {
+    test('mass mode maps to a counter presentation', () {
+      const ingredient = Ingredient(
+        id: 'ing-carne',
+        name: 'Carne molida',
+        category: Category.proteina,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.mass,
+      );
+
+      expect(presentationForPurchase(ingredient), const Presentation.counter());
+    });
+
+    test('count mode maps to a loose presentation', () {
+      const ingredient = Ingredient(
+        id: 'ing-platano',
+        name: 'Plátano',
+        category: Category.fruta,
+        measurementKind: MeasurementKind.unit,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.count,
+      );
+
+      expect(presentationForPurchase(ingredient), const Presentation.loose());
+    });
+
+    test('packageBase mode maps to a package presentation using its yieldQty '
+        'and label', () {
+      const ingredient = Ingredient(
+        id: 'ing-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: 1,
+          baseDimension: Unit.liter,
+        ),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+      );
+    });
+
+    test('packageAbstract mode maps to a single-pack package presentation '
+        'using its label', () {
+      const ingredient = Ingredient(
+        id: 'ing-lechuga',
+        name: 'Lechuga',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.bulk,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+      );
     });
   });
 }

@@ -133,12 +133,16 @@ void main() {
       'getById returns Left(Failure) instead of throwing when the '
       'document is missing a required field',
       () async {
-        // Arrange
+        // Arrange — `category` remains required even after the
+        // flexible-units back-compat change (which only relaxed
+        // `measurementKind`/`booleanTracked` to nullable so an old-shape
+        // document lacking `measurementMode` still loads); a doc missing
+        // `category` is still genuinely malformed.
         final dataSource = makeDataSource();
         await firestore
             .collection('users/uid-A/ingredients')
             .doc('broken')
-            .set({'name': 'Avena', 'category': 'cereal'});
+            .set({'name': 'Avena'});
 
         // Act
         final result = await dataSource.getById('broken');
@@ -149,6 +153,37 @@ void main() {
           (failure) => expect(failure.code, 'malformedData'),
           (_) => fail('expected Left, got Right'),
         );
+      },
+    );
+
+    test(
+      'getById loads an old-shape document (no measurementMode) without '
+      'throwing, deriving a mode from its legacy fields',
+      () async {
+        // Arrange — a pre-flexible-units document: `measurementKind` +
+        // `booleanTracked` present, no `measurementMode`/`package`/
+        // `defaultLensLabel` keys at all.
+        final dataSource = makeDataSource();
+        await firestore
+            .collection('users/uid-A/ingredients')
+            .doc('old-shape')
+            .set({
+              'name': 'Arroz',
+              'category': 'cereal',
+              'measurementKind': 'bulk',
+              'booleanTracked': false,
+              'conversionFactor': 50,
+            });
+
+        // Act
+        final result = await dataSource.getById('old-shape');
+
+        // Assert
+        expect(result, isA<Right<Failure, IngredientDTO>>());
+        result.fold((_) => fail('expected Right, got Left'), (dto) {
+          expect(dto.measurementKind, 'bulk');
+          expect(dto.measurementMode, isNull);
+        });
       },
     );
 

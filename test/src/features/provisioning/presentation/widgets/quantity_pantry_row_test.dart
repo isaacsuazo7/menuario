@@ -261,4 +261,27 @@ void main() {
       expect(find.widgetWithText(TextField, '1'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'a sub-display residual stock ("0.00 lb") shows the red No tengo pill, '
+    'not the green Tengo pill a raw nonzero stock would wrongly suggest '
+    '(effective-zero overrides raw positivity)',
+    (tester) async {
+      // 1 g is nonzero raw stock, but rounds to "0.00 lb" at the
+      // mass-mode default lens's 2dp display precision.
+      const residualItem = PantryItem.quantityTracked(
+        ingredientId: 'ing-pollo',
+        category: Category.proteina,
+        presentation: Presentation.counter(),
+        stock: Quantity(value: 1, unit: Unit.gram),
+      );
+      final residualRow = PantryRow(item: residualItem, ingredient: pollo);
+
+      await pumpRow(tester, withRow: residualRow);
+
+      expect(find.text('0.00 lb'), findsOneWidget);
+      expect(find.text('🔴 No tengo'), findsOneWidget);
+      expect(find.text('🟢 Tengo'), findsNothing);
+    },
+  );
 }
