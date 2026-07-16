@@ -930,6 +930,67 @@ void main() {
         expect(find.text('Nuevo ingrediente'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'Confirm pops the screen with the saved ingredient id (recipe-crud '
+      'BOM inline-add escape hatch relies on this return value)',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        String? poppedValue;
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: overrides(),
+            child: MaterialApp(
+              home: Builder(
+                builder: (context) => Scaffold(
+                  body: ElevatedButton(
+                    onPressed: () async {
+                      poppedValue = await Navigator.of(context)
+                          .push<String?>(
+                            MaterialPageRoute<String?>(
+                              builder: (_) => const IngredientFormScreen(),
+                            ),
+                          );
+                    },
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('open'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Huevo',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '7',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        expect(poppedValue, 'ing-new-id');
+      },
+    );
   });
 
   group('edit prefill', () {
