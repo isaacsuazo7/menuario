@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/shared/data/models/ingredient_dto.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
 import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
@@ -18,8 +17,6 @@ void main() {
         name: 'Avena',
         emoji: '🌾',
         category: Category.cereal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         conversionFactor: 85,
       );
 
@@ -34,18 +31,18 @@ void main() {
       expect(result.emoji, '🌾');
       expect(json.containsKey('id'), isFalse);
       expect(json['category'], 'cereal');
-      expect(json['measurementKind'], 'bulk');
+      expect(json['measurementMode'], 'mass');
+      expect(json['measurementKind'], isNull);
     });
 
-    test('a unit-tracked, boolean-tracked ingredient with no conversion '
-        'factor round-trips exactly', () {
+    test('a boolean-mode ingredient with no conversion factor round-trips '
+        'exactly', () {
       // Arrange
       const entity = Ingredient(
         id: 'ingredient-comino',
         name: 'Comino',
         category: Category.condimento,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: true,
+        measurementMode: MeasurementMode.boolean,
         conversionFactor: null,
       );
 
@@ -59,7 +56,8 @@ void main() {
       expect(result, entity);
       expect(result.emoji, isNull);
       expect(json['conversionFactor'], isNull);
-      expect(json['booleanTracked'], isTrue);
+      expect(json['measurementMode'], 'boolean');
+      expect(json['booleanTracked'], isNull);
     });
 
     test('a packageBase ingredient with a default-lens override round-trips '
@@ -70,8 +68,6 @@ void main() {
         name: 'Leche',
         emoji: '🥛',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         package: PackageSpec(
           label: 'bolsa',
@@ -100,8 +96,6 @@ void main() {
         id: 'ingredient-espinaca',
         name: 'Espinaca',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'bolsa'),
         needType: NeedType.weeklyFixed,
@@ -124,8 +118,6 @@ void main() {
         id: 'ingredient-fresas',
         name: 'Fresas',
         category: Category.fruta,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'caja'),
         needType: NeedType.optional,
@@ -207,26 +199,23 @@ void main() {
       expect(result.measurementMode, MeasurementMode.boolean);
     });
 
-    test(
-      'an old-shape doc with no needType key defaults to recipeDriven',
-      () {
-        // Arrange
-        final json = {
-          'name': 'Arroz',
-          'category': 'cereal',
-          'measurementKind': 'bulk',
-          'booleanTracked': false,
-          'conversionFactor': 50,
-        };
+    test('an old-shape doc with no needType key defaults to recipeDriven', () {
+      // Arrange
+      final json = {
+        'name': 'Arroz',
+        'category': 'cereal',
+        'measurementKind': 'bulk',
+        'booleanTracked': false,
+        'conversionFactor': 50,
+      };
 
-        // Act
-        final result = IngredientDTO.fromJson(
-          json,
-        ).toEntity(id: 'ingredient-arroz');
+      // Act
+      final result = IngredientDTO.fromJson(
+        json,
+      ).toEntity(id: 'ingredient-arroz');
 
-        // Assert
-        expect(result.needType, NeedType.recipeDriven);
-      },
-    );
+      // Assert
+      expect(result.needType, NeedType.recipeDriven);
+    });
   });
 }

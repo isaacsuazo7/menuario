@@ -10,8 +10,6 @@ void main() {
     name: 'Pollo',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
@@ -20,8 +18,6 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const leche = Ingredient(
@@ -29,8 +25,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'bolsa',

@@ -9,8 +9,6 @@ import 'package:menuario/src/shared/data/repositories/ingredient_catalog_reposit
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
-import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -41,14 +39,11 @@ void main() {
           id: 'ingredient-avena',
           name: 'Avena',
           category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           conversionFactor: 85,
         );
         const pantryItem = PantryItem.quantityTracked(
           ingredientId: 'ingredient-avena',
           category: Category.cereal,
-          presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
           stock: Quantity(value: 2, unit: Unit.gram),
         );
 
@@ -87,13 +82,10 @@ void main() {
           id: 'ingredient-comino',
           name: 'Comino',
           category: Category.condimento,
-          measurementKind: MeasurementKind.unit,
-          booleanTracked: true,
         );
         const pantryItem = PantryItem.booleanTracked(
           ingredientId: 'ingredient-comino',
           category: Category.condimento,
-          presentation: Presentation.loose(),
           haveIt: false,
         );
 
@@ -133,14 +125,11 @@ void main() {
       id: 'ingredient-avena',
       name: 'Avena',
       category: Category.cereal,
-      measurementKind: MeasurementKind.bulk,
-      booleanTracked: false,
       conversionFactor: 85,
     );
     const pantryItem = PantryItem.quantityTracked(
       ingredientId: 'ingredient-avena',
       category: Category.cereal,
-      presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
       stock: Quantity(value: 2, unit: Unit.gram),
     );
 

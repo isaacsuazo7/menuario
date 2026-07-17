@@ -26,15 +26,12 @@ void main() {
     name: 'Pollo',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
   const polloItem = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
-    presentation: Presentation.counter(),
     stock: Quantity(value: Mass.gramsPerPound * 2, unit: Unit.gram),
   );
   final polloRow = PantryRow(item: polloItem, ingredient: pollo);
@@ -45,14 +42,11 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const huevoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-huevo',
     category: Category.proteina,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 7, unit: Unit.count),
   );
   final huevoRow = PantryRow(item: huevoItem, ingredient: huevo);
@@ -63,8 +57,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'bolsas',
@@ -75,7 +67,6 @@ void main() {
   const lecheItem = PantryItem.quantityTracked(
     ingredientId: 'ing-leche',
     category: Category.lacteo,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsas'),
     stock: Quantity(value: 3.5, unit: Unit.liter),
   );
   final lecheRow = PantryRow(item: lecheItem, ingredient: leche);
@@ -86,7 +77,6 @@ void main() {
   const zeroLecheItem = PantryItem.quantityTracked(
     ingredientId: 'ing-leche',
     category: Category.lacteo,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsas'),
     stock: Quantity(value: 0, unit: Unit.liter),
   );
   final zeroLecheRow = PantryRow(item: zeroLecheItem, ingredient: leche);
@@ -97,15 +87,12 @@ void main() {
     name: 'Lechuga',
     emoji: '🥬',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'bolsa'),
   );
   const lechugaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-lechuga',
     category: Category.vegetal,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
     stock: Quantity(value: 0, unit: Unit.package),
   );
   final lechugaRow = PantryRow(item: lechugaItem, ingredient: lechuga);
@@ -119,15 +106,12 @@ void main() {
         'especiales de la casa',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
   const longNameItem = PantryItem.quantityTracked(
     ingredientId: 'ing-long-name',
     category: Category.proteina,
-    presentation: Presentation.counter(),
     stock: Quantity(value: Mass.gramsPerPound * 2, unit: Unit.gram),
   );
   final longNameRow = PantryRow(

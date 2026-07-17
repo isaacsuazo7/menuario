@@ -17,8 +17,6 @@ void main() {
     id: 'ing-huevo',
     name: 'Huevo',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
 
@@ -26,8 +24,6 @@ void main() {
     id: 'ing-platano',
     name: 'Plátano',
     category: Category.fruta,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
 
@@ -35,21 +31,16 @@ void main() {
     id: 'ing-arroz',
     name: 'Arroz',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
   );
 
   const comino = Ingredient(
     id: 'ing-comino',
     name: 'Comino',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
 
@@ -57,13 +48,10 @@ void main() {
     id: 'ing-sal',
     name: 'Sal',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const salItem = PantryItem.booleanTracked(
     ingredientId: 'ing-sal',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: true,
   );
 
@@ -76,7 +64,6 @@ void main() {
         const platanoStock = PantryItem.quantityTracked(
           ingredientId: 'ing-platano',
           category: Category.fruta,
-          presentation: Presentation.loose(),
           stock: Quantity(value: 3, unit: Unit.count),
         );
 
@@ -106,10 +93,6 @@ void main() {
       const huevoStock = PantryItem.quantityTracked(
         ingredientId: 'ing-huevo',
         category: Category.proteina,
-        presentation: Presentation.package(
-          yieldQty: 15,
-          label: 'cartón (15 u)',
-        ),
         stock: Quantity(value: 20, unit: Unit.count),
       );
 
@@ -183,7 +166,6 @@ void main() {
       const platanoStock = PantryItem.quantityTracked(
         ingredientId: 'ing-platano',
         category: Category.fruta,
-        presentation: Presentation.loose(),
         stock: Quantity(value: 3, unit: Unit.count),
       );
 
@@ -213,15 +195,12 @@ void main() {
       const mismatchedStock = PantryItem.quantityTracked(
         ingredientId: 'ing-arroz',
         category: Category.cereal,
-        presentation: Presentation.counter(),
         stock: Quantity(value: 2, unit: taza),
       );
       const arrozWithFactor = Ingredient(
         id: 'ing-arroz',
         name: 'Arroz',
         category: Category.cereal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
         conversionFactor: 50,
       );
@@ -284,45 +263,39 @@ void main() {
       expect(result.skipped, isEmpty);
     });
 
-    test(
-      'a weeklyFixed ingredient with less than 1 package in stock appears '
-      'in Comprar (buy 1) — the map already carries its 1-package need, '
-      'the builder needs no NeedType branching of its own',
-      () {
-        // Arrange
-        const espinaca = Ingredient(
-          id: 'ing-espinaca',
-          name: 'Espinaca',
-          category: Category.vegetal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
-          measurementMode: MeasurementMode.packageAbstract,
-          package: PackageSpec(label: 'bolsa'),
-          needType: NeedType.weeklyFixed,
-        );
-        const espinacaStock = PantryItem.quantityTracked(
-          ingredientId: 'ing-espinaca',
-          category: Category.vegetal,
-          presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
-          stock: Quantity(value: 0.5, unit: Unit.package),
-        );
+    test('a weeklyFixed ingredient with less than 1 package in stock appears '
+        'in Comprar (buy 1) — the map already carries its 1-package need, '
+        'the builder needs no NeedType branching of its own', () {
+      // Arrange
+      const espinaca = Ingredient(
+        id: 'ing-espinaca',
+        name: 'Espinaca',
+        category: Category.vegetal,
+        measurementMode: MeasurementMode.packageAbstract,
+        package: PackageSpec(label: 'bolsa'),
+        needType: NeedType.weeklyFixed,
+      );
+      const espinacaStock = PantryItem.quantityTracked(
+        ingredientId: 'ing-espinaca',
+        category: Category.vegetal,
+        stock: Quantity(value: 0.5, unit: Unit.package),
+      );
 
-        // Act
-        final result = builder.build(
-          weeklyConsumptionByIngredient: const {
-            'ing-espinaca': Right(Quantity(value: 1, unit: Unit.package)),
-          },
-          ingredientsById: const {'ing-espinaca': espinaca},
-          pantryByIngredientId: const {'ing-espinaca': espinacaStock},
-        );
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-espinaca': Right(Quantity(value: 1, unit: Unit.package)),
+        },
+        ingredientsById: const {'ing-espinaca': espinaca},
+        pantryByIngredientId: const {'ing-espinaca': espinacaStock},
+      );
 
-        // Assert
-        expect(result.skipped, isEmpty);
-        final row = result.groups.single.rows.single;
-        expect(row.ingredientId, 'ing-espinaca');
-        expect(row.quantityDisplay, '1 bolsa');
-      },
-    );
+      // Assert
+      expect(result.skipped, isEmpty);
+      final row = result.groups.single.rows.single;
+      expect(row.ingredientId, 'ing-espinaca');
+      expect(row.quantityDisplay, '1 bolsa');
+    });
   });
 
   group('presentationForPurchase adapter', () {
@@ -331,8 +304,6 @@ void main() {
         id: 'ing-carne',
         name: 'Carne molida',
         category: Category.proteina,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
       );
 
@@ -344,8 +315,6 @@ void main() {
         id: 'ing-platano',
         name: 'Plátano',
         category: Category.fruta,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: false,
         measurementMode: MeasurementMode.count,
       );
 
@@ -358,8 +327,6 @@ void main() {
         id: 'ing-leche',
         name: 'Leche',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         package: PackageSpec(
           label: 'bolsa',
@@ -380,8 +347,6 @@ void main() {
         id: 'ing-lechuga',
         name: 'Lechuga',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'bolsa'),
       );

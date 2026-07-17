@@ -10,9 +10,6 @@ QuantityTrackedPantryItemDTO _$QuantityTrackedPantryItemDTOFromJson(
   Map<String, dynamic> json,
 ) => QuantityTrackedPantryItemDTO(
   category: json['category'] as String,
-  presentation: PresentationDTO.fromJson(
-    json['presentation'] as Map<String, dynamic>,
-  ),
   stock: QuantityDTO.fromJson(json['stock'] as Map<String, dynamic>),
   $type: json['type'] as String?,
 );
@@ -21,7 +18,6 @@ Map<String, dynamic> _$QuantityTrackedPantryItemDTOToJson(
   QuantityTrackedPantryItemDTO instance,
 ) => <String, dynamic>{
   'category': instance.category,
-  'presentation': instance.presentation.toJson(),
   'stock': instance.stock.toJson(),
   'type': instance.$type,
 };
@@ -30,9 +26,6 @@ BooleanTrackedPantryItemDTO _$BooleanTrackedPantryItemDTOFromJson(
   Map<String, dynamic> json,
 ) => BooleanTrackedPantryItemDTO(
   category: json['category'] as String,
-  presentation: PresentationDTO.fromJson(
-    json['presentation'] as Map<String, dynamic>,
-  ),
   haveIt: json['haveIt'] as bool,
   $type: json['type'] as String?,
 );
@@ -41,7 +34,6 @@ Map<String, dynamic> _$BooleanTrackedPantryItemDTOToJson(
   BooleanTrackedPantryItemDTO instance,
 ) => <String, dynamic>{
   'category': instance.category,
-  'presentation': instance.presentation.toJson(),
   'haveIt': instance.haveIt,
   'type': instance.$type,
 };

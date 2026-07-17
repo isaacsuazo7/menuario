@@ -28,8 +28,6 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const recipeHuevo = Recipe(
@@ -49,8 +47,6 @@ void main() {
     name: 'Arroz',
     emoji: '🍚',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
   );
   const recipeArroz = Recipe(
     id: 'recipe-arroz',

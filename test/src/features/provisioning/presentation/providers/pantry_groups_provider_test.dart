@@ -19,8 +19,6 @@ void main() {
     name: 'Avena',
     emoji: '🥣',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const zanahoria = Ingredient(
@@ -28,8 +26,6 @@ void main() {
     name: 'Zanahoria',
     emoji: '🥕',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 50,
   );
   const papa = Ingredient(
@@ -37,27 +33,22 @@ void main() {
     name: 'Papa',
     emoji: '🥔',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 50,
   );
 
   const avenaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-avena',
     category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
     stock: Quantity(value: 2, unit: Unit.gram),
   );
   const zanahoriaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-zanahoria',
     category: Category.vegetal,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 5, unit: Unit.gram),
   );
   const papaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-papa',
     category: Category.vegetal,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 1, unit: Unit.gram),
   );
 

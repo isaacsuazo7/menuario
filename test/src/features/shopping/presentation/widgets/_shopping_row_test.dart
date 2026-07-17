@@ -50,14 +50,11 @@ void main() {
     name: 'Plátano',
     emoji: '🍌',
     category: Category.fruta,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const platanoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-platano',
     category: Category.fruta,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 3, unit: Unit.count),
   );
   final platanoRow = ShoppingRow(
@@ -75,13 +72,10 @@ void main() {
     name: 'Comino',
     emoji: '🌿',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
   final cominoRow = ShoppingRow(
@@ -266,7 +260,6 @@ void main() {
         const absentPlatanoItem = PantryItem.quantityTracked(
           ingredientId: 'ing-platano',
           category: Category.fruta,
-          presentation: Presentation.loose(),
           stock: Quantity(value: 0, unit: Unit.count),
         );
         final absentRow = ShoppingRow(

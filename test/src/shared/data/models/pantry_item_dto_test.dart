@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/shared/data/models/pantry_item_dto.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
@@ -17,7 +16,6 @@ void main() {
         const entity = PantryItem.quantityTracked(
           ingredientId: 'ingredient-avena',
           category: Category.cereal,
-          presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
           stock: Quantity(value: 340, unit: Unit.gram),
         );
 
@@ -43,7 +41,6 @@ void main() {
         const entity = PantryItem.booleanTracked(
           ingredientId: 'ingredient-comino',
           category: Category.condimento,
-          presentation: Presentation.loose(),
           haveIt: true,
         );
 
@@ -66,7 +63,6 @@ void main() {
       const entity = PantryItem.booleanTracked(
         ingredientId: 'ingredient-sal',
         category: Category.condimento,
-        presentation: Presentation.counter(),
         haveIt: false,
       );
 
@@ -79,6 +75,48 @@ void main() {
       // Assert
       expect(result, entity);
       expect(json['haveIt'], isFalse);
+    });
+  });
+
+  group('PantryItemDTO back-compat read (legacy presentation key)', () {
+    test('a quantityTracked doc with NO presentation key at all decodes fine '
+        '(presentation is no longer required)', () {
+      // Arrange — a post-removal-shape doc: no `presentation` key.
+      final json = {
+        'type': 'quantityTracked',
+        'category': 'cereal',
+        'stock': {'value': 340, 'unitSymbol': 'g', 'unitDimension': 'mass'},
+      };
+
+      // Act
+      final result = PantryItemDTO.fromJson(
+        json,
+      ).toEntity(ingredientId: 'ingredient-avena');
+
+      // Assert
+      expect(result, isA<QuantityTrackedPantryItem>());
+      expect((result as QuantityTrackedPantryItem).stock.value, 340);
+    });
+
+    test('a booleanTracked doc that still carries a stale legacy presentation '
+        'key decodes fine, silently ignoring it', () {
+      // Arrange — an old-shape doc from before this rollout, still
+      // carrying the now-legacy `presentation` key.
+      final json = {
+        'type': 'booleanTracked',
+        'category': 'condimento',
+        'presentation': {'type': 'loose'},
+        'haveIt': true,
+      };
+
+      // Act
+      final result = PantryItemDTO.fromJson(
+        json,
+      ).toEntity(ingredientId: 'ingredient-comino');
+
+      // Assert
+      expect(result, isA<BooleanTrackedPantryItem>());
+      expect((result as BooleanTrackedPantryItem).haveIt, isTrue);
     });
   });
 }

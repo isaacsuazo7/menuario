@@ -44,15 +44,12 @@ void main() {
     name: 'Pollo',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
   const polloPantry = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
-    presentation: Presentation.counter(),
     stock: Quantity(value: Mass.gramsPerPound * 2, unit: Unit.gram),
   );
 
@@ -62,14 +59,11 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const huevoPantry = PantryItem.quantityTracked(
     ingredientId: 'ing-huevo',
     category: Category.proteina,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 7, unit: Unit.count),
   );
 
@@ -79,8 +73,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
@@ -92,7 +84,6 @@ void main() {
   const lechePantry = PantryItem.quantityTracked(
     ingredientId: 'ing-leche',
     category: Category.lacteo,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsas'),
     stock: Quantity(value: 3.5, unit: Unit.liter),
   );
 
@@ -102,8 +93,6 @@ void main() {
     name: 'Lechuga',
     emoji: '🥬',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'bolsa'),
@@ -111,7 +100,6 @@ void main() {
   const lechugaPantry = PantryItem.quantityTracked(
     ingredientId: 'ing-lechuga',
     category: Category.vegetal,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
     stock: Quantity(value: 0.5, unit: Unit.package),
   );
 
@@ -120,14 +108,11 @@ void main() {
     id: 'ing-comino',
     name: 'Comino',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
     measurementMode: MeasurementMode.boolean,
   );
   const cominoPantry = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: true,
   );
 
@@ -898,7 +883,6 @@ void main() {
       final savedPantryItem = captured[1] as BooleanTrackedPantryItem;
 
       expect(savedIngredient.measurementMode, MeasurementMode.boolean);
-      expect(savedIngredient.booleanTracked, isTrue);
       expect(savedPantryItem.haveIt, isTrue);
     });
 
@@ -964,12 +948,11 @@ void main() {
                 builder: (context) => Scaffold(
                   body: ElevatedButton(
                     onPressed: () async {
-                      poppedValue = await Navigator.of(context)
-                          .push<String?>(
-                            MaterialPageRoute<String?>(
-                              builder: (_) => const IngredientFormScreen(),
-                            ),
-                          );
+                      poppedValue = await Navigator.of(context).push<String?>(
+                        MaterialPageRoute<String?>(
+                          builder: (_) => const IngredientFormScreen(),
+                        ),
+                      );
                     },
                     child: const Text('open'),
                   ),
@@ -1029,45 +1012,40 @@ void main() {
       expect(find.widgetWithText(TextField, '1'), findsOneWidget);
     });
 
-    testWidgets(
-      'still pre-fills when ingredientEditProvider/'
-      'ingredientPantryEditProvider are already resolved/cached before the '
-      'form mounts (revisit-without-fireImmediately regression guard — '
-      'mirrors recipe_form_screen_test.dart)',
-      (tester) async {
-        when(
-          () => mockIngredientRepository.getById('ing-pollo'),
-        ).thenAnswer((_) async => const Right(pollo));
-        when(
-          () => mockPantryRepository.getById('ing-pollo'),
-        ).thenAnswer((_) async => const Right(polloPantry));
+    testWidgets('still pre-fills when ingredientEditProvider/'
+        'ingredientPantryEditProvider are already resolved/cached before the '
+        'form mounts (revisit-without-fireImmediately regression guard — '
+        'mirrors recipe_form_screen_test.dart)', (tester) async {
+      when(
+        () => mockIngredientRepository.getById('ing-pollo'),
+      ).thenAnswer((_) async => const Right(pollo));
+      when(
+        () => mockPantryRepository.getById('ing-pollo'),
+      ).thenAnswer((_) async => const Right(polloPantry));
 
-        final container = ProviderContainer(overrides: overrides());
-        addTearDown(container.dispose);
+      final container = ProviderContainer(overrides: overrides());
+      addTearDown(container.dispose);
 
-        // Resolve BOTH family providers to completion BEFORE the form ever
-        // mounts — mirrors a real revisit where they're already cached as
-        // AsyncData once resolved elsewhere in the session.
-        await container.read(ingredientEditProvider('ing-pollo').future);
-        await container.read(
-          ingredientPantryEditProvider('ing-pollo').future,
-        );
+      // Resolve BOTH family providers to completion BEFORE the form ever
+      // mounts — mirrors a real revisit where they're already cached as
+      // AsyncData once resolved elsewhere in the session.
+      await container.read(ingredientEditProvider('ing-pollo').future);
+      await container.read(ingredientPantryEditProvider('ing-pollo').future);
 
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: const MaterialApp(
-              home: IngredientFormScreen(ingredientId: 'ing-pollo'),
-            ),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            home: IngredientFormScreen(ingredientId: 'ing-pollo'),
           ),
-        );
-        await tester.pumpAndSettle();
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        expect(find.widgetWithText(TextField, 'Pollo'), findsOneWidget);
-        expect(find.widgetWithText(TextField, '2'), findsOneWidget);
-        expect(find.text('Editar ingrediente'), findsOneWidget);
-      },
-    );
+      expect(find.widgetWithText(TextField, 'Pollo'), findsOneWidget);
+      expect(find.widgetWithText(TextField, '2'), findsOneWidget);
+      expect(find.text('Editar ingrediente'), findsOneWidget);
+    });
 
     testWidgets('Por paquete pre-fills package fields and pack-lens stock', (
       tester,
@@ -1164,26 +1142,23 @@ void main() {
   });
 
   group('NeedType selector', () {
-    testWidgets(
-      'renders the "Tipo de necesidad" selector, defaulting to '
-      'recipeDriven ("Por recetas") on create',
-      (tester) async {
-        await pumpScreen(tester);
-        await tester.pumpAndSettle();
+    testWidgets('renders the "Tipo de necesidad" selector, defaulting to '
+        'recipeDriven ("Por recetas") on create', (tester) async {
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
 
-        expect(
-          find.byKey(const Key('ingredient-need-type-field')),
-          findsOneWidget,
-        );
-        final selector = tester.widget<SegmentedButton<NeedType>>(
-          find.byKey(const Key('ingredient-need-type-field')),
-        );
-        expect(selector.selected, {NeedType.recipeDriven});
-        expect(find.text('Por recetas'), findsOneWidget);
-        expect(find.text('1 por semana'), findsOneWidget);
-        expect(find.text('Opcional'), findsOneWidget);
-      },
-    );
+      expect(
+        find.byKey(const Key('ingredient-need-type-field')),
+        findsOneWidget,
+      );
+      final selector = tester.widget<SegmentedButton<NeedType>>(
+        find.byKey(const Key('ingredient-need-type-field')),
+      );
+      expect(selector.selected, {NeedType.recipeDriven});
+      expect(find.text('Por recetas'), findsOneWidget);
+      expect(find.text('1 por semana'), findsOneWidget);
+      expect(find.text('Opcional'), findsOneWidget);
+    });
 
     testWidgets('prefills the existing needType on edit (weeklyFixed)', (
       tester,
@@ -1193,8 +1168,6 @@ void main() {
         name: 'Espinaca',
         emoji: '🥬',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         conversionFactor: 1,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'bolsa'),
@@ -1203,7 +1176,6 @@ void main() {
       const espinacaPantry = PantryItem.quantityTracked(
         ingredientId: 'ing-espinaca',
         category: Category.vegetal,
-        presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
         stock: Quantity(value: 0.5, unit: Unit.package),
       );
       when(

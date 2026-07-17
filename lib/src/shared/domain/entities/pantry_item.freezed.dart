@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PantryItem {
 
- String get ingredientId; Category get category; Presentation get presentation;
+ String get ingredientId; Category get category;
 /// Create a copy of PantryItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PantryItemCopyWith<PantryItem> get copyWith => _$PantryItemCopyWithImpl<PantryI
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ingredientId,category,presentation);
+int get hashCode => Object.hash(runtimeType,ingredientId,category);
 
 @override
 String toString() {
-  return 'PantryItem(ingredientId: $ingredientId, category: $category, presentation: $presentation)';
+  return 'PantryItem(ingredientId: $ingredientId, category: $category)';
 }
 
 
@@ -45,11 +45,11 @@ abstract mixin class $PantryItemCopyWith<$Res>  {
   factory $PantryItemCopyWith(PantryItem value, $Res Function(PantryItem) _then) = _$PantryItemCopyWithImpl;
 @useResult
 $Res call({
- String ingredientId, Category category, Presentation presentation
+ String ingredientId, Category category
 });
 
 
-$PresentationCopyWith<$Res> get presentation;
+
 
 }
 /// @nodoc
@@ -62,24 +62,14 @@ class _$PantryItemCopyWithImpl<$Res>
 
 /// Create a copy of PantryItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? ingredientId = null,Object? category = null,Object? presentation = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? ingredientId = null,Object? category = null,}) {
   return _then(_self.copyWith(
 ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as Presentation,
+as Category,
   ));
 }
-/// Create a copy of PantryItem
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationCopyWith<$Res> get presentation {
-  
-  return $PresentationCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}
+
 }
 
 
@@ -161,11 +151,11 @@ return booleanTracked(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String ingredientId,  Category category,  Presentation presentation,  Quantity stock)?  quantityTracked,TResult Function( String ingredientId,  Category category,  Presentation presentation,  bool haveIt)?  booleanTracked,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String ingredientId,  Category category,  Quantity stock)?  quantityTracked,TResult Function( String ingredientId,  Category category,  bool haveIt)?  booleanTracked,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItem() when quantityTracked != null:
-return quantityTracked(_that.ingredientId,_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItem() when booleanTracked != null:
-return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that.haveIt);case _:
+return quantityTracked(_that.ingredientId,_that.category,_that.stock);case BooleanTrackedPantryItem() when booleanTracked != null:
+return booleanTracked(_that.ingredientId,_that.category,_that.haveIt);case _:
   return orElse();
 
 }
@@ -183,11 +173,11 @@ return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String ingredientId,  Category category,  Presentation presentation,  Quantity stock)  quantityTracked,required TResult Function( String ingredientId,  Category category,  Presentation presentation,  bool haveIt)  booleanTracked,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String ingredientId,  Category category,  Quantity stock)  quantityTracked,required TResult Function( String ingredientId,  Category category,  bool haveIt)  booleanTracked,}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItem():
-return quantityTracked(_that.ingredientId,_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItem():
-return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that.haveIt);}
+return quantityTracked(_that.ingredientId,_that.category,_that.stock);case BooleanTrackedPantryItem():
+return booleanTracked(_that.ingredientId,_that.category,_that.haveIt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -201,11 +191,11 @@ return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String ingredientId,  Category category,  Presentation presentation,  Quantity stock)?  quantityTracked,TResult? Function( String ingredientId,  Category category,  Presentation presentation,  bool haveIt)?  booleanTracked,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String ingredientId,  Category category,  Quantity stock)?  quantityTracked,TResult? Function( String ingredientId,  Category category,  bool haveIt)?  booleanTracked,}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItem() when quantityTracked != null:
-return quantityTracked(_that.ingredientId,_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItem() when booleanTracked != null:
-return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that.haveIt);case _:
+return quantityTracked(_that.ingredientId,_that.category,_that.stock);case BooleanTrackedPantryItem() when booleanTracked != null:
+return booleanTracked(_that.ingredientId,_that.category,_that.haveIt);case _:
   return null;
 
 }
@@ -217,12 +207,11 @@ return booleanTracked(_that.ingredientId,_that.category,_that.presentation,_that
 
 
 class QuantityTrackedPantryItem implements PantryItem {
-  const QuantityTrackedPantryItem({required this.ingredientId, required this.category, required this.presentation, required this.stock});
+  const QuantityTrackedPantryItem({required this.ingredientId, required this.category, required this.stock});
   
 
 @override final  String ingredientId;
 @override final  Category category;
-@override final  Presentation presentation;
  final  Quantity stock;
 
 /// Create a copy of PantryItem
@@ -235,16 +224,16 @@ $QuantityTrackedPantryItemCopyWith<QuantityTrackedPantryItem> get copyWith => _$
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuantityTrackedPantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation)&&(identical(other.stock, stock) || other.stock == stock));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuantityTrackedPantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category)&&(identical(other.stock, stock) || other.stock == stock));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ingredientId,category,presentation,stock);
+int get hashCode => Object.hash(runtimeType,ingredientId,category,stock);
 
 @override
 String toString() {
-  return 'PantryItem.quantityTracked(ingredientId: $ingredientId, category: $category, presentation: $presentation, stock: $stock)';
+  return 'PantryItem.quantityTracked(ingredientId: $ingredientId, category: $category, stock: $stock)';
 }
 
 
@@ -255,11 +244,11 @@ abstract mixin class $QuantityTrackedPantryItemCopyWith<$Res> implements $Pantry
   factory $QuantityTrackedPantryItemCopyWith(QuantityTrackedPantryItem value, $Res Function(QuantityTrackedPantryItem) _then) = _$QuantityTrackedPantryItemCopyWithImpl;
 @override @useResult
 $Res call({
- String ingredientId, Category category, Presentation presentation, Quantity stock
+ String ingredientId, Category category, Quantity stock
 });
 
 
-@override $PresentationCopyWith<$Res> get presentation;$QuantityCopyWith<$Res> get stock;
+$QuantityCopyWith<$Res> get stock;
 
 }
 /// @nodoc
@@ -272,26 +261,16 @@ class _$QuantityTrackedPantryItemCopyWithImpl<$Res>
 
 /// Create a copy of PantryItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? ingredientId = null,Object? category = null,Object? presentation = null,Object? stock = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? ingredientId = null,Object? category = null,Object? stock = null,}) {
   return _then(QuantityTrackedPantryItem(
 ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as Presentation,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as Category,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as Quantity,
   ));
 }
 
 /// Create a copy of PantryItem
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationCopyWith<$Res> get presentation {
-  
-  return $PresentationCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}/// Create a copy of PantryItem
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -307,12 +286,11 @@ $QuantityCopyWith<$Res> get stock {
 
 
 class BooleanTrackedPantryItem implements PantryItem {
-  const BooleanTrackedPantryItem({required this.ingredientId, required this.category, required this.presentation, required this.haveIt});
+  const BooleanTrackedPantryItem({required this.ingredientId, required this.category, required this.haveIt});
   
 
 @override final  String ingredientId;
 @override final  Category category;
-@override final  Presentation presentation;
  final  bool haveIt;
 
 /// Create a copy of PantryItem
@@ -325,16 +303,16 @@ $BooleanTrackedPantryItemCopyWith<BooleanTrackedPantryItem> get copyWith => _$Bo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanTrackedPantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation)&&(identical(other.haveIt, haveIt) || other.haveIt == haveIt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanTrackedPantryItem&&(identical(other.ingredientId, ingredientId) || other.ingredientId == ingredientId)&&(identical(other.category, category) || other.category == category)&&(identical(other.haveIt, haveIt) || other.haveIt == haveIt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,ingredientId,category,presentation,haveIt);
+int get hashCode => Object.hash(runtimeType,ingredientId,category,haveIt);
 
 @override
 String toString() {
-  return 'PantryItem.booleanTracked(ingredientId: $ingredientId, category: $category, presentation: $presentation, haveIt: $haveIt)';
+  return 'PantryItem.booleanTracked(ingredientId: $ingredientId, category: $category, haveIt: $haveIt)';
 }
 
 
@@ -345,11 +323,11 @@ abstract mixin class $BooleanTrackedPantryItemCopyWith<$Res> implements $PantryI
   factory $BooleanTrackedPantryItemCopyWith(BooleanTrackedPantryItem value, $Res Function(BooleanTrackedPantryItem) _then) = _$BooleanTrackedPantryItemCopyWithImpl;
 @override @useResult
 $Res call({
- String ingredientId, Category category, Presentation presentation, bool haveIt
+ String ingredientId, Category category, bool haveIt
 });
 
 
-@override $PresentationCopyWith<$Res> get presentation;
+
 
 }
 /// @nodoc
@@ -362,26 +340,16 @@ class _$BooleanTrackedPantryItemCopyWithImpl<$Res>
 
 /// Create a copy of PantryItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? ingredientId = null,Object? category = null,Object? presentation = null,Object? haveIt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? ingredientId = null,Object? category = null,Object? haveIt = null,}) {
   return _then(BooleanTrackedPantryItem(
 ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
 as String,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as Category,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as Presentation,haveIt: null == haveIt ? _self.haveIt : haveIt // ignore: cast_nullable_to_non_nullable
+as Category,haveIt: null == haveIt ? _self.haveIt : haveIt // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
 
-/// Create a copy of PantryItem
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationCopyWith<$Res> get presentation {
-  
-  return $PresentationCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}
+
 }
 
 // dart format on

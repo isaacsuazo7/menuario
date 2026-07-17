@@ -22,14 +22,11 @@ void main() {
     name: 'Avena',
     emoji: '🥣',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const avenaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-avena',
     category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
     stock: Quantity(value: 2, unit: Unit.gram),
   );
 
@@ -94,13 +91,10 @@ void main() {
       id: 'ing-comino',
       name: 'Comino',
       category: Category.otro,
-      measurementKind: MeasurementKind.unit,
-      booleanTracked: true,
     );
     const cominoItem = PantryItem.booleanTracked(
       ingredientId: 'ing-comino',
       category: Category.otro,
-      presentation: Presentation.loose(),
       haveIt: false,
     );
     when(

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
@@ -14,7 +13,6 @@ void main() {
         const item = PantryItem.quantityTracked(
           ingredientId: 'ingredient-avena',
           category: Category.cereal,
-          presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
           stock: Quantity(value: 200, unit: Unit.gram),
         );
 
@@ -35,7 +33,6 @@ void main() {
       const item = PantryItem.booleanTracked(
         ingredientId: 'ingredient-comino',
         category: Category.condimento,
-        presentation: Presentation.loose(),
         haveIt: false,
       );
 
@@ -52,13 +49,11 @@ void main() {
       const noTengo = PantryItem.booleanTracked(
         ingredientId: 'ingredient-comino',
         category: Category.condimento,
-        presentation: Presentation.loose(),
         haveIt: false,
       );
       const tengo = PantryItem.booleanTracked(
         ingredientId: 'ingredient-sal',
         category: Category.condimento,
-        presentation: Presentation.loose(),
         haveIt: true,
       );
 

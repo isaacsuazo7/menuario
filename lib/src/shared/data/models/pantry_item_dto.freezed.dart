@@ -38,7 +38,7 @@ PantryItemDTO _$PantryItemDTOFromJson(
 /// @nodoc
 mixin _$PantryItemDTO {
 
- String get category; PresentationDTO get presentation;
+ String get category;
 /// Create a copy of PantryItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -51,16 +51,16 @@ $PantryItemDTOCopyWith<PantryItemDTO> get copyWith => _$PantryItemDTOCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PantryItemDTO&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PantryItemDTO&&(identical(other.category, category) || other.category == category));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,category,presentation);
+int get hashCode => Object.hash(runtimeType,category);
 
 @override
 String toString() {
-  return 'PantryItemDTO(category: $category, presentation: $presentation)';
+  return 'PantryItemDTO(category: $category)';
 }
 
 
@@ -71,11 +71,11 @@ abstract mixin class $PantryItemDTOCopyWith<$Res>  {
   factory $PantryItemDTOCopyWith(PantryItemDTO value, $Res Function(PantryItemDTO) _then) = _$PantryItemDTOCopyWithImpl;
 @useResult
 $Res call({
- String category, PresentationDTO presentation
+ String category
 });
 
 
-$PresentationDTOCopyWith<$Res> get presentation;
+
 
 }
 /// @nodoc
@@ -88,23 +88,13 @@ class _$PantryItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of PantryItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? category = null,Object? presentation = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? category = null,}) {
   return _then(_self.copyWith(
 category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as String,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as PresentationDTO,
+as String,
   ));
 }
-/// Create a copy of PantryItemDTO
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationDTOCopyWith<$Res> get presentation {
-  
-  return $PresentationDTOCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}
+
 }
 
 
@@ -186,11 +176,11 @@ return booleanTracked(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String category,  PresentationDTO presentation,  QuantityDTO stock)?  quantityTracked,TResult Function( String category,  PresentationDTO presentation,  bool haveIt)?  booleanTracked,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String category,  QuantityDTO stock)?  quantityTracked,TResult Function( String category,  bool haveIt)?  booleanTracked,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItemDTO() when quantityTracked != null:
-return quantityTracked(_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItemDTO() when booleanTracked != null:
-return booleanTracked(_that.category,_that.presentation,_that.haveIt);case _:
+return quantityTracked(_that.category,_that.stock);case BooleanTrackedPantryItemDTO() when booleanTracked != null:
+return booleanTracked(_that.category,_that.haveIt);case _:
   return orElse();
 
 }
@@ -208,11 +198,11 @@ return booleanTracked(_that.category,_that.presentation,_that.haveIt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String category,  PresentationDTO presentation,  QuantityDTO stock)  quantityTracked,required TResult Function( String category,  PresentationDTO presentation,  bool haveIt)  booleanTracked,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String category,  QuantityDTO stock)  quantityTracked,required TResult Function( String category,  bool haveIt)  booleanTracked,}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItemDTO():
-return quantityTracked(_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItemDTO():
-return booleanTracked(_that.category,_that.presentation,_that.haveIt);}
+return quantityTracked(_that.category,_that.stock);case BooleanTrackedPantryItemDTO():
+return booleanTracked(_that.category,_that.haveIt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -226,11 +216,11 @@ return booleanTracked(_that.category,_that.presentation,_that.haveIt);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String category,  PresentationDTO presentation,  QuantityDTO stock)?  quantityTracked,TResult? Function( String category,  PresentationDTO presentation,  bool haveIt)?  booleanTracked,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String category,  QuantityDTO stock)?  quantityTracked,TResult? Function( String category,  bool haveIt)?  booleanTracked,}) {final _that = this;
 switch (_that) {
 case QuantityTrackedPantryItemDTO() when quantityTracked != null:
-return quantityTracked(_that.category,_that.presentation,_that.stock);case BooleanTrackedPantryItemDTO() when booleanTracked != null:
-return booleanTracked(_that.category,_that.presentation,_that.haveIt);case _:
+return quantityTracked(_that.category,_that.stock);case BooleanTrackedPantryItemDTO() when booleanTracked != null:
+return booleanTracked(_that.category,_that.haveIt);case _:
   return null;
 
 }
@@ -242,11 +232,10 @@ return booleanTracked(_that.category,_that.presentation,_that.haveIt);case _:
 @JsonSerializable()
 
 class QuantityTrackedPantryItemDTO implements PantryItemDTO {
-  const QuantityTrackedPantryItemDTO({required this.category, required this.presentation, required this.stock, final  String? $type}): $type = $type ?? 'quantityTracked';
+  const QuantityTrackedPantryItemDTO({required this.category, required this.stock, final  String? $type}): $type = $type ?? 'quantityTracked';
   factory QuantityTrackedPantryItemDTO.fromJson(Map<String, dynamic> json) => _$QuantityTrackedPantryItemDTOFromJson(json);
 
 @override final  String category;
-@override final  PresentationDTO presentation;
  final  QuantityDTO stock;
 
 @JsonKey(name: 'type')
@@ -266,16 +255,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuantityTrackedPantryItemDTO&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation)&&(identical(other.stock, stock) || other.stock == stock));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuantityTrackedPantryItemDTO&&(identical(other.category, category) || other.category == category)&&(identical(other.stock, stock) || other.stock == stock));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,category,presentation,stock);
+int get hashCode => Object.hash(runtimeType,category,stock);
 
 @override
 String toString() {
-  return 'PantryItemDTO.quantityTracked(category: $category, presentation: $presentation, stock: $stock)';
+  return 'PantryItemDTO.quantityTracked(category: $category, stock: $stock)';
 }
 
 
@@ -286,11 +275,11 @@ abstract mixin class $QuantityTrackedPantryItemDTOCopyWith<$Res> implements $Pan
   factory $QuantityTrackedPantryItemDTOCopyWith(QuantityTrackedPantryItemDTO value, $Res Function(QuantityTrackedPantryItemDTO) _then) = _$QuantityTrackedPantryItemDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String category, PresentationDTO presentation, QuantityDTO stock
+ String category, QuantityDTO stock
 });
 
 
-@override $PresentationDTOCopyWith<$Res> get presentation;$QuantityDTOCopyWith<$Res> get stock;
+$QuantityDTOCopyWith<$Res> get stock;
 
 }
 /// @nodoc
@@ -303,25 +292,15 @@ class _$QuantityTrackedPantryItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of PantryItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? category = null,Object? presentation = null,Object? stock = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? category = null,Object? stock = null,}) {
   return _then(QuantityTrackedPantryItemDTO(
 category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as String,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as PresentationDTO,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
+as String,stock: null == stock ? _self.stock : stock // ignore: cast_nullable_to_non_nullable
 as QuantityDTO,
   ));
 }
 
 /// Create a copy of PantryItemDTO
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationDTOCopyWith<$Res> get presentation {
-  
-  return $PresentationDTOCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}/// Create a copy of PantryItemDTO
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
@@ -337,11 +316,10 @@ $QuantityDTOCopyWith<$Res> get stock {
 @JsonSerializable()
 
 class BooleanTrackedPantryItemDTO implements PantryItemDTO {
-  const BooleanTrackedPantryItemDTO({required this.category, required this.presentation, required this.haveIt, final  String? $type}): $type = $type ?? 'booleanTracked';
+  const BooleanTrackedPantryItemDTO({required this.category, required this.haveIt, final  String? $type}): $type = $type ?? 'booleanTracked';
   factory BooleanTrackedPantryItemDTO.fromJson(Map<String, dynamic> json) => _$BooleanTrackedPantryItemDTOFromJson(json);
 
 @override final  String category;
-@override final  PresentationDTO presentation;
  final  bool haveIt;
 
 @JsonKey(name: 'type')
@@ -361,16 +339,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanTrackedPantryItemDTO&&(identical(other.category, category) || other.category == category)&&(identical(other.presentation, presentation) || other.presentation == presentation)&&(identical(other.haveIt, haveIt) || other.haveIt == haveIt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BooleanTrackedPantryItemDTO&&(identical(other.category, category) || other.category == category)&&(identical(other.haveIt, haveIt) || other.haveIt == haveIt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,category,presentation,haveIt);
+int get hashCode => Object.hash(runtimeType,category,haveIt);
 
 @override
 String toString() {
-  return 'PantryItemDTO.booleanTracked(category: $category, presentation: $presentation, haveIt: $haveIt)';
+  return 'PantryItemDTO.booleanTracked(category: $category, haveIt: $haveIt)';
 }
 
 
@@ -381,11 +359,11 @@ abstract mixin class $BooleanTrackedPantryItemDTOCopyWith<$Res> implements $Pant
   factory $BooleanTrackedPantryItemDTOCopyWith(BooleanTrackedPantryItemDTO value, $Res Function(BooleanTrackedPantryItemDTO) _then) = _$BooleanTrackedPantryItemDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String category, PresentationDTO presentation, bool haveIt
+ String category, bool haveIt
 });
 
 
-@override $PresentationDTOCopyWith<$Res> get presentation;
+
 
 }
 /// @nodoc
@@ -398,25 +376,15 @@ class _$BooleanTrackedPantryItemDTOCopyWithImpl<$Res>
 
 /// Create a copy of PantryItemDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? category = null,Object? presentation = null,Object? haveIt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? category = null,Object? haveIt = null,}) {
   return _then(BooleanTrackedPantryItemDTO(
 category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as String,presentation: null == presentation ? _self.presentation : presentation // ignore: cast_nullable_to_non_nullable
-as PresentationDTO,haveIt: null == haveIt ? _self.haveIt : haveIt // ignore: cast_nullable_to_non_nullable
+as String,haveIt: null == haveIt ? _self.haveIt : haveIt // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
 
-/// Create a copy of PantryItemDTO
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$PresentationDTOCopyWith<$Res> get presentation {
-  
-  return $PresentationDTOCopyWith<$Res>(_self.presentation, (value) {
-    return _then(_self.copyWith(presentation: value));
-  });
-}
+
 }
 
 // dart format on

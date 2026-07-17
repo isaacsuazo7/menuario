@@ -185,8 +185,7 @@ class IngredientFormController extends Notifier<FormGroup> {
     if (form.control('modeChoice').value != IngredientModeChoice.package) {
       return null;
     }
-    final label = (form.control('packageLabel').value as String? ?? '')
-        .trim();
+    final label = (form.control('packageLabel').value as String? ?? '').trim();
     if (label.isEmpty) return null;
 
     final yieldQty = num.tryParse(
@@ -224,18 +223,6 @@ class IngredientFormController extends Notifier<FormGroup> {
         mode == IngredientModeChoice.package;
   }
 
-  /// The legacy [MeasurementKind] persisted alongside `measurementMode` for
-  /// back-compat readers (`MeasurementConverter.toStockUnit`).
-  static MeasurementKind legacyMeasurementKind(FormGroup form) {
-    final mode = form.control('modeChoice').value as IngredientModeChoice;
-    return switch (mode) {
-      IngredientModeChoice.count ||
-      IngredientModeChoice.boolean => MeasurementKind.unit,
-      IngredientModeChoice.mass ||
-      IngredientModeChoice.package => MeasurementKind.bulk,
-    };
-  }
-
   /// A throwaway [Ingredient] carrying just enough (`measurementMode`,
   /// `package`, `defaultLensLabel`) for [StockLensService] to compute
   /// lenses off the CURRENT form state — never persisted itself.
@@ -243,8 +230,6 @@ class IngredientFormController extends Notifier<FormGroup> {
     id: '',
     name: '',
     category: form.control('category').value as Category,
-    measurementKind: legacyMeasurementKind(form),
-    booleanTracked: measurementMode(form) == MeasurementMode.boolean,
     measurementMode: measurementMode(form),
     package: packageSpec(form),
     defaultLensLabel: form.control('lensOverrideLabel').value as String?,
@@ -316,26 +301,6 @@ class IngredientFormController extends Notifier<FormGroup> {
     return canonical != null && canonical >= 0;
   }
 
-  /// The legacy purchase [Presentation] mirrored from
-  /// `shopping_list_builder.dart`'s `presentationForPurchase` adapter — a
-  /// back-compat field no longer read by anything mode-aware.
-  static Presentation legacyPresentation(FormGroup form) {
-    final package = packageSpec(form);
-    return switch (measurementMode(form)) {
-      MeasurementMode.mass => const Presentation.counter(),
-      MeasurementMode.count => const Presentation.loose(),
-      MeasurementMode.packageBase => Presentation.package(
-        yieldQty: package?.yieldQty ?? 1,
-        label: package?.label ?? 'paquete',
-      ),
-      MeasurementMode.packageAbstract => Presentation.package(
-        yieldQty: 1,
-        label: package?.label ?? 'paquete',
-      ),
-      MeasurementMode.boolean => const Presentation.loose(),
-    };
-  }
-
   /// Builds the [Ingredient] for [id] from the form's current values.
   Ingredient toEntity(String id) {
     final form = state;
@@ -346,12 +311,9 @@ class IngredientFormController extends Notifier<FormGroup> {
       name: name,
       emoji: emoji.isEmpty ? null : emoji,
       category: form.control('category').value as Category,
-      measurementKind: legacyMeasurementKind(form),
-      booleanTracked: measurementMode(form) == MeasurementMode.boolean,
       conversionFactor: requiresConversionFactor(form)
           ? num.tryParse(
-              (form.control('conversionFactor').value as String? ?? '')
-                  .trim(),
+              (form.control('conversionFactor').value as String? ?? '').trim(),
             )
           : null,
       measurementMode: measurementMode(form),
@@ -367,19 +329,16 @@ class IngredientFormController extends Notifier<FormGroup> {
     final form = state;
     final category = form.control('category').value as Category;
     final mode = form.control('modeChoice').value as IngredientModeChoice;
-    final presentation = legacyPresentation(form);
 
     return mode == IngredientModeChoice.boolean
         ? PantryItem.booleanTracked(
             ingredientId: id,
             category: category,
-            presentation: presentation,
             haveIt: form.control('haveIt').value as bool? ?? false,
           )
         : PantryItem.quantityTracked(
             ingredientId: id,
             category: category,
-            presentation: presentation,
             stock: Quantity(
               value: canonicalStockValue(form)!,
               unit: _stockLensService.canonicalUnitFor(draftIngredient(form)),
