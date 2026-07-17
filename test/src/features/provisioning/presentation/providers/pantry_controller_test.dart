@@ -22,8 +22,6 @@ void main() {
     name: 'Avena',
     emoji: '🥣',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const comino = Ingredient(
@@ -31,35 +29,28 @@ void main() {
     name: 'Comino',
     emoji: '🌿',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const zanahoria = Ingredient(
     id: 'ing-zanahoria',
     name: 'Zanahoria',
     emoji: '🥕',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 50,
   );
 
   const avenaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-avena',
     category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
     stock: Quantity(value: 2, unit: Unit.gram),
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
   const zanahoriaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-zanahoria',
     category: Category.vegetal,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 5, unit: Unit.gram),
   );
 
@@ -238,7 +229,6 @@ void main() {
         const zeroStockItem = PantryItem.quantityTracked(
           ingredientId: 'ing-avena',
           category: Category.cereal,
-          presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
           stock: Quantity(value: 0, unit: Unit.gram),
         );
         when(
@@ -267,7 +257,6 @@ void main() {
         const counterItem = PantryItem.quantityTracked(
           ingredientId: 'ing-avena',
           category: Category.cereal,
-          presentation: Presentation.counter(),
           stock: Quantity(value: 793.7, unit: Unit.gram),
         );
         when(

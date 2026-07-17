@@ -30,13 +30,10 @@ void main() {
     id: 'ing-comino',
     name: 'Comino',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
 

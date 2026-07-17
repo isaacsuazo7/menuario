@@ -20,8 +20,6 @@ void main() {
     name: 'Avena',
     emoji: '🥣',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const comino = Ingredient(
@@ -29,8 +27,6 @@ void main() {
     name: 'Comino',
     emoji: '🌿',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
 
   setUp(() {

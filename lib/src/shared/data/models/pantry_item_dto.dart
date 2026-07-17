@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:menuario/src/shared/data/models/presentation_dto.dart';
 import 'package:menuario/src/shared/data/models/quantity_dto.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
@@ -14,12 +13,19 @@ part 'pantry_item_dto.g.dart';
 /// default `runtimeType` key. [PantryItem.ingredientId] is never stored in
 /// the map: it is the Firestore `doc.id` and is injected back via
 /// [PantryItemDTOX.toEntity].
+///
+/// Neither variant carries a `presentation` key anymore — that field was
+/// removed from [PantryItem] (purchase presentation is now derived from
+/// [Ingredient.measurementMode] instead, see `presentationForPurchase` in
+/// `shopping_list_builder.dart`). An old-shape document written before this
+/// rollout may still carry a stale `presentation` key; `fromJson` silently
+/// ignores it (json_serializable ignores unknown keys), so old docs still
+/// load fine.
 @Freezed(unionKey: 'type')
 sealed class PantryItemDTO with _$PantryItemDTO {
   /// Tracked by numeric stock (mirrors [PantryItem.quantityTracked]).
   const factory PantryItemDTO.quantityTracked({
     required String category,
-    required PresentationDTO presentation,
     required QuantityDTO stock,
   }) = QuantityTrackedPantryItemDTO;
 
@@ -27,7 +33,6 @@ sealed class PantryItemDTO with _$PantryItemDTO {
   /// [PantryItem.booleanTracked]).
   const factory PantryItemDTO.booleanTracked({
     required String category,
-    required PresentationDTO presentation,
     required bool haveIt,
   }) = BooleanTrackedPantryItemDTO;
 
@@ -38,26 +43,13 @@ sealed class PantryItemDTO with _$PantryItemDTO {
   /// [PantryItem.ingredientId].
   static PantryItemDTO fromEntity(PantryItem entity) {
     return switch (entity) {
-      QuantityTrackedPantryItem(
-        :final category,
-        :final presentation,
-        :final stock,
-      ) =>
+      QuantityTrackedPantryItem(:final category, :final stock) =>
         PantryItemDTO.quantityTracked(
           category: category.name,
-          presentation: PresentationDTO.fromEntity(presentation),
           stock: QuantityDTO.fromEntity(stock),
         ),
-      BooleanTrackedPantryItem(
-        :final category,
-        :final presentation,
-        :final haveIt,
-      ) =>
-        PantryItemDTO.booleanTracked(
-          category: category.name,
-          presentation: PresentationDTO.fromEntity(presentation),
-          haveIt: haveIt,
-        ),
+      BooleanTrackedPantryItem(:final category, :final haveIt) =>
+        PantryItemDTO.booleanTracked(category: category.name, haveIt: haveIt),
     };
   }
 }
@@ -69,26 +61,16 @@ extension PantryItemDTOX on PantryItemDTO {
   /// stored map.
   PantryItem toEntity({required String ingredientId}) {
     return switch (this) {
-      QuantityTrackedPantryItemDTO(
-        :final category,
-        :final presentation,
-        :final stock,
-      ) =>
+      QuantityTrackedPantryItemDTO(:final category, :final stock) =>
         PantryItem.quantityTracked(
           ingredientId: ingredientId,
           category: Category.values.byName(category),
-          presentation: presentation.toEntity(),
           stock: stock.toEntity(),
         ),
-      BooleanTrackedPantryItemDTO(
-        :final category,
-        :final presentation,
-        :final haveIt,
-      ) =>
+      BooleanTrackedPantryItemDTO(:final category, :final haveIt) =>
         PantryItem.booleanTracked(
           ingredientId: ingredientId,
           category: Category.values.byName(category),
-          presentation: presentation.toEntity(),
           haveIt: haveIt,
         ),
     };

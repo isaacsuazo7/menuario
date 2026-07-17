@@ -29,8 +29,7 @@ class IngredientRepositoryImpl implements IngredientRepository {
     final result = await _dataSource.list();
     try {
       return result.map(
-        (items) =>
-            items.map((item) => item.$2.toEntity(id: item.$1)).toList(),
+        (items) => items.map((item) => item.$2.toEntity(id: item.$1)).toList(),
       );
     } on Object catch (exception, stackTrace) {
       return Left(Failure.malformedData(exception, stackTrace));

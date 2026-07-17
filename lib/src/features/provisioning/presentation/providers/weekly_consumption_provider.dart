@@ -89,7 +89,7 @@ final weeklyConsumptionByIngredientProvider =
           for (final line in recipe.bomLines) {
             final ingredient = ingredientsById[line.ingredientId];
             if (ingredient != null &&
-                !ingredient.booleanTracked &&
+                ingredient.measurementMode != MeasurementMode.boolean &&
                 ingredient.needType != NeedType.optional) {
               quantityIngredientIds.add(line.ingredientId);
             }

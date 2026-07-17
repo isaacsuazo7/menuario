@@ -12,7 +12,6 @@ import 'package:menuario/src/shared/domain/services/provisioning_calculator.dart
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/day_of_week.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_slot.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
 import 'package:menuario/src/shared/domain/value_objects/need_type.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
@@ -31,8 +30,6 @@ void main() {
     id: 'ingredient-avena',
     name: 'Avena',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.mass,
     conversionFactor: 85,
   );
@@ -41,8 +38,6 @@ void main() {
     id: 'ingredient-huevo',
     name: 'Huevo',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
 
@@ -50,8 +45,6 @@ void main() {
     id: 'ingredient-leche',
     name: 'Leche',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     conversionFactor: 0.24,
     package: PackageSpec(
@@ -159,8 +152,6 @@ void main() {
           id: 'ingredient-leche',
           name: 'Leche',
           category: Category.lacteo,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           package: PackageSpec(
             label: 'bolsa',
@@ -282,8 +273,6 @@ void main() {
           id: 'ingredient-arroz',
           name: 'Arroz',
           category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
         );
         const recipe = Recipe(
           id: 'recipe-arroz',
@@ -375,8 +364,6 @@ void main() {
           id: 'ingredient-espinaca',
           name: 'Espinaca',
           category: Category.vegetal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageAbstract,
           package: PackageSpec(label: 'bolsa'),
           needType: NeedType.weeklyFixed,
@@ -427,8 +414,6 @@ void main() {
           id: 'ingredient-leche-fixed',
           name: 'Leche',
           category: Category.lacteo,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           package: PackageSpec(
             label: 'bolsa',
@@ -659,7 +644,6 @@ void main() {
         const comino = PantryItem.booleanTracked(
           ingredientId: 'ingredient-comino',
           category: Category.condimento,
-          presentation: Presentation.loose(),
           haveIt: false,
         );
 
@@ -673,7 +657,6 @@ void main() {
         const sal = PantryItem.booleanTracked(
           ingredientId: 'ingredient-sal',
           category: Category.condimento,
-          presentation: Presentation.loose(),
           haveIt: true,
         );
 
@@ -687,7 +670,6 @@ void main() {
         const item = PantryItem.quantityTracked(
           ingredientId: 'ingredient-avena',
           category: Category.cereal,
-          presentation: Presentation.package(yieldQty: 454, label: 'bolsas'),
           stock: Quantity(value: 200, unit: Unit.gram),
         );
 

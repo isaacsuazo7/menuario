@@ -15,13 +15,13 @@ part 'ingredient_dto.g.dart';
 /// `doc.id` and is injected back via [IngredientDTOX.toEntity].
 ///
 /// [measurementMode]/[package]/[defaultLensLabel] are the flexible-units
-/// replacement for [measurementKind]/[booleanTracked]. [fromEntity] always
-/// writes both the new fields and the legacy ones (the entity still
-/// carries every field), so every document this app version writes is
-/// self-describing. [measurementKind]/[booleanTracked] are kept nullable
-/// (rather than dropped) so an old-shape document written before this
-/// rollout — which has them but no [measurementMode] — still loads; see
-/// [IngredientDTOX.toEntity] for the back-compat derivation.
+/// replacement for the legacy `measurementKind`/`booleanTracked` pair — the
+/// [Ingredient] entity no longer carries those fields at all, so
+/// [fromEntity] no longer writes them. They are kept here, nullable, ONLY
+/// as a read-side fallback: an old-shape document written before this
+/// rollout has them but no [measurementMode], and [IngredientDTOX.toEntity]
+/// derives the mode from them when [measurementMode] is absent — see
+/// [IngredientDTOX._deriveMode].
 ///
 /// [needType] is nullable for the same reason: an old-shape document
 /// written before the NeedType rollout has no such key, and
@@ -49,13 +49,16 @@ abstract class IngredientDTO with _$IngredientDTO {
       _$IngredientDTOFromJson(json);
 
   /// Builds an [IngredientDTO] from an [Ingredient] entity, dropping its id.
+  ///
+  /// Never writes `measurementKind`/`booleanTracked` — those are a
+  /// read-only back-compat fallback for pre-rollout documents; every
+  /// document this app version writes is fully described by
+  /// [measurementMode] alone.
   static IngredientDTO fromEntity(Ingredient entity) {
     return IngredientDTO(
       name: entity.name,
       emoji: entity.emoji,
       category: entity.category.name,
-      measurementKind: entity.measurementKind.name,
-      booleanTracked: entity.booleanTracked,
       conversionFactor: entity.conversionFactor,
       measurementMode: entity.measurementMode.name,
       package: entity.package == null
@@ -73,35 +76,27 @@ extension IngredientDTOX on IngredientDTO {
   /// (the Firestore `doc.id`) since it is not part of the stored map.
   ///
   /// When [measurementMode] is present (every document this app version
-  /// writes), it — and [measurementKind]/[booleanTracked] alongside it —
-  /// are used directly. When it is absent (an old-shape document from
-  /// before this rollout), the mode is derived from the legacy fields: a
-  /// `booleanTracked: true` flag always wins (boolean mode); otherwise
-  /// `measurementKind: unit` maps to count and `bulk` maps to mass.
-  /// `IngredientDTO` carries no purchase presentation (that lives on
-  /// `PantryItemDTO`), so this bridge cannot distinguish packageBase/
-  /// packageAbstract from plain mass — that per-ingredient reclassification
-  /// is the migration script's job; until it runs, a bulk ingredient reads
-  /// as mass, which always loads without crashing.
+  /// writes), it is used directly. When it is absent (an old-shape
+  /// document from before this rollout, which has no [measurementMode]
+  /// key), the mode is derived from the legacy `measurementKind`/
+  /// `booleanTracked` JSON keys via [_deriveMode]: a `booleanTracked: true`
+  /// flag always wins (boolean mode); otherwise `measurementKind: unit`
+  /// maps to count and `bulk` maps to mass. `IngredientDTO` carries no
+  /// purchase presentation (that lives on `PantryItemDTO`), so this bridge
+  /// cannot distinguish packageBase/packageAbstract from plain mass — that
+  /// per-ingredient reclassification is the migration script's job; until
+  /// it runs, a bulk ingredient reads as mass, which always loads without
+  /// crashing.
   Ingredient toEntity({required String id}) {
     final mode = measurementMode != null
         ? MeasurementMode.values.byName(measurementMode!)
         : _deriveMode();
-    final kind = measurementKind != null
-        ? MeasurementKind.values.byName(measurementKind!)
-        : (mode == MeasurementMode.count
-              ? MeasurementKind.unit
-              : MeasurementKind.bulk);
-    final resolvedBooleanTracked =
-        booleanTracked ?? (mode == MeasurementMode.boolean);
 
     return Ingredient(
       id: id,
       name: name,
       emoji: emoji,
       category: Category.values.byName(category),
-      measurementKind: kind,
-      booleanTracked: resolvedBooleanTracked,
       conversionFactor: conversionFactor,
       measurementMode: mode,
       package: package?.toEntity(),

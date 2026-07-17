@@ -3,7 +3,6 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/services/stock_lens_service.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
 import 'package:menuario/src/shared/domain/value_objects/mass.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -16,8 +15,6 @@ void main() {
     id: 'ingredient-carne',
     name: 'Carne molida',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.mass,
   );
 
@@ -25,8 +22,6 @@ void main() {
     id: 'ingredient-kiwi',
     name: 'Kiwi',
     category: Category.fruta,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
 
@@ -34,8 +29,6 @@ void main() {
     id: 'ingredient-leche',
     name: 'Leche',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'bolsas',
@@ -48,8 +41,6 @@ void main() {
     id: 'ingredient-huevo',
     name: 'Huevo',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'cartón',
@@ -62,8 +53,6 @@ void main() {
     id: 'ingredient-lechuga',
     name: 'Lechuga',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'bolsa'),
   );
@@ -72,8 +61,6 @@ void main() {
     id: 'ingredient-requeson',
     name: 'Requesón',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'pana'),
   );
@@ -82,8 +69,6 @@ void main() {
     id: 'ingredient-sal',
     name: 'Sal',
     category: Category.condimento,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: true,
     measurementMode: MeasurementMode.boolean,
   );
 
@@ -94,8 +79,6 @@ void main() {
     id: 'ingredient-jamon',
     name: 'Jamón',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'bolsa',
@@ -110,8 +93,6 @@ void main() {
     id: 'ingredient-requeson-pana',
     name: 'Requesón',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'pana',
@@ -127,8 +108,6 @@ void main() {
     id: 'ingredient-caja',
     name: 'Galletas',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'caja'),
   );
@@ -374,10 +353,7 @@ void main() {
       test('exact quarter renders the glyph on a base-lens value '
           '(mass g -> "¼ lb")', () {
         // Arrange
-        const stock = Quantity(
-          value: Mass.gramsPerPound / 4,
-          unit: Unit.gram,
-        );
+        const stock = Quantity(value: Mass.gramsPerPound / 4, unit: Unit.gram);
 
         // Act & Assert
         expect(service.formatStock(mass, stock), '¼ lb');

@@ -6,7 +6,6 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/data/datasources/ingredient_catalog_data_source.dart';
 import 'package:menuario/src/shared/data/models/ingredient_dto.dart';
 import 'package:menuario/src/shared/data/models/pantry_item_dto.dart';
-import 'package:menuario/src/shared/data/models/presentation_dto.dart';
 import 'package:menuario/src/shared/data/models/quantity_dto.dart';
 import 'package:mock_exceptions/mock_exceptions.dart';
 
@@ -31,11 +30,6 @@ void main() {
     );
     const pantryDto = PantryItemDTO.quantityTracked(
       category: 'cereal',
-      presentation: PresentationDTO(
-        type: 'package',
-        yieldQty: 454,
-        label: 'bolsa',
-      ),
       stock: QuantityDTO(value: 2, unitSymbol: 'g', unitDimension: 'mass'),
     );
 

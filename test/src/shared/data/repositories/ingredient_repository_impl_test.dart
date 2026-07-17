@@ -7,7 +7,6 @@ import 'package:menuario/src/shared/data/models/ingredient_dto.dart';
 import 'package:menuario/src/shared/data/repositories/ingredient_repository_impl.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 
 void main() {
   group('IngredientRepositoryImpl', () {
@@ -17,10 +16,7 @@ void main() {
 
     setUp(() {
       firestore = FakeFirebaseFirestore();
-      dataSource = IngredientDataSourceImpl(
-        firestore: firestore,
-        uid: 'uid-A',
-      );
+      dataSource = IngredientDataSourceImpl(firestore: firestore, uid: 'uid-A');
       repository = IngredientRepositoryImpl(dataSource: dataSource);
     });
 
@@ -32,8 +28,6 @@ void main() {
           id: 'ingredient-avena',
           name: 'Avena',
           category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           conversionFactor: 85,
         );
 
@@ -56,16 +50,12 @@ void main() {
         id: 'ingredient-avena',
         name: 'Avena',
         category: Category.cereal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         conversionFactor: 85,
       );
       const second = Ingredient(
         id: 'ingredient-huevo',
         name: 'Huevo',
         category: Category.proteina,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: false,
       );
       await repository.save(first);
       await repository.save(second);
@@ -80,41 +70,35 @@ void main() {
       );
     });
 
-    test(
-      'getById propagates Left(Failure) from the datasource without '
-      'throwing',
-      () async {
-        // Act
-        final result = await repository.getById('missing');
+    test('getById propagates Left(Failure) from the datasource without '
+        'throwing', () async {
+      // Act
+      final result = await repository.getById('missing');
 
-        // Assert
-        expect(result, isA<Left<Failure, Ingredient>>());
-      },
-    );
+      // Assert
+      expect(result, isA<Left<Failure, Ingredient>>());
+    });
 
-    test(
-      'getById returns Left(Failure) instead of throwing when the '
-      'document carries an unrecognized category',
-      () async {
-        // Arrange
-        const dto = IngredientDTO(
-          name: 'Ingrediente corrupto',
-          category: 'unknownCategory',
-          measurementKind: 'unit',
-          booleanTracked: false,
-        );
-        await dataSource.save('ingredient-x', dto);
+    test('getById returns Left(Failure) instead of throwing when the '
+        'document carries an unrecognized category', () async {
+      // Arrange
+      const dto = IngredientDTO(
+        name: 'Ingrediente corrupto',
+        category: 'unknownCategory',
+        measurementKind: 'unit',
+        booleanTracked: false,
+      );
+      await dataSource.save('ingredient-x', dto);
 
-        // Act
-        final result = await repository.getById('ingredient-x');
+      // Act
+      final result = await repository.getById('ingredient-x');
 
-        // Assert
-        expect(result, isA<Left<Failure, Ingredient>>());
-        result.fold(
-          (failure) => expect(failure.code, 'malformedData'),
-          (_) => fail('expected Left, got Right'),
-        );
-      },
-    );
+      // Assert
+      expect(result, isA<Left<Failure, Ingredient>>());
+      result.fold(
+        (failure) => expect(failure.code, 'malformedData'),
+        (_) => fail('expected Left, got Right'),
+      );
+    });
   });
 }

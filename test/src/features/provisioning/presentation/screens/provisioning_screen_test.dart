@@ -24,8 +24,6 @@ void main() {
     name: 'Avena',
     emoji: '🥣',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const comino = Ingredient(
@@ -33,19 +31,15 @@ void main() {
     name: 'Comino',
     emoji: '🌿',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const avenaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-avena',
     category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
     stock: Quantity(value: 2, unit: Unit.gram),
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
 

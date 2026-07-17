@@ -23,13 +23,10 @@ void main() {
     name: 'Comino',
     emoji: '🌿',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
   const cominoItem = PantryItem.booleanTracked(
     ingredientId: 'ing-comino',
     category: Category.condimento,
-    presentation: Presentation.loose(),
     haveIt: false,
   );
   final row = PantryRow(item: cominoItem, ingredient: comino);

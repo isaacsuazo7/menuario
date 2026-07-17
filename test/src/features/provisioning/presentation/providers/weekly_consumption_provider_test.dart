@@ -27,8 +27,6 @@ void main() {
     id: 'ing-pollo',
     name: 'Pollo',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.mass,
     conversionFactor: 1,
   );
@@ -48,8 +46,6 @@ void main() {
     id: 'ing-arroz',
     name: 'Arroz',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
   );
   const recipeArroz = Recipe(
     id: 'recipe-arroz',
@@ -67,8 +63,6 @@ void main() {
     id: 'ing-comino',
     name: 'Comino',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
   );
 
   setUp(() {
@@ -275,8 +269,6 @@ void main() {
         id: 'ing-queso',
         name: 'Queso',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
         conversionFactor: 1,
       );
@@ -297,8 +289,6 @@ void main() {
         id: 'ing-sal',
         name: 'Sal',
         category: Category.condimento,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
         conversionFactor: 1,
       );
@@ -414,8 +404,6 @@ void main() {
         id: 'ing-espinaca',
         name: 'Espinaca',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'bolsa'),
         needType: NeedType.weeklyFixed,
@@ -436,8 +424,6 @@ void main() {
         id: 'ing-fresas',
         name: 'Fresas',
         category: Category.fruta,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'caja'),
         needType: NeedType.optional,

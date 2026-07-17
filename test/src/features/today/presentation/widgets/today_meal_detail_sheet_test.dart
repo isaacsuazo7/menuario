@@ -13,8 +13,6 @@ void main() {
     name: 'Harina',
     emoji: '🌾',
     category: Category.cereal,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
   );
   const recipe = Recipe(
     id: 'r-1',

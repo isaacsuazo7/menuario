@@ -129,7 +129,6 @@ class ShoppingListBuilder {
       pantryItem = QuantityTrackedPantryItem(
         ingredientId: ingredientId,
         category: ingredient.category,
-        presentation: presentationForPurchase(ingredient),
         stock: Quantity(value: 0, unit: consumption.unit),
       );
       pantryExists = false;
@@ -147,7 +146,7 @@ class ShoppingListBuilder {
 
     final purchaseResult = _calculator.purchaseQuantity(
       shortfall: shortfall,
-      presentation: pantryItem.presentation,
+      presentation: presentationForPurchase(ingredient),
     );
     if (purchaseResult case Left(value: final failure)) {
       return Left(failure);

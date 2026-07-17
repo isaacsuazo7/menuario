@@ -42,16 +42,12 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
   );
   const avena = Ingredient(
     id: 'i2',
     name: 'Avena',
     emoji: '🌾',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   const leche = Ingredient(
@@ -59,8 +55,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
   );
 

@@ -4,7 +4,6 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/domain/entities/pantry_item.dart';
 import 'package:menuario/src/shared/domain/repositories/pantry_repository.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/presentation.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 import 'package:mocktail/mocktail.dart';
@@ -17,7 +16,6 @@ void main() {
   const pantryItem = PantryItem.quantityTracked(
     ingredientId: 'ingredient-avena',
     category: Category.cereal,
-    presentation: Presentation.package(yieldQty: 454, label: 'bolsa'),
     stock: Quantity(value: 200, unit: Unit.gram),
   );
   final failure = Failure(message: 'no encontrado', code: 'notFound');

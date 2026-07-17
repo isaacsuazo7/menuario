@@ -4,7 +4,6 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/repositories/ingredient_repository.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockIngredientRepository extends Mock implements IngredientRepository {}
@@ -16,8 +15,6 @@ void main() {
     id: 'ingredient-avena',
     name: 'Avena',
     category: Category.cereal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 85,
   );
   final failure = Failure(message: 'no encontrado', code: 'notFound');

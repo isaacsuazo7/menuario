@@ -33,15 +33,12 @@ void main() {
     name: 'Pollo',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
   const polloItem = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
-    presentation: Presentation.counter(),
     stock: Quantity(value: 800, unit: Unit.gram),
   );
   final polloRow = PantryRow(item: polloItem, ingredient: pollo);
@@ -50,7 +47,6 @@ void main() {
   const polloStepItem = PantryItem.quantityTracked(
     ingredientId: 'ing-pollo',
     category: Category.proteina,
-    presentation: Presentation.counter(),
     stock: Quantity(value: 793.7866475, unit: Unit.gram),
   );
   final polloStepRow = PantryRow(item: polloStepItem, ingredient: pollo);
@@ -63,8 +59,6 @@ void main() {
     name: 'Pollo (gramos)',
     emoji: '🍗',
     category: Category.proteina,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
     defaultLensLabel: 'g',
@@ -97,14 +91,11 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const huevoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-huevo',
     category: Category.proteina,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 7, unit: Unit.count),
   );
   final huevoRow = PantryRow(item: huevoItem, ingredient: huevo);
@@ -112,7 +103,6 @@ void main() {
   const zeroHuevoItem = PantryItem.quantityTracked(
     ingredientId: 'ing-huevo',
     category: Category.proteina,
-    presentation: Presentation.loose(),
     stock: Quantity(value: 0, unit: Unit.count),
   );
   final zeroHuevoRow = PantryRow(item: zeroHuevoItem, ingredient: huevo);
@@ -125,8 +115,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageBase,
     package: PackageSpec(
       label: 'bolsas',
@@ -137,7 +125,6 @@ void main() {
   const zeroLecheItem = PantryItem.quantityTracked(
     ingredientId: 'ing-leche',
     category: Category.lacteo,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsas'),
     stock: Quantity(value: 0, unit: Unit.liter),
   );
   final zeroLecheRow = PantryRow(item: zeroLecheItem, ingredient: leche);
@@ -149,15 +136,12 @@ void main() {
     name: 'Lechuga',
     emoji: '🥬',
     category: Category.vegetal,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'bolsa'),
   );
   const lechugaItem = PantryItem.quantityTracked(
     ingredientId: 'ing-lechuga',
     category: Category.vegetal,
-    presentation: Presentation.package(yieldQty: 1, label: 'bolsa'),
     stock: Quantity(value: 0.5, unit: Unit.package),
   );
   final lechugaRow = PantryRow(item: lechugaItem, ingredient: lechuga);
@@ -169,15 +153,12 @@ void main() {
     name: 'Requesón',
     emoji: '🧀',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     measurementMode: MeasurementMode.packageAbstract,
     package: PackageSpec(label: 'pana'),
   );
   const requesonItem = PantryItem.quantityTracked(
     ingredientId: 'ing-requeson',
     category: Category.lacteo,
-    presentation: Presentation.package(yieldQty: 1, label: 'pana'),
     stock: Quantity(value: 0.37, unit: Unit.package),
   );
   final requesonRow = PantryRow(item: requesonItem, ingredient: requeson);
@@ -216,9 +197,7 @@ void main() {
           ingredientRepositoryProvider.overrideWithValue(
             mockIngredientRepository,
           ),
-          weekPlanRepositoryProvider.overrideWithValue(
-            mockWeekPlanRepository,
-          ),
+          weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
         ],
         child: MaterialApp(
@@ -444,7 +423,6 @@ void main() {
       const lowStockItem = PantryItem.quantityTracked(
         ingredientId: 'ing-pollo',
         category: Category.proteina,
-        presentation: Presentation.counter(),
         stock: Quantity(value: 57, unit: Unit.gram),
       );
       final lowStockRow = PantryRow(item: lowStockItem, ingredient: pollo);
@@ -478,7 +456,6 @@ void main() {
       final item = PantryItem.quantityTracked(
         ingredientId: 'ing-pollo-gramos',
         category: Category.proteina,
-        presentation: const Presentation.counter(),
         stock: Quantity(value: stock, unit: Unit.gram),
       );
       final rowFixture = PantryRow(item: item, ingredient: polloGramos);
@@ -533,23 +510,20 @@ void main() {
       },
     );
 
-    testWidgets(
-      'falta (effectively-zero stock with a real need): tinted red, '
-      'subtitle still shows the need',
-      (tester) async {
-        await planPolloGramos(tester, stock: 0);
+    testWidgets('falta (effectively-zero stock with a real need): tinted red, '
+        'subtitle still shows the need', (tester) async {
+      await planPolloGramos(tester, stock: 0);
 
-        expect(find.text('0 g · necesitás 340 g'), findsOneWidget);
-        final tile = tester.widget<ListTile>(find.byType(ListTile));
-        expect(
-          tile.tileColor,
-          MenuarioTheme.dark
-              .extension<MenuarioCoverageColors>()!
-              .falta
-              .withValues(alpha: 0.35),
-        );
-      },
-    );
+      expect(find.text('0 g · necesitás 340 g'), findsOneWidget);
+      final tile = tester.widget<ListTile>(find.byType(ListTile));
+      expect(
+        tile.tileColor,
+        MenuarioTheme.dark
+            .extension<MenuarioCoverageColors>()!
+            .falta
+            .withValues(alpha: 0.35),
+      );
+    });
 
     testWidgets(
       'an effectively-zero residual stock (rounds to "0 g") on a PLANNED '
@@ -581,8 +555,6 @@ void main() {
           id: 'ing-arroz',
           name: 'Arroz',
           category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.mass,
         );
         const recipeArroz = Recipe(
@@ -609,7 +581,6 @@ void main() {
         const arrozItem = PantryItem.quantityTracked(
           ingredientId: 'ing-arroz',
           category: Category.cereal,
-          presentation: Presentation.counter(),
           stock: Quantity(value: 100, unit: Unit.gram),
         );
         final arrozRow = PantryRow(item: arrozItem, ingredient: arroz);

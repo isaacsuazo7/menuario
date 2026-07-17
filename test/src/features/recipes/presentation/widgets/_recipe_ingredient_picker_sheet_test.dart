@@ -16,8 +16,6 @@ void main() {
     name: 'Huevo',
     emoji: '🥚',
     category: Category.proteina,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: false,
     measurementMode: MeasurementMode.count,
   );
   const leche = Ingredient(
@@ -25,8 +23,6 @@ void main() {
     name: 'Leche',
     emoji: '🥛',
     category: Category.lacteo,
-    measurementKind: MeasurementKind.bulk,
-    booleanTracked: false,
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
@@ -35,8 +31,6 @@ void main() {
     name: 'Sal',
     emoji: '🧂',
     category: Category.condimento,
-    measurementKind: MeasurementKind.unit,
-    booleanTracked: true,
     measurementMode: MeasurementMode.boolean,
   );
 

@@ -5,7 +5,6 @@ import 'package:menuario/src/shared/domain/entities/ingredient.dart';
 import 'package:menuario/src/shared/domain/services/measurement_converter.dart';
 import 'package:menuario/src/shared/domain/services/recipe_unit_options.dart';
 import 'package:menuario/src/shared/domain/value_objects/category.dart';
-import 'package:menuario/src/shared/domain/value_objects/measurement_kind.dart';
 import 'package:menuario/src/shared/domain/value_objects/measurement_mode.dart';
 import 'package:menuario/src/shared/domain/value_objects/package_spec.dart';
 import 'package:menuario/src/shared/domain/value_objects/quantity.dart';
@@ -21,8 +20,6 @@ void main() {
         id: 'ingredient-banano',
         name: 'Banano',
         category: Category.fruta,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: false,
         measurementMode: MeasurementMode.count,
       );
 
@@ -40,8 +37,6 @@ void main() {
         id: 'ingredient-zanahoria',
         name: 'Zanahoria',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: false,
         measurementMode: MeasurementMode.count,
         conversionFactor: 0.25,
       );
@@ -63,8 +58,6 @@ void main() {
         id: 'ingredient-queso',
         name: 'Queso',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
       );
 
@@ -82,8 +75,6 @@ void main() {
         id: 'ingredient-avena',
         name: 'Avena',
         category: Category.cereal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.mass,
         conversionFactor: 85,
       );
@@ -110,8 +101,6 @@ void main() {
         id: 'ingredient-leche',
         name: 'Leche',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         package: PackageSpec(
           label: 'bolsa',
@@ -134,8 +123,6 @@ void main() {
         id: 'ingredient-leche',
         name: 'Leche',
         category: Category.lacteo,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         conversionFactor: 0.24,
         package: PackageSpec(
@@ -168,8 +155,6 @@ void main() {
         id: 'ingredient-huevo-carton',
         name: 'Huevo',
         category: Category.proteina,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         package: PackageSpec(
           label: 'cartón',
@@ -194,8 +179,6 @@ void main() {
         id: 'ingredient-huevo-carton',
         name: 'Huevo',
         category: Category.proteina,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageBase,
         conversionFactor: 1,
         package: PackageSpec(
@@ -219,8 +202,6 @@ void main() {
         id: 'ingredient-espinaca',
         name: 'Espinaca',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         package: PackageSpec(label: 'bolsa'),
       );
@@ -239,8 +220,6 @@ void main() {
         id: 'ingredient-espinaca',
         name: 'Espinaca',
         category: Category.vegetal,
-        measurementKind: MeasurementKind.bulk,
-        booleanTracked: false,
         measurementMode: MeasurementMode.packageAbstract,
         conversionFactor: 0.1,
         package: PackageSpec(label: 'bolsa'),
@@ -263,8 +242,6 @@ void main() {
         id: 'ingredient-sal',
         name: 'Sal',
         category: Category.condimento,
-        measurementKind: MeasurementKind.unit,
-        booleanTracked: true,
         measurementMode: MeasurementMode.boolean,
       );
 
@@ -285,16 +262,12 @@ void main() {
           id: 'ingredient-banano',
           name: 'Banano',
           category: Category.fruta,
-          measurementKind: MeasurementKind.unit,
-          booleanTracked: false,
           measurementMode: MeasurementMode.count,
         ),
         Ingredient(
           id: 'ingredient-zanahoria',
           name: 'Zanahoria',
           category: Category.vegetal,
-          measurementKind: MeasurementKind.unit,
-          booleanTracked: false,
           measurementMode: MeasurementMode.count,
           conversionFactor: 0.25,
         ),
@@ -302,16 +275,12 @@ void main() {
           id: 'ingredient-queso',
           name: 'Queso',
           category: Category.lacteo,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.mass,
         ),
         Ingredient(
           id: 'ingredient-avena',
           name: 'Avena',
           category: Category.cereal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.mass,
           conversionFactor: 85,
         ),
@@ -319,8 +288,6 @@ void main() {
           id: 'ingredient-leche-no-factor',
           name: 'Leche',
           category: Category.lacteo,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           package: PackageSpec(
             label: 'bolsa',
@@ -332,8 +299,6 @@ void main() {
           id: 'ingredient-leche',
           name: 'Leche',
           category: Category.lacteo,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           conversionFactor: 0.24,
           package: PackageSpec(
@@ -346,8 +311,6 @@ void main() {
           id: 'ingredient-huevo-carton-no-factor',
           name: 'Huevo',
           category: Category.proteina,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           package: PackageSpec(
             label: 'cartón',
@@ -359,8 +322,6 @@ void main() {
           id: 'ingredient-huevo-carton',
           name: 'Huevo',
           category: Category.proteina,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageBase,
           conversionFactor: 1,
           package: PackageSpec(
@@ -373,8 +334,6 @@ void main() {
           id: 'ingredient-espinaca-no-factor',
           name: 'Espinaca',
           category: Category.vegetal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageAbstract,
           package: PackageSpec(label: 'bolsa'),
         ),
@@ -382,8 +341,6 @@ void main() {
           id: 'ingredient-espinaca',
           name: 'Espinaca',
           category: Category.vegetal,
-          measurementKind: MeasurementKind.bulk,
-          booleanTracked: false,
           measurementMode: MeasurementMode.packageAbstract,
           conversionFactor: 0.1,
           package: PackageSpec(label: 'bolsa'),

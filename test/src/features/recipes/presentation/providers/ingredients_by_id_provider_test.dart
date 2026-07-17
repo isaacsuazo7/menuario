@@ -33,15 +33,11 @@ void main() {
       id: 'i1',
       name: 'Huevo',
       category: Category.proteina,
-      measurementKind: MeasurementKind.unit,
-      booleanTracked: false,
     );
     const avena = Ingredient(
       id: 'i2',
       name: 'Avena',
       category: Category.cereal,
-      measurementKind: MeasurementKind.bulk,
-      booleanTracked: false,
       conversionFactor: 85,
     );
     when(
