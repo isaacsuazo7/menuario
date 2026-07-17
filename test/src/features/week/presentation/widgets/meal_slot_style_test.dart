@@ -11,6 +11,7 @@ void main() {
     });
 
     test('short labels are the compact scan column', () {
+      expect(MealSlot.pregym.shortLabel, 'Pre');
       expect(MealSlot.desayuno.shortLabel, 'Des');
       expect(MealSlot.almuerzo.shortLabel, 'Alm');
       expect(MealSlot.merienda.shortLabel, 'Mer');

@@ -92,7 +92,7 @@ void main() {
   });
 
   testWidgets(
-    'an empty plan renders all 24 cells as empty (6 days x 4 slots)',
+    'an empty plan renders all 30 cells as empty (6 days x 5 slots)',
     (tester) async {
       when(
         () => mockWeekPlanRepository.getActive(),
@@ -104,7 +104,7 @@ void main() {
       await pumpScreen(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Agregar'), findsNWidgets(24));
+      expect(find.text('Agregar'), findsNWidgets(30));
       for (final day in DayOfWeek.values) {
         expect(find.text(day.label), findsOneWidget);
       }
@@ -124,7 +124,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Pollo al horno'), findsOneWidget);
-    expect(find.text('Agregar'), findsNWidgets(23));
+    expect(find.text('Agregar'), findsNWidgets(29));
   });
 
   testWidgets('marks only today\'s section with a "Hoy" chip', (tester) async {

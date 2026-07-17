@@ -144,6 +144,28 @@ void main() {
     expect(find.text('Misterio'), findsNothing);
   });
 
+  testWidgets('filtering by Pre-gym narrows the grid', (tester) async {
+    const pregymRecipe = Recipe(
+      id: 'r6',
+      name: 'Batido de proteína',
+      emoji: '🥤',
+      mealType: MealType.pregym,
+      bomLines: [],
+    );
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([pregymRecipe, desayunoRecipe]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Pre-gym'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Batido de proteína'), findsOneWidget);
+    expect(find.text('Avena'), findsNothing);
+  });
+
   testWidgets('Todas shows everything, including untagged recipes', (
     tester,
   ) async {

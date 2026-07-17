@@ -3,6 +3,10 @@ import 'package:menuario/src/features/week/presentation/providers/meal_slot_mapp
 import 'package:menuario/src/shared/shared.dart';
 
 void main() {
+  test('pregym slot maps to pregym meal type', () {
+    expect(mealTypeForSlot(MealSlot.pregym), MealType.pregym);
+  });
+
   test('desayuno slot maps to desayuno meal type', () {
     expect(mealTypeForSlot(MealSlot.desayuno), MealType.desayuno);
   });

@@ -4,6 +4,7 @@
 /// classification: it does not imply the recipe is plannable into a given
 /// day slot (e.g. `aderezo` has no daily-slot equivalent).
 enum MealType {
+  pregym,
   desayuno,
   almuerzo,
   merienda,
@@ -12,6 +13,7 @@ enum MealType {
 
   /// The Spanish label used across the UI.
   String get label => switch (this) {
+    MealType.pregym => 'Pre-gym',
     MealType.desayuno => 'Desayuno',
     MealType.almuerzo => 'Almuerzo',
     MealType.merienda => 'Merienda',
