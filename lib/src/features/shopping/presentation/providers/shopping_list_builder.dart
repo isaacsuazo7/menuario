@@ -147,7 +147,7 @@ class ShoppingListBuilder {
 
     final purchaseResult = _calculator.purchaseQuantity(
       shortfall: shortfall,
-      presentation: pantryItem.presentation,
+      presentation: presentationForPurchase(ingredient),
     );
     if (purchaseResult case Left(value: final failure)) {
       return Left(failure);
