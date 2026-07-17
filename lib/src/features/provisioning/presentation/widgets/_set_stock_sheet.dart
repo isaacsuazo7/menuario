@@ -152,7 +152,14 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
                   style: const TextStyle(fontSize: 24),
                 ),
                 MenuarioSpacing.gapH8,
-                Text(widget.row.ingredient.name, style: MenuarioTypography.h4),
+                Expanded(
+                  child: Text(
+                    widget.row.ingredient.name,
+                    style: MenuarioTypography.h4,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
             if (_lenses.length > 1) ...[
