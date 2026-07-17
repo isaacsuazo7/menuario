@@ -150,8 +150,8 @@ class _IngredientFormBody extends ConsumerWidget {
       builder: (context, form, child) {
         final modeChoice =
             form.control('modeChoice').value as IngredientModeChoice;
-        final requiresConversionFactor =
-            IngredientFormController.requiresConversionFactor(form);
+        final allowsConversionFactor =
+            IngredientFormController.allowsConversionFactor(form);
 
         return SingleChildScrollView(
           padding: MenuarioSpacing.paddingAll16,
@@ -288,7 +288,7 @@ class _IngredientFormBody extends ConsumerWidget {
                       form.control('packageBaseUnit').value = value,
                 ),
               ],
-              if (requiresConversionFactor) ...[
+              if (allowsConversionFactor) ...[
                 MenuarioSpacing.gapV16,
                 ExpansionTile(
                   key: const Key('ingredient-advanced-section'),
@@ -301,8 +301,13 @@ class _IngredientFormBody extends ConsumerWidget {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Factor de conversión',
+                        helperText: modeChoice == IngredientModeChoice.count
+                            ? 'Opcional — unidades de stock por unidad de '
+                                  'receta (ej. taza); 1 = 1 taza equivale a '
+                                  '1 unidad'
+                            : null,
                       ),
                     ),
                   ],
