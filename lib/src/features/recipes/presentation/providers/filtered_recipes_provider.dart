@@ -9,14 +9,20 @@ import 'package:menuario/src/shared/shared.dart';
 /// `null` `mealType`. A specific [MealType] only matches recipes whose
 /// `mealType` equals it — untagged recipes never appear under a specific
 /// chip, only under Todas.
+///
+/// Disabled ([Recipe.enabled] `false`) recipes are INCLUDED here — the
+/// Recetario grid renders them greyed with a reactivate action (see
+/// `recipes_screen.dart`'s `_RecipeCard`), instead of hiding them
+/// unreachably. Other `enabled`-scoped consumers (weekly-planning picker,
+/// budget/coverage aggregation) apply their own independent `enabled`
+/// filter and are unaffected by this provider's scope.
 final filteredRecipesProvider = Provider<AsyncValue<List<Recipe>>>((ref) {
   final recipesValue = ref.watch(recipeListProvider);
   final selectedMealType = ref.watch(selectedMealTypeProvider);
 
   return recipesValue.whenData((recipes) {
-    final visible = recipes.where((recipe) => recipe.enabled).toList();
-    if (selectedMealType == null) return visible;
-    return visible
+    if (selectedMealType == null) return recipes;
+    return recipes
         .where((recipe) => recipe.mealType == selectedMealType)
         .toList();
   });
