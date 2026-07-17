@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_bom_editor.dart';
+import 'package:menuario/src/shared/domain/services/recipe_unit_options.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 void main() {
@@ -14,33 +15,39 @@ void main() {
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
+  const huevo = Ingredient(
+    id: 'ing-huevo',
+    name: 'Huevo',
+    emoji: '🥚',
+    category: Category.proteina,
+    measurementKind: MeasurementKind.unit,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.count,
+  );
+  const leche = Ingredient(
+    id: 'ing-leche',
+    name: 'Leche',
+    emoji: '🥛',
+    category: Category.lacteo,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'bolsa',
+      yieldQty: 1,
+      baseDimension: Unit.liter,
+    ),
+  );
 
   Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
-  group('recipeUnitOptions', () {
-    test('is the fixed curated vocabulary: taza, g, u, cda, L', () {
-      expect(recipeUnitOptions.map((u) => u.symbol).toList(), [
-        'taza',
-        'g',
-        'u',
-        'cda',
-        'L',
-      ]);
-      expect(recipeUnitOptions[0].dimension, UnitDimension.volume);
-      expect(recipeUnitOptions[1], Unit.gram);
-      expect(recipeUnitOptions[2], Unit.count);
-      expect(recipeUnitOptions[3].dimension, UnitDimension.volume);
-      expect(recipeUnitOptions[4], Unit.liter);
-    });
-  });
-
   group('BomDraft', () {
-    test('defaults to the first curated unit and an empty quantity', () {
+    test('defaults to Unit.count and an empty quantity', () {
       final draft = BomDraft();
       addTearDown(draft.dispose);
 
       expect(draft.ingredientId, isNull);
-      expect(draft.unit, recipeUnitOptions.first);
+      expect(draft.unit, Unit.count);
       expect(draft.quantityController.text, isEmpty);
     });
 
@@ -145,7 +152,11 @@ void main() {
     testWidgets('the remove button invokes onRemoveLine with the row index', (
       tester,
     ) async {
-      final draft = BomDraft(ingredientId: 'ing-pollo', quantity: 1);
+      final draft = BomDraft(
+        ingredientId: 'ing-pollo',
+        quantity: 1,
+        unit: Unit.gram,
+      );
       addTearDown(draft.dispose);
       var removedIndex = -1;
 
@@ -168,17 +179,93 @@ void main() {
       expect(removedIndex, 0);
     });
 
-    testWidgets('the unit dropdown offers exactly the 5 curated units', (
+    testWidgets(
+      'the unit dropdown offers exactly recipeUnitsFor(ingredient) for a '
+      'picked mass-mode ingredient (pollo: g, kg, taza, cda)',
+      (tester) async {
+        final draft = BomDraft(
+          ingredientId: 'ing-pollo',
+          quantity: 1,
+          unit: Unit.gram,
+        );
+        addTearDown(draft.dispose);
+
+        await tester.pumpWidget(
+          wrap(
+            BomEditorSection(
+              lines: [draft],
+              ingredientsById: const {'ing-pollo': pollo},
+              onAddLine: () {},
+              onRemoveLine: (_) {},
+              onPickIngredient: (_) {},
+              onUnitChanged: (_, _) {},
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
+        await tester.pumpAndSettle();
+
+        expect(recipeUnitsFor(pollo), hasLength(4));
+        for (final label in const [
+          'Gramos (g)',
+          'Kilogramos (kg)',
+          'Taza',
+          'Cucharada (cda)',
+        ]) {
+          expect(find.text(label), findsWidgets);
+        }
+        expect(find.text('Litros (L)'), findsNothing);
+        expect(find.text('Unidades (u)'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'a count-dimension ingredient (huevo) locks the unit dropdown to '
+      'exactly {u}',
+      (tester) async {
+        final draft = BomDraft(
+          ingredientId: 'ing-huevo',
+          quantity: 1,
+          unit: Unit.count,
+        );
+        addTearDown(draft.dispose);
+
+        await tester.pumpWidget(
+          wrap(
+            BomEditorSection(
+              lines: [draft],
+              ingredientsById: const {'ing-huevo': huevo},
+              onAddLine: () {},
+              onRemoveLine: (_) {},
+              onPickIngredient: (_) {},
+              onUnitChanged: (_, _) {},
+            ),
+          ),
+        );
+
+        await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
+        await tester.pumpAndSettle();
+
+        // One item in the open menu, PLUS the currently-selected item
+        // mirrored in the closed field itself (Flutter's
+        // DropdownButtonFormField behavior) — 1 + 1.
+        expect(find.byType(DropdownMenuItem<Unit>), findsNWidgets(2));
+        expect(find.text('Unidades (u)'), findsWidgets);
+      },
+    );
+
+    testWidgets('the unit dropdown is disabled until an ingredient is picked', (
       tester,
     ) async {
-      final draft = BomDraft(ingredientId: 'ing-pollo', quantity: 1);
+      final draft = BomDraft();
       addTearDown(draft.dispose);
 
       await tester.pumpWidget(
         wrap(
           BomEditorSection(
             lines: [draft],
-            ingredientsById: const {'ing-pollo': pollo},
+            ingredientsById: const {},
             onAddLine: () {},
             onRemoveLine: (_) {},
             onPickIngredient: (_) {},
@@ -187,22 +274,15 @@ void main() {
         ),
       );
 
+      final dropdown = tester.widget<DropdownButtonFormField<Unit>>(
+        find.byKey(const Key('recipe-bom-unit-field-0')),
+      );
+      expect(dropdown.onChanged, isNull);
+
       await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
       await tester.pumpAndSettle();
 
-      // The dropdown renders one DropdownMenuItem per curated unit in the
-      // open menu, PLUS the currently-selected item mirrored in the closed
-      // field itself (Flutter's DropdownButtonFormField behavior) — 5 + 1.
-      expect(find.byType(DropdownMenuItem<Unit>), findsNWidgets(6));
-      for (final label in const [
-        'Taza',
-        'Gramos (g)',
-        'Unidades (u)',
-        'Cucharada (cda)',
-        'Litros (L)',
-      ]) {
-        expect(find.text(label), findsWidgets);
-      }
+      expect(find.byType(DropdownMenuItem<Unit>), findsNothing);
     });
 
     testWidgets('selecting a unit invokes onUnitChanged with the row index', (
@@ -235,8 +315,42 @@ void main() {
 
       await tester.tap(find.byKey(const Key('recipe-bom-unit-field-0')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Litros (L)').last);
+      await tester.tap(find.text('Kilogramos (kg)').last);
       await tester.pumpAndSettle();
+
+      expect(changedIndex, 0);
+      expect(changedUnit, Unit.kilogram);
+    });
+
+    testWidgets('picking a different ingredient resets the unit to the new '
+        "ingredient's set-default unit", (tester) async {
+      final draft = BomDraft();
+      addTearDown(draft.dispose);
+      var changedIndex = -1;
+      Unit? changedUnit;
+
+      Widget build({required Map<String, Ingredient> ingredientsById}) => wrap(
+        BomEditorSection(
+          lines: [draft],
+          ingredientsById: ingredientsById,
+          onAddLine: () {},
+          onRemoveLine: (_) {},
+          onPickIngredient: (_) {},
+          onUnitChanged: (index, unit) {
+            changedIndex = index;
+            changedUnit = unit;
+          },
+        ),
+      );
+
+      await tester.pumpWidget(build(ingredientsById: const {}));
+
+      // Simulates the screen assigning a picked ingredient id to the
+      // draft, then re-rendering with the resolved ingredient.
+      draft.ingredientId = 'ing-leche';
+      await tester.pumpWidget(
+        build(ingredientsById: const {'ing-leche': leche}),
+      );
 
       expect(changedIndex, 0);
       expect(changedUnit, Unit.liter);

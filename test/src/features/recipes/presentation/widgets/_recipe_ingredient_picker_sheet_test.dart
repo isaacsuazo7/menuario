@@ -1,23 +1,12 @@
-import 'package:dartz/dartz.dart' hide State, Unit;
+import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
-import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_recipe_ingredient_picker_sheet.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockIngredientRepository extends Mock implements IngredientRepository {}
-
-/// A mutable box for the `Future<String?>` a `showModalBottomSheet` call
-/// resolves with — lets a test read the pop value AFTER interacting with
-/// the still-open sheet (the awaited `Future` only resolves once the sheet
-/// pops, so it can't be captured via a plain local before then).
-class _PickerResultBox {
-  String? value;
-  bool resolved = false;
-}
 
 void main() {
   late MockIngredientRepository mockIngredientRepository;
@@ -41,49 +30,26 @@ void main() {
     conversionFactor: 1,
     measurementMode: MeasurementMode.mass,
   );
+  const sal = Ingredient(
+    id: 'ing-sal',
+    name: 'Sal',
+    emoji: '🧂',
+    category: Category.condimento,
+    measurementKind: MeasurementKind.unit,
+    booleanTracked: true,
+    measurementMode: MeasurementMode.boolean,
+  );
 
   setUp(() {
     mockIngredientRepository = MockIngredientRepository();
   });
 
   /// Pumps a screen with a button that opens [RecipeIngredientPickerSheet]
-  /// as a modal bottom sheet and taps it open, behind a [GoRouter] so
-  /// [IngredientRoutes.form] is a real, navigable route (mirrors
-  /// `recipe_detail_screen_test.dart`'s edit-navigation setup). Returns a
-  /// box that captures the sheet's eventual pop value.
-  Future<_PickerResultBox> pumpAndOpenSheet(
-    WidgetTester tester, {
-    String createdIngredientId = 'ing-new',
-  }) async {
-    final box = _PickerResultBox();
-    final router = GoRouter(
-      initialLocation: '/host',
-      routes: [
-        GoRoute(
-          path: '/host',
-          builder: (context, state) => Scaffold(
-            body: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () async {
-                  box.value = await showModalBottomSheet<String?>(
-                    context: context,
-                    builder: (_) => const RecipeIngredientPickerSheet(),
-                  );
-                  box.resolved = true;
-                },
-                child: const Text('open picker'),
-              ),
-            ),
-          ),
-        ),
-        GoRoute(
-          path: IngredientRoutes.form,
-          name: IngredientRoutes.form,
-          builder: (context, state) =>
-              _FakeIngredientFormScreen(returns: createdIngredientId),
-        ),
-      ],
-    );
+  /// as a modal bottom sheet capped at ~80% of the screen height (mirrors
+  /// `recipe_form_screen.dart`'s `_pickIngredientForBomRow` call) and taps
+  /// it open. Returns the [Future] the sheet resolves with on pop.
+  Future<Future<String?>> openSheet(WidgetTester tester) async {
+    late Future<String?> future;
 
     await tester.pumpWidget(
       ProviderScope(
@@ -92,14 +58,32 @@ void main() {
             mockIngredientRepository,
           ),
         ],
-        child: MaterialApp.router(routerConfig: router),
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () {
+                  future = showModalBottomSheet<String?>(
+                    context: context,
+                    isScrollControlled: true,
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    builder: (_) => const RecipeIngredientPickerSheet(),
+                  );
+                },
+                child: const Text('open picker'),
+              ),
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('open picker'));
     await tester.pumpAndSettle();
 
-    return box;
+    return future;
   }
 
   testWidgets('lists ingredients grouped by category', (tester) async {
@@ -107,7 +91,7 @@ void main() {
       () => mockIngredientRepository.list(),
     ).thenAnswer((_) async => const Right([huevo, leche]));
 
-    await pumpAndOpenSheet(tester);
+    await openSheet(tester);
 
     expect(find.text(Category.proteina.label), findsOneWidget);
     expect(find.text(Category.lacteo.label), findsOneWidget);
@@ -122,64 +106,66 @@ void main() {
       () => mockIngredientRepository.list(),
     ).thenAnswer((_) async => const Right([huevo, leche]));
 
-    final box = await pumpAndOpenSheet(tester);
+    final future = await openSheet(tester);
 
     await tester.tap(find.text('Leche'));
     await tester.pumpAndSettle();
 
-    expect(box.resolved, isTrue);
-    expect(box.value, 'ing-leche');
+    expect(await future, 'ing-leche');
+  });
+
+  testWidgets('there is no inline "create ingredient" action', (tester) async {
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, leche]));
+
+    await openSheet(tester);
+
+    expect(find.text('＋ Nuevo ingrediente'), findsNothing);
+    expect(find.byKey(const Key('recipe-bom-create-ingredient')), findsNothing);
+    expect(find.byIcon(Icons.add), findsNothing);
   });
 
   testWidgets(
-    'Nuevo ingrediente pushes the ingredient form and pops the sheet with '
-    'the newly-created id',
+    'boolean-mode ingredients are excluded from the selectable list',
     (tester) async {
       when(
         () => mockIngredientRepository.list(),
-      ).thenAnswer((_) async => const Right([huevo]));
+      ).thenAnswer((_) async => const Right([huevo, leche, sal]));
 
-      final box = await pumpAndOpenSheet(
-        tester,
-        createdIngredientId: 'ing-new',
-      );
+      await openSheet(tester);
 
-      expect(find.text('＋ Nuevo ingrediente'), findsOneWidget);
-
-      await tester.tap(find.text('＋ Nuevo ingrediente'));
-      await tester.pumpAndSettle();
-
-      // The fake ingredient form auto-confirms and pops('ing-new'); the
-      // sheet must relay that value as its own pop value.
-      expect(find.text('open picker'), findsOneWidget);
-      expect(box.resolved, isTrue);
-      expect(box.value, 'ing-new');
+      expect(find.text('Huevo'), findsOneWidget);
+      expect(find.text('Leche'), findsOneWidget);
+      expect(find.text('Sal'), findsNothing);
+      expect(find.text(Category.condimento.label), findsNothing);
     },
   );
-}
 
-/// Stands in for `IngredientFormScreen`: immediately pops with [returns]
-/// when built, exercising the picker's `pop(id)` handoff without needing
-/// the real ingredient form's fields.
-class _FakeIngredientFormScreen extends StatefulWidget {
-  const _FakeIngredientFormScreen({required this.returns});
+  testWidgets('opening the sheet does not throw (no invalidate-during-build '
+      'regression)', (tester) async {
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, leche]));
 
-  final String returns;
+    await openSheet(tester);
 
-  @override
-  State<_FakeIngredientFormScreen> createState() =>
-      _FakeIngredientFormScreenState();
-}
+    expect(tester.takeException(), isNull);
+  });
 
-class _FakeIngredientFormScreenState extends State<_FakeIngredientFormScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).pop(widget.returns);
-    });
-  }
+  testWidgets('the modal sheet is capped at ~80% of the screen height', (
+    tester,
+  ) async {
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, leche]));
 
-  @override
-  Widget build(BuildContext context) => const Scaffold(body: SizedBox());
+    await openSheet(tester);
+
+    final screenHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    final sheetSize = tester.getSize(find.byType(RecipeIngredientPickerSheet));
+
+    expect(sheetSize.height, lessThanOrEqualTo(screenHeight * 0.8 + 0.5));
+  });
 }

@@ -1,36 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:menuario/src/core/routing/app_routes.dart';
 import 'package:menuario/src/core/theme/category_colors.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredients_list_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 /// Ingredient-picker bottom sheet opened from the recipe form's BOM editor:
-/// lists every stored [Ingredient] grouped by [Category] (mirrors
-/// `ingredients_list_screen.dart`'s grouping), pops with the tapped
-/// ingredient's id on selection, or offers an inline "＋ Nuevo ingrediente"
-/// escape hatch that pushes [IngredientRoutes.form], and — once it returns a
-/// newly-created id — invalidates the ingredient read surfaces and pops the
-/// sheet with that id, auto-selecting it into the BOM line.
+/// lists every EXISTING ingredient grouped by [Category] (mirrors
+/// `ingredients_list_screen.dart`'s grouping) and pops with the tapped
+/// ingredient's id on selection.
+///
+/// Boolean-mode ingredients are excluded — `recipeUnitsFor` returns `{}`
+/// for them, so they have no sensible BOM unit to pick.
+///
+/// There is NO inline "create ingredient" action: ingredient creation is a
+/// product decision reserved for the Ingredients screen. The old inline
+/// escape hatch invalidated `ingredientsListProvider`/`ingredientsByIdProvider`
+/// right after an awaited pushed route returned, which crashed with a
+/// "setState/markNeedsBuild during build" error; removing the flow entirely
+/// removes that crash site.
 class RecipeIngredientPickerSheet extends ConsumerWidget {
   const RecipeIngredientPickerSheet({super.key});
-
-  Future<void> _handleCreateIngredient(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final navigator = Navigator.of(context);
-    final newId = await context.pushNamed<String?>(IngredientRoutes.form);
-    if (newId == null) return;
-
-    ref.invalidate(ingredientsListProvider);
-    ref.invalidate(ingredientsByIdProvider);
-    navigator.pop(newId);
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,17 +36,17 @@ class RecipeIngredientPickerSheet extends ConsumerWidget {
             padding: MenuarioSpacing.paddingAll16,
             child: Text('Elegí un ingrediente', style: MenuarioTypography.h4),
           ),
-          ListTile(
-            key: const Key('recipe-bom-create-ingredient'),
-            leading: const Icon(Icons.add),
-            title: const Text('＋ Nuevo ingrediente'),
-            onTap: () => _handleCreateIngredient(context, ref),
-          ),
           Flexible(
             child: AppAsyncValueWidget<List<Ingredient>>(
               value: ingredientsValue,
               builder: (context, ingredients) {
-                if (ingredients.isEmpty) {
+                final selectable = ingredients
+                    .where(
+                      (ingredient) =>
+                          ingredient.measurementMode != MeasurementMode.boolean,
+                    )
+                    .toList();
+                if (selectable.isEmpty) {
                   return const Padding(
                     padding: MenuarioSpacing.paddingAll16,
                     child: Text('Aún no tienes ingredientes.'),
@@ -64,7 +55,7 @@ class RecipeIngredientPickerSheet extends ConsumerWidget {
                 return ListView(
                   shrinkWrap: true,
                   children: [
-                    for (final group in _groupByCategory(ingredients))
+                    for (final group in _groupByCategory(selectable))
                       _CategorySection(
                         category: group.category,
                         ingredients: group.ingredients,
