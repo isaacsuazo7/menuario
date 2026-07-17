@@ -20,6 +20,10 @@ class MockIngredientRepository extends Mock implements IngredientRepository {}
 void main() {
   late MockRecipeRepository mockRecipeRepository;
 
+  setUpAll(() {
+    registerFallbackValue(const Recipe(id: 'fallback', name: '', bomLines: []));
+  });
+
   setUp(() {
     mockRecipeRepository = MockRecipeRepository();
   });
@@ -48,10 +52,16 @@ void main() {
     emoji: '❓',
     bomLines: [],
   );
+  const disabledRecipe = Recipe(
+    id: 'r5',
+    name: 'Vieja receta',
+    emoji: '🕰️',
+    mealType: MealType.desayuno,
+    enabled: false,
+    bomLines: [],
+  );
 
-  testWidgets('renders as body content without its own AppBar', (
-    tester,
-  ) async {
+  testWidgets('renders as body content without its own AppBar', (tester) async {
     when(
       () => mockRecipeRepository.list(),
     ).thenAnswer((_) async => const Right([]));
@@ -153,39 +163,38 @@ void main() {
     expect(find.text('Misterio'), findsOneWidget);
   });
 
-  testWidgets(
-    'a card with a 2-line name and a meal chip does not overflow',
-    (tester) async {
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
+  testWidgets('a card with a 2-line name and a meal chip does not overflow', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
 
-      const longNameRecipes = [
-        Recipe(
-          id: 'r3',
-          name: 'Aderezo mostaza-miel',
-          emoji: '🥫',
-          mealType: MealType.desayuno,
-          bomLines: [],
-        ),
-        Recipe(
-          id: 'r4',
-          name: 'Aderezo yogurt-cilantro',
-          emoji: '🥫',
-          mealType: MealType.cena,
-          bomLines: [],
-        ),
-      ];
-      when(
-        () => mockRecipeRepository.list(),
-      ).thenAnswer((_) async => const Right(longNameRecipes));
+    const longNameRecipes = [
+      Recipe(
+        id: 'r3',
+        name: 'Aderezo mostaza-miel',
+        emoji: '🥫',
+        mealType: MealType.desayuno,
+        bomLines: [],
+      ),
+      Recipe(
+        id: 'r4',
+        name: 'Aderezo yogurt-cilantro',
+        emoji: '🥫',
+        mealType: MealType.cena,
+        bomLines: [],
+      ),
+    ];
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right(longNameRecipes));
 
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
 
-      expect(tester.takeException(), isNull);
-    },
-  );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('tapping a card navigates to its recipe detail route', (
     tester,
@@ -238,6 +247,98 @@ void main() {
     expect(find.byType(RecipeDetailScreen), findsOneWidget);
     expect(find.text('Detalle de receta'), findsOneWidget);
   });
+
+  testWidgets('a disabled recipe renders greyed with a Desactivada marker', (
+    tester,
+  ) async {
+    when(
+      () => mockRecipeRepository.list(),
+    ).thenAnswer((_) async => const Right([desayunoRecipe, disabledRecipe]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Vieja receta'), findsOneWidget);
+    expect(find.text('Desactivada'), findsOneWidget);
+
+    final opacity = tester.widget<Opacity>(
+      find.ancestor(
+        of: find.text('Vieja receta'),
+        matching: find.byType(Opacity),
+      ),
+    );
+    expect(opacity.opacity, lessThan(1.0));
+  });
+
+  testWidgets(
+    'an enabled recipe renders without the Desactivada marker at full '
+    'opacity',
+    (tester) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Desactivada'), findsNothing);
+      final opacity = tester.widget<Opacity>(
+        find.ancestor(of: find.text('Avena'), matching: find.byType(Opacity)),
+      );
+      expect(opacity.opacity, 1.0);
+    },
+  );
+
+  testWidgets(
+    'tapping a disabled card reactivates it in place without navigating',
+    (tester) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([disabledRecipe]));
+      when(
+        () => mockRecipeRepository.save(any()),
+      ).thenAnswer((_) async => const Right(null));
+
+      final router = GoRouter(
+        initialLocation: ShellRoutes.recipes,
+        routes: [
+          GoRoute(
+            path: ShellRoutes.recipes,
+            builder: (context, state) => const RecipesScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: ShellRoutes.recipeDetailName,
+                builder: (context, state) =>
+                    RecipeDetailScreen(recipeId: state.pathParameters['id']!),
+              ),
+            ],
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Vieja receta'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RecipeDetailScreen), findsNothing);
+      final captured = verify(
+        () => mockRecipeRepository.save(captureAny()),
+      ).captured;
+      expect(captured, hasLength(1));
+      expect((captured.single as Recipe).id, disabledRecipe.id);
+      expect((captured.single as Recipe).enabled, isTrue);
+    },
+  );
 
   testWidgets('tapping the FAB opens the create form', (tester) async {
     when(

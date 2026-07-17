@@ -55,14 +55,22 @@ void main() {
     return container;
   }
 
-  test('Todas (null) shows every recipe, including untagged', () async {
-    final container = makeContainer();
-    await container.read(recipeListProvider.future);
+  test(
+    'Todas (null) shows every recipe, including untagged and disabled',
+    () async {
+      final container = makeContainer();
+      await container.read(recipeListProvider.future);
 
-    final result = container.read(filteredRecipesProvider);
+      final result = container.read(filteredRecipesProvider);
 
-    expect(result.value, [desayunoRecipe, untaggedRecipe, almuerzoRecipe]);
-  });
+      expect(result.value, [
+        desayunoRecipe,
+        untaggedRecipe,
+        almuerzoRecipe,
+        disabledRecipe,
+      ]);
+    },
+  );
 
   test('a specific meal type excludes untagged recipes', () async {
     final container = makeContainer();
@@ -71,25 +79,30 @@ void main() {
 
     final result = container.read(filteredRecipesProvider);
 
-    expect(result.value, [desayunoRecipe]);
+    expect(result.value, [desayunoRecipe, disabledRecipe]);
   });
 
-  test('Todas excludes disabled recipes', () async {
+  test('Todas includes disabled recipes (grid reachability)', () async {
     final container = makeContainer();
     await container.read(recipeListProvider.future);
 
     final result = container.read(filteredRecipesProvider);
 
-    expect(result.value, isNot(contains(disabledRecipe)));
+    expect(result.value, contains(disabledRecipe));
   });
 
-  test('a specific meal type also excludes disabled recipes', () async {
-    final container = makeContainer();
-    await container.read(recipeListProvider.future);
-    container.read(selectedMealTypeProvider.notifier).select(MealType.desayuno);
+  test(
+    'a specific meal type also includes disabled recipes matching it',
+    () async {
+      final container = makeContainer();
+      await container.read(recipeListProvider.future);
+      container
+          .read(selectedMealTypeProvider.notifier)
+          .select(MealType.desayuno);
 
-    final result = container.read(filteredRecipesProvider);
+      final result = container.read(filteredRecipesProvider);
 
-    expect(result.value, isNot(contains(disabledRecipe)));
-  });
+      expect(result.value, contains(disabledRecipe));
+    },
+  );
 }
