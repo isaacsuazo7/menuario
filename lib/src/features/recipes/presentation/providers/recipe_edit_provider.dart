@@ -6,7 +6,7 @@ import 'package:menuario/src/shared/shared.dart';
 /// (create mode short-circuits without hitting the repository).
 ///
 /// `retry: null` — see [FailureException] note on `recipeListProvider`.
-final recipeEditProvider = FutureProvider.family<Recipe?, String?>(
+final recipeEditProvider = FutureProvider.autoDispose.family<Recipe?, String?>(
   (ref, id) async {
     if (id == null) return null;
 
