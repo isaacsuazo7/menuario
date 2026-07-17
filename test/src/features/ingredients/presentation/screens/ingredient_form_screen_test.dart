@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
+import 'package:menuario/src/features/ingredients/presentation/providers/ingredient_edit_provider.dart';
+import 'package:menuario/src/features/ingredients/presentation/providers/ingredient_pantry_edit_provider.dart';
 import 'package:menuario/src/features/ingredients/presentation/screens/ingredient_form_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
@@ -14,12 +16,20 @@ class MockPantryRepository extends Mock implements PantryRepository {}
 class MockIngredientCatalogRepository extends Mock
     implements IngredientCatalogRepository {}
 
-/// Reads the current text of the [TextField] keyed [key]. Safer than
+/// Reads the current text of the text field keyed [key] (a
+/// `ReactiveTextField`, which wraps its own internally-managed
+/// `TextField`/`EditableText` — reading the `EditableText` descendant's
+/// controller works regardless of the wrapper type). Safer than
 /// `find.widgetWithText` when the field's own `suffixText` (e.g. a lens
 /// label like `'bolsas'`) can collide with another field's typed value.
 String _textOf(WidgetTester tester, String key) {
-  final field = tester.widget<TextField>(find.byKey(Key(key)));
-  return field.controller!.text;
+  final editable = tester.widget<EditableText>(
+    find.descendant(
+      of: find.byKey(Key(key)),
+      matching: find.byType(EditableText),
+    ),
+  );
+  return editable.controller.text;
 }
 
 void main() {
@@ -1018,6 +1028,46 @@ void main() {
       await expandAdvanced(tester);
       expect(find.widgetWithText(TextField, '1'), findsOneWidget);
     });
+
+    testWidgets(
+      'still pre-fills when ingredientEditProvider/'
+      'ingredientPantryEditProvider are already resolved/cached before the '
+      'form mounts (revisit-without-fireImmediately regression guard — '
+      'mirrors recipe_form_screen_test.dart)',
+      (tester) async {
+        when(
+          () => mockIngredientRepository.getById('ing-pollo'),
+        ).thenAnswer((_) async => const Right(pollo));
+        when(
+          () => mockPantryRepository.getById('ing-pollo'),
+        ).thenAnswer((_) async => const Right(polloPantry));
+
+        final container = ProviderContainer(overrides: overrides());
+        addTearDown(container.dispose);
+
+        // Resolve BOTH family providers to completion BEFORE the form ever
+        // mounts — mirrors a real revisit where they're already cached as
+        // AsyncData once resolved elsewhere in the session.
+        await container.read(ingredientEditProvider('ing-pollo').future);
+        await container.read(
+          ingredientPantryEditProvider('ing-pollo').future,
+        );
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(
+              home: IngredientFormScreen(ingredientId: 'ing-pollo'),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.widgetWithText(TextField, 'Pollo'), findsOneWidget);
+        expect(find.widgetWithText(TextField, '2'), findsOneWidget);
+        expect(find.text('Editar ingrediente'), findsOneWidget);
+      },
+    );
 
     testWidgets('Por paquete pre-fills package fields and pack-lens stock', (
       tester,
