@@ -6,7 +6,6 @@ import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/recipe_submission_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/selected_meal_type_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 
@@ -110,28 +109,26 @@ class _RecipeGrid extends StatelessWidget {
 }
 
 /// A disabled recipe stays reachable instead of vanishing from the grid: it
-/// renders greyed (via [Opacity]) with a "Desactivada" marker chip, and
-/// tapping it reactivates it in place (`enabled: true`, persisted through
-/// [recipeSubmissionProvider]) rather than navigating to its detail — an
-/// enabled card's tap still navigates as before.
-class _RecipeCard extends ConsumerWidget {
+/// renders greyed (via [Opacity]) with a "Desactivada" marker chip. Tapping
+/// it ALWAYS navigates to its detail, same as an enabled card — reactivation
+/// happens only through the "Activa" switch on the edit form, never as a
+/// tap side effect (a synchronous `submit()` call from `InkWell.onTap` used
+/// to race the tap ripple's `Ticker` and throw
+/// `setState()`/`markNeedsBuild() called during build`).
+class _RecipeCard extends StatelessWidget {
   const _RecipeCard({required this.recipe});
 
   final Recipe recipe;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => recipe.enabled
-            ? context.pushNamed(
-                ShellRoutes.recipeDetailName,
-                pathParameters: {'id': recipe.id},
-              )
-            : ref
-                  .read(recipeSubmissionProvider.notifier)
-                  .submit(recipe.copyWith(enabled: true)),
+        onTap: () => context.pushNamed(
+          ShellRoutes.recipeDetailName,
+          pathParameters: {'id': recipe.id},
+        ),
         child: Opacity(
           opacity: recipe.enabled ? 1.0 : 0.5,
           child: Padding(
