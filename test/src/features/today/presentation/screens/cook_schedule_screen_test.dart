@@ -8,6 +8,7 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/today/data/repositories/cook_schedule_repository_impl.dart';
 import 'package:menuario/src/features/today/domain/entities/cook_schedule.dart';
 import 'package:menuario/src/features/today/domain/repositories/cook_schedule_repository.dart';
+import 'package:menuario/src/features/today/presentation/providers/cook_schedule_provider.dart';
 import 'package:menuario/src/features/today/presentation/screens/cook_schedule_screen.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -174,6 +175,45 @@ void main() {
 
     expect(tile.value, isTrue);
   });
+
+  testWidgets(
+    'still pre-fills when cookScheduleProvider is already resolved/cached '
+    'before the form mounts (revisit-without-fireImmediately regression '
+    'guard — mirrors recipe_form_screen_test.dart; cookScheduleProvider is '
+    'NOT autoDispose, so it stays cached across screens for the session)',
+    (tester) async {
+      when(
+        () => mockCookScheduleRepository.getActive(),
+      ).thenAnswer((_) async => const Right(null));
+
+      final container = ProviderContainer(
+        overrides: [
+          cookScheduleRepositoryProvider.overrideWithValue(
+            mockCookScheduleRepository,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      // Resolve cookScheduleProvider to completion BEFORE the form ever
+      // mounts — mirrors a real revisit: the provider is already cached
+      // as AsyncData once resolved elsewhere in the session.
+      await container.read(cookScheduleProvider.future);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: CookScheduleScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final tile = tester.widget<SwitchListTile>(
+        toggleFinder(DateTime.monday, 'cenaHoy'),
+      );
+      expect(tile.value, isTrue);
+    },
+  );
 
   testWidgets('Save persists the edited draft via the controller', (
     tester,
