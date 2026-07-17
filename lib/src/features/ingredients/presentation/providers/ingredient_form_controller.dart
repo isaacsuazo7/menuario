@@ -223,6 +223,15 @@ class IngredientFormController extends Notifier<FormGroup> {
         mode == IngredientModeChoice.package;
   }
 
+  /// Whether the form should show/persist `conversionFactor` at all —
+  /// [requiresConversionFactor]'s modes plus `Por unidad`, where it's
+  /// OPTIONAL (lets a count ingredient accept a volume/mass recipe unit,
+  /// e.g. Zanahoria bought whole but used by `taza` in recipes).
+  static bool allowsConversionFactor(FormGroup form) {
+    final mode = form.control('modeChoice').value as IngredientModeChoice;
+    return requiresConversionFactor(form) || mode == IngredientModeChoice.count;
+  }
+
   /// A throwaway [Ingredient] carrying just enough (`measurementMode`,
   /// `package`, `defaultLensLabel`) for [StockLensService] to compute
   /// lenses off the CURRENT form state — never persisted itself.
@@ -311,7 +320,7 @@ class IngredientFormController extends Notifier<FormGroup> {
       name: name,
       emoji: emoji.isEmpty ? null : emoji,
       category: form.control('category').value as Category,
-      conversionFactor: requiresConversionFactor(form)
+      conversionFactor: allowsConversionFactor(form)
           ? num.tryParse(
               (form.control('conversionFactor').value as String? ?? '').trim(),
             )
