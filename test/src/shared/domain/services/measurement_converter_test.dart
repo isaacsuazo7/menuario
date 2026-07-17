@@ -123,7 +123,8 @@ void main() {
       });
 
       test('count mode returns Left(unknownUnit) for a non-count recipe '
-          'unit (huevo given taza)', () {
+          'unit when the ingredient has NO conversionFactor (huevo given '
+          'taza)', () {
         // Arrange
         const huevo = Ingredient(
           id: 'ingredient-huevo',
@@ -150,6 +151,60 @@ void main() {
             'unknownUnit',
           ),
         );
+      });
+
+      test('count mode multiplies by conversionFactor when the recipe unit '
+          'is not count (zanahoria 3 taza x cf=0.25 = 0.75 u)', () {
+        // Arrange
+        const zanahoria = Ingredient(
+          id: 'ingredient-zanahoria',
+          name: 'Zanahoria',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+          conversionFactor: 0.25,
+        );
+        const recipeQuantity = Quantity(value: 3, unit: taza);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: zanahoria,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(
+            Quantity(value: 0.75, unit: Unit.count),
+          ),
+        );
+      });
+
+      test('count mode passes the recipe quantity through as an identity '
+          'when it is already in count, requiring NO conversionFactor even '
+          'when one is set (zanahoria, cf=0.25, 2 u -> 2 u)', () {
+        // Arrange
+        const zanahoria = Ingredient(
+          id: 'ingredient-zanahoria',
+          name: 'Zanahoria',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+          conversionFactor: 0.25,
+        );
+        const recipeQuantity = Quantity(value: 2, unit: Unit.count);
+
+        // Act
+        final result = converter.toStockUnit(
+          recipeQuantity: recipeQuantity,
+          ingredient: zanahoria,
+        );
+
+        // Assert
+        expect(result, const Right<Failure, Quantity>(recipeQuantity));
       });
 
       test('packageBase mode with a volume base dimension multiplies into '
