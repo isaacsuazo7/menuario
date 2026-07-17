@@ -6,6 +6,7 @@ import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/provisioning/presentation/models/pantry_row.dart';
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
 import 'package:menuario/src/shared/shared.dart';
+import 'package:reactive_forms/reactive_forms.dart';
 
 /// Pure and dependency-free (see [StockLensService]'s "no DI needed"
 /// design decision) — safe to hold as a single const instance.
@@ -17,9 +18,11 @@ const _stockLensService = StockLensService();
 /// and converted to the item's canonical stock unit via
 /// [StockLens.toCanonical] on confirm.
 ///
-/// This is the app's first real form surface — it establishes the
-/// [MenuarioSpacing]/[MenuarioTypography] form idiom future sheets should
-/// copy.
+/// The [FormGroup] here is owned locally by the state (not a
+/// `NotifierProvider`, unlike the other reactive_forms screens): the sheet
+/// is short-lived and scoped 1:1 to the [row] passed into its constructor,
+/// so there is nothing else to `ref.watch`/`ref.read` this state from —
+/// prefill is synchronous from [row], seeded once in `initState`.
 class SetStockSheet extends ConsumerStatefulWidget {
   const SetStockSheet({super.key, required this.row});
 
@@ -35,8 +38,7 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   late final QuantityTrackedPantryItem _item;
   late final Ingredient _ingredient;
   late final List<StockLens> _lenses;
-  late final TextEditingController _controller;
-  late StockLens _selectedLens;
+  late final FormGroup _form;
 
   @override
   void initState() {
@@ -44,23 +46,24 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
     _item = widget.row.item as QuantityTrackedPantryItem;
     _ingredient = widget.row.ingredient;
     _lenses = _stockLensService.lensesFor(_ingredient);
-    _selectedLens = _stockLensService.defaultLensFor(_ingredient);
+    final selectedLens = _stockLensService.defaultLensFor(_ingredient);
+    final naturalValue = selectedLens.fromCanonical(_item.stock.value);
 
-    final naturalValue = _selectedLens.fromCanonical(_item.stock.value);
-    _controller = TextEditingController(
-      text: _formatNatural(naturalValue, _selectedLens),
-    );
-    _controller.addListener(_handleFieldChanged);
+    _form = FormGroup({
+      'quantity': FormControl<String>(
+        value: _formatNatural(naturalValue, selectedLens),
+      ),
+      'lens': FormControl<StockLens>(value: selectedLens),
+    });
   }
 
   @override
   void dispose() {
-    _controller.removeListener(_handleFieldChanged);
-    _controller.dispose();
+    _form.dispose();
     super.dispose();
   }
 
-  void _handleFieldChanged() => setState(() {});
+  StockLens get _selectedLens => _form.control('lens').value as StockLens;
 
   /// Trims trailing fractional zeros (and a bare trailing `.`), so `1.00`
   /// displays as `1` and `0.50` as `0.5`. Integer-only lenses round first,
@@ -81,7 +84,7 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   /// The typed value in [_selectedLens]'s unit, or `null` when the field is
   /// empty or not a valid number.
   num? get _parsedValue {
-    final text = _controller.text.trim();
+    final text = (_form.control('quantity').value as String? ?? '').trim();
     if (text.isEmpty) return null;
     return num.tryParse(text);
   }
@@ -99,8 +102,16 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   List<num> get _quickSetOptions =>
       _selectedLens.allowsDecimal ? const [0.5, 1, 2, 3] : const [1, 2, 3];
 
+  String _equivalentLine(num canonical, StockLens lens) {
+    final natural = _formatNatural(lens.fromCanonical(canonical), lens);
+    return '= $natural ${lens.label}';
+  }
+
   void _handleChipTap(num naturalValue) {
-    _controller.text = _formatNatural(naturalValue, _selectedLens);
+    _form.control('quantity').value = _formatNatural(
+      naturalValue,
+      _selectedLens,
+    );
   }
 
   /// Switches the active lens, re-scaling the field to the same canonical
@@ -108,8 +119,11 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
   /// never changes just because the user changed how they're looking at it.
   void _handleLensChanged(StockLens lens) {
     final canonical = _canonicalValue ?? _item.stock.value;
-    setState(() => _selectedLens = lens);
-    _controller.text = _formatNatural(lens.fromCanonical(canonical), lens);
+    _form.control('lens').value = lens;
+    _form.control('quantity').value = _formatNatural(
+      lens.fromCanonical(canonical),
+      lens,
+    );
   }
 
   Future<void> _handleConfirm() async {
@@ -129,109 +143,127 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final canonical = _canonicalValue;
-    final canConfirm = canonical != null && canonical >= 0;
-    final otherLenses = _lenses.where((lens) => lens != _selectedLens);
+    return ReactiveForm(
+      formGroup: _form,
+      child: ReactiveFormConsumer(
+        builder: (context, form, child) {
+          final selectedLens = _selectedLens;
+          final canonical = _canonicalValue;
+          final canConfirm = canonical != null && canonical >= 0;
+          final otherLenses = _lenses.where((lens) => lens != selectedLens);
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.only(
-          left: MenuarioSpacing.md,
-          right: MenuarioSpacing.md,
-          top: MenuarioSpacing.md,
-          bottom: MediaQuery.of(context).viewInsets.bottom + MenuarioSpacing.md,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  widget.row.ingredient.emoji ?? '🥫',
-                  style: const TextStyle(fontSize: 24),
-                ),
-                MenuarioSpacing.gapH8,
-                Text(widget.row.ingredient.name, style: MenuarioTypography.h4),
-              ],
-            ),
-            if (_lenses.length > 1) ...[
-              MenuarioSpacing.gapV16,
-              SegmentedButton<StockLens>(
-                segments: [
-                  for (final lens in _lenses)
-                    ButtonSegment(value: lens, label: Text(lens.label)),
-                ],
-                selected: {_selectedLens},
-                showSelectedIcon: false,
-                onSelectionChanged: (selection) =>
-                    _handleLensChanged(selection.first),
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(
+                left: MenuarioSpacing.md,
+                right: MenuarioSpacing.md,
+                top: MenuarioSpacing.md,
+                bottom:
+                    MediaQuery.of(context).viewInsets.bottom +
+                    MenuarioSpacing.md,
               ),
-            ],
-            MenuarioSpacing.gapV16,
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              keyboardType: TextInputType.numberWithOptions(
-                decimal: _selectedLens.allowsDecimal,
-              ),
-              inputFormatters: [
-                if (_selectedLens.allowsDecimal)
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
-                else
-                  FilteringTextInputFormatter.digitsOnly,
-              ],
-              decoration: InputDecoration(
-                labelText: 'Cantidad',
-                suffixText: _selectedLens.label,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            MenuarioSpacing.gapV8,
-            if (canonical == null)
-              Text(
-                'Ingresa una cantidad válida',
-                style: MenuarioTypography.body,
-              )
-            else
-              for (final lens in otherLenses)
-                Text(
-                  '= ${_formatNatural(lens.fromCanonical(canonical), lens)} '
-                  '${lens.label}',
-                  style: MenuarioTypography.body,
-                ),
-            MenuarioSpacing.gapV16,
-            Wrap(
-              spacing: MenuarioSpacing.sm,
-              children: [
-                for (final option in _quickSetOptions)
-                  ChoiceChip(
-                    label: Text(
-                      '${_formatNatural(option, _selectedLens)} '
-                      '${_selectedLens.label}',
-                    ),
-                    selected: false,
-                    onSelected: (_) => _handleChipTap(option),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        widget.row.ingredient.emoji ?? '🥫',
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      MenuarioSpacing.gapH8,
+                      Expanded(
+                        child: Text(
+                          widget.row.ingredient.name,
+                          style: MenuarioTypography.h4,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-              ],
+                  if (_lenses.length > 1) ...[
+                    MenuarioSpacing.gapV16,
+                    SegmentedButton<StockLens>(
+                      segments: [
+                        for (final lens in _lenses)
+                          ButtonSegment(value: lens, label: Text(lens.label)),
+                      ],
+                      selected: {selectedLens},
+                      showSelectedIcon: false,
+                      onSelectionChanged: (selection) =>
+                          _handleLensChanged(selection.first),
+                    ),
+                  ],
+                  MenuarioSpacing.gapV16,
+                  ReactiveTextField<String>(
+                    formControlName: 'quantity',
+                    autofocus: true,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: selectedLens.allowsDecimal,
+                    ),
+                    inputFormatters: [
+                      if (selectedLens.allowsDecimal)
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*\.?\d*'),
+                        )
+                      else
+                        FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Cantidad',
+                      suffixText: selectedLens.label,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  MenuarioSpacing.gapV8,
+                  if (canonical == null)
+                    Text(
+                      'Ingresa una cantidad válida',
+                      style: MenuarioTypography.body,
+                    )
+                  else
+                    for (final lens in otherLenses)
+                      Text(
+                        _equivalentLine(canonical, lens),
+                        style: MenuarioTypography.body,
+                      ),
+                  MenuarioSpacing.gapV16,
+                  Wrap(
+                    spacing: MenuarioSpacing.sm,
+                    children: [
+                      for (final option in _quickSetOptions)
+                        ChoiceChip(
+                          label: Text(
+                            '${_formatNatural(option, selectedLens)} '
+                            '${selectedLens.label}',
+                          ),
+                          selected: false,
+                          onSelected: (_) => _handleChipTap(option),
+                        ),
+                    ],
+                  ),
+                  MenuarioSpacing.gapV16,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('Cancelar'),
+                      ),
+                      MenuarioSpacing.gapH8,
+                      FilledButton(
+                        onPressed: canConfirm ? _handleConfirm : null,
+                        child: const Text('Confirmar'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            MenuarioSpacing.gapV16,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
-                ),
-                MenuarioSpacing.gapH8,
-                FilledButton(
-                  onPressed: canConfirm ? _handleConfirm : null,
-                  child: const Text('Confirmar'),
-                ),
-              ],
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

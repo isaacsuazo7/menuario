@@ -110,6 +110,31 @@ void main() {
   );
   final lechugaRow = PantryRow(item: lechugaItem, ingredient: lechuga);
 
+  // A name long enough to overflow the header Row's available width when
+  // rendered unconstrained — reproduces the horizontal RenderFlex overflow.
+  const longNameIngredient = Ingredient(
+    id: 'ing-long-name',
+    name:
+        'Pechuga de pollo deshuesada y sin piel marinada con especias '
+        'especiales de la casa',
+    emoji: '🍗',
+    category: Category.proteina,
+    measurementKind: MeasurementKind.bulk,
+    booleanTracked: false,
+    conversionFactor: 1,
+    measurementMode: MeasurementMode.mass,
+  );
+  const longNameItem = PantryItem.quantityTracked(
+    ingredientId: 'ing-long-name',
+    category: Category.proteina,
+    presentation: Presentation.counter(),
+    stock: Quantity(value: Mass.gramsPerPound * 2, unit: Unit.gram),
+  );
+  final longNameRow = PantryRow(
+    item: longNameItem,
+    ingredient: longNameIngredient,
+  );
+
   setUpAll(() {
     registerFallbackValue(polloItem);
   });
@@ -414,6 +439,23 @@ void main() {
       // there, not rendered past the bottom of the (visible) screen.
       final confirmRect = tester.getRect(find.text('Confirmar'));
       expect(confirmRect.bottom, lessThanOrEqualTo(200));
+    },
+  );
+
+  testWidgets(
+    'a very long ingredient name renders without a horizontal RenderFlex '
+    'overflow',
+    (tester) async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([longNameItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([longNameIngredient]));
+
+      await pumpSheet(tester, row: longNameRow);
+
+      expect(tester.takeException(), isNull);
     },
   );
 }

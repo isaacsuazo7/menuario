@@ -12,6 +12,7 @@ extension MealSlotStyleX on MealSlot {
   /// The time-of-day accent, morning → night. Used as a SMALL identity mark
   /// (a thin left bar / tile ring), never as a fill.
   Color get accent => switch (this) {
+    MealSlot.pregym => const Color(0xFFF43F5E), // rose — pre-workout
     MealSlot.desayuno => const Color(0xFFFBBF24), // amber — morning
     MealSlot.almuerzo => const Color(0xFF2DD4BF), // teal — midday
     MealSlot.merienda => const Color(0xFFFB923C), // orange — afternoon
@@ -19,8 +20,9 @@ extension MealSlotStyleX on MealSlot {
   };
 
   /// The compact, fixed-width label shown at the start of each row so the
-  /// eye scans Des/Alm/Mer/Cena straight down the day card.
+  /// eye scans Pre/Des/Alm/Mer/Cena straight down the day card.
   String get shortLabel => switch (this) {
+    MealSlot.pregym => 'Pre',
     MealSlot.desayuno => 'Des',
     MealSlot.almuerzo => 'Alm',
     MealSlot.merienda => 'Mer',

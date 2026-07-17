@@ -93,16 +93,16 @@ void main() {
     expect(find.text('Pollo al horno'), findsOneWidget);
   });
 
-  testWidgets('the header shows an n/4 planned-count pill', (tester) async {
+  testWidgets('the header shows an n/5 planned-count pill', (tester) async {
     await pumpSection(tester);
-    expect(find.text('0/4'), findsOneWidget);
+    expect(find.text('0/5'), findsOneWidget);
 
     await pumpSection(
       tester,
       entriesBySlot: {MealSlot.almuerzo: almuerzoEntry},
       recipesById: {'r-almuerzo': almuerzoRecipe},
     );
-    expect(find.text('1/4'), findsOneWidget);
+    expect(find.text('1/5'), findsOneWidget);
   });
 
   testWidgets('shows a "Hoy" chip only when isToday', (tester) async {

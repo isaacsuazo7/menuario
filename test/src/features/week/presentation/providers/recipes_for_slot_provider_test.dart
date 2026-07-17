@@ -9,6 +9,12 @@ import 'package:mocktail/mocktail.dart';
 class MockRecipeRepository extends Mock implements RecipeRepository {}
 
 void main() {
+  const pregymRecipe = Recipe(
+    id: 'r6',
+    name: 'Batido de proteína',
+    mealType: MealType.pregym,
+    bomLines: [],
+  );
   const desayunoRecipe = Recipe(
     id: 'r1',
     name: 'Avena',
@@ -42,6 +48,7 @@ void main() {
     mockRecipeRepository = MockRecipeRepository();
     when(() => mockRecipeRepository.list()).thenAnswer(
       (_) async => const Right([
+        pregymRecipe,
         desayunoRecipe,
         almuerzoRecipe,
         aderezoRecipe,
@@ -60,6 +67,15 @@ void main() {
     addTearDown(container.dispose);
     return container;
   }
+
+  test('pregym recipes are plannable into the pregym slot', () async {
+    final container = makeContainer();
+    await container.read(recipeListProvider.future);
+
+    final result = container.read(recipesForSlotProvider(MealSlot.pregym));
+
+    expect(result.value, [pregymRecipe]);
+  });
 
   test('filters by the mealType matching the given slot', () async {
     final container = makeContainer();

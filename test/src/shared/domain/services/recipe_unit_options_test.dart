@@ -33,6 +33,29 @@ void main() {
       expect(result, const [Unit.count]);
     });
 
+    test('count mode with conversionFactor adds cup/tablespoon to {count} '
+        '(zanahoria, cf=0.25)', () {
+      // Arrange
+      const zanahoria = Ingredient(
+        id: 'ingredient-zanahoria',
+        name: 'Zanahoria',
+        category: Category.vegetal,
+        measurementKind: MeasurementKind.unit,
+        booleanTracked: false,
+        measurementMode: MeasurementMode.count,
+        conversionFactor: 0.25,
+      );
+
+      // Act
+      final result = recipeUnitsFor(zanahoria);
+
+      // Assert
+      expect(
+        result,
+        unorderedEquals(<Unit>[Unit.count, Unit.cup, Unit.tablespoon]),
+      );
+    });
+
     test('mass mode without conversionFactor returns {g, kg} only, no '
         'taza/cda (queso, no factor)', () {
       // Arrange
@@ -265,6 +288,15 @@ void main() {
           measurementKind: MeasurementKind.unit,
           booleanTracked: false,
           measurementMode: MeasurementMode.count,
+        ),
+        Ingredient(
+          id: 'ingredient-zanahoria',
+          name: 'Zanahoria',
+          category: Category.vegetal,
+          measurementKind: MeasurementKind.unit,
+          booleanTracked: false,
+          measurementMode: MeasurementMode.count,
+          conversionFactor: 0.25,
         ),
         Ingredient(
           id: 'ingredient-queso',

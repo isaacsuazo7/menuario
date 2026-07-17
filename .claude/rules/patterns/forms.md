@@ -103,6 +103,18 @@ class BadFormController extends Notifier<FormGroup> {
 
 ## Screen con ConsumerStatefulWidget
 
+> ⚠️ **Regla de listeners (CRÍTICA — un patrón mal aplicado ya causó un crash en prod):**
+> - `ref.listen` (Riverpod) va **SIEMPRE al root de `build()`**, NUNCA en
+>   `initState` ni con `listenManual` — lo dice la doc de flutter_riverpod. En
+>   `initState`/`listenManual` la subscription se resume en transiciones de
+>   `TickerMode` (navegación) y puede invalidar un provider durante el build →
+>   crash `setState()/markNeedsBuild() called during build`.
+> - Los listeners de `valueChanges` (reactive_forms) / `TextEditingController`
+>   SÍ van en `initState` (se crean una sola vez).
+> - El **prefill de edición** (sembrar el FormGroup desde una entidad async) va
+>   en `build()`, guardado por un flag, diferido con
+>   `WidgetsBinding.instance.addPostFrameCallback` (ver "Prefill en edición").
+
 ### ✅ CORRECTO
 
 ```dart
@@ -185,6 +197,38 @@ class BadScreen extends ConsumerWidget {
 }
 ```
 
+## Prefill en edición (patrón correcto)
+
+Para precargar el form desde una entidad que llega async (un
+`FutureProvider.family` de detalle/edición), **NO** uses `ref.listen`/
+`listenManual` en `initState`. Observá el `AsyncValue` en `build()` y sembrá una
+sola vez, diferido a post-frame:
+
+```dart
+@override
+Widget build(BuildContext context) {
+  final editValue = widget.id == null
+      ? const AsyncValue<Recipe?>.data(null)
+      : ref.watch(recipeEditProvider(widget.id));
+  final form = ref.watch(recipeFormController);
+
+  // Siembra una sola vez cuando el dato está disponible — sirve tanto si ya
+  // está cacheado (inmediato) como si llega async (build re-corre en la
+  // transición Loading -> Data). addPostFrameCallback evita mutar el FormGroup
+  // que ReactiveForm observa durante el build.
+  editValue.whenData((recipe) {
+    if (recipe == null || _prefilled) return;
+    _prefilled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(recipeFormController.notifier).prefill(recipe);
+    });
+  });
+
+  return ReactiveForm(formGroup: form, child: ...);
+}
+```
+
 ## ReactiveFormConsumer
 
 Para el botón de envío que reacciona a la validez del form, usar
@@ -210,7 +254,8 @@ ReactiveFormConsumer(
 - [ ] Validators inline en el constructor de FormGroup
 - [ ] Custom validators como clases privadas `_MyValidator`
 - [ ] Screen es `ConsumerStatefulWidget`
-- [ ] Listeners configurados en `initState()` del screen
+- [ ] `valueChanges`/`TextEditingController` listeners en `initState()`; `ref.listen` SIEMPRE al root de `build()` (NUNCA en initState/listenManual)
+- [ ] Prefill de edición en `build()` vía `WidgetsBinding.addPostFrameCallback` (no en initState)
 - [ ] `toEntity()` helper para convertir form a entidad
 - [ ] Botón de envío con `ReactiveFormConsumer` + `FilledButton`
 - [ ] Efectos de submission con `ref.listen(submissionProvider, ...)` (NO `observeForDialogs`)

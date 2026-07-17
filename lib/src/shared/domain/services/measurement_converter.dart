@@ -61,9 +61,14 @@ class MeasurementConverter {
   /// - [MeasurementMode.mass]: multiplies by [Ingredient.conversionFactor],
   ///   producing a quantity in [Unit.gram].
   /// - [MeasurementMode.count]: recipe unit already equals stock unit
-  ///   ([Unit.count]), so the quantity passes through unchanged. Returns
+  ///   ([Unit.count]), so the quantity passes through unchanged. When
+  ///   [recipeQuantity] is NOT in [Unit.count] AND the ingredient has a
+  ///   [Ingredient.conversionFactor], the factor is applied the same way
+  ///   `mass`/`packageBase`/`packageAbstract` apply theirs (multiplied into
+  ///   the canonical unit) — e.g. a count ingredient sized by volume/mass
+  ///   (zanahoria: `u` with a `taza`-per-`u` factor). Returns
   ///   `Left(Failure.unknownUnit)` when [recipeQuantity] is not in
-  ///   [Unit.count].
+  ///   [Unit.count] AND no factor is set.
   /// - [MeasurementMode.packageBase]: multiplies by
   ///   [Ingredient.conversionFactor] into the package's base-dimension unit
   ///   (e.g. liters for leche, not always grams).
@@ -91,10 +96,16 @@ class MeasurementConverter {
     final stockUnit = _lens.canonicalUnitFor(ingredient);
     switch (ingredient.measurementMode) {
       case MeasurementMode.count:
-        if (normalizedQuantity.unit != Unit.count) {
+        if (normalizedQuantity.unit == Unit.count) {
+          return Right(normalizedQuantity);
+        }
+        final factor = ingredient.conversionFactor;
+        if (factor == null) {
           return Left(Failure.unknownUnit(normalizedQuantity.unit.symbol));
         }
-        return Right(normalizedQuantity);
+        return Right(
+          Quantity(value: normalizedQuantity.value * factor, unit: stockUnit),
+        );
       case MeasurementMode.mass:
       case MeasurementMode.packageBase:
       case MeasurementMode.packageAbstract:

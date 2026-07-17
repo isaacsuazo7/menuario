@@ -19,8 +19,11 @@ final Map<Unit, Unit> _metricSiblingOf = {
 /// exact same set regardless of its [Ingredient.measurementMode] or
 /// whether it even has a [Ingredient.conversionFactor].
 ///
-/// - [MeasurementMode.count]: strictly `{Unit.count}` — the converter
-///   rejects any other unit outright.
+/// - [MeasurementMode.count]: `{Unit.count}` always, plus
+///   `{Unit.cup, Unit.tablespoon}` when [Ingredient.conversionFactor] is
+///   set — a count ingredient sized by volume/mass (e.g. zanahoria: `u`
+///   with a `taza`-per-`u` factor). Without a factor the converter rejects
+///   any unit but [Unit.count] outright.
 /// - [MeasurementMode.mass]: `{Unit.gram, Unit.kilogram}` always (`kg`
 ///   normalizes to the canonical `g` via the converter's metric pre-pass,
 ///   needing no factor), plus `{Unit.cup, Unit.tablespoon}` only when
@@ -48,7 +51,10 @@ List<Unit> recipeUnitsFor(
   final hasFactor = ingredient.conversionFactor != null;
   switch (ingredient.measurementMode) {
     case MeasurementMode.count:
-      return const [Unit.count];
+      return [
+        Unit.count,
+        if (hasFactor) ...[Unit.cup, Unit.tablespoon],
+      ];
     case MeasurementMode.mass:
       return [
         Unit.gram,
