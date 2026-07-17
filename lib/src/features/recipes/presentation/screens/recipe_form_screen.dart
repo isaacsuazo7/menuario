@@ -46,6 +46,8 @@ class RecipeFormScreen extends ConsumerStatefulWidget {
 
 class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
   bool _prefilled = false;
+  ProviderSubscription<AsyncValue<Recipe?>>? _recipeEditSubscription;
+  ProviderSubscription<AsyncValue<void>>? _submissionSubscription;
 
   bool get _isEdit => widget.recipeId != null;
 
@@ -57,44 +59,67 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
   FormControl<List<BomDraft>> get _bomLinesControl =>
       _form.control('bomLines') as FormControl<List<BomDraft>>;
 
-  /// Wires the recipe-edit prefill and submission-result side effects.
+  @override
+  void initState() {
+    super.initState();
+    _listenForSideEffects();
+  }
+
+  @override
+  void dispose() {
+    _recipeEditSubscription?.close();
+    _submissionSubscription?.close();
+    super.dispose();
+  }
+
+  /// Wires the recipe-edit prefill and submission-result side effects via
+  /// `ref.listenManual` (initState-safe, unlike `ref.listen` which asserts
+  /// `debugDoingBuild` and only runs during a build).
   ///
-  /// Deliberately called from [build] (NOT `initState`): `flutter_riverpod`
-  /// asserts `debugDoingBuild` inside `ConsumerStatefulElement.listen` —
-  /// `ref.listen` can only run during a build, even for
-  /// `ConsumerStatefulWidget`. Riverpod dedupes the subscription by
-  /// call-site across rebuilds, so calling this every `build()` is safe and
-  /// is the framework's actual supported pattern (this deviates from the
-  /// tasks doc's literal "ref.listen in initState" wording, which does not
-  /// hold against this `flutter_riverpod` version).
-  void _listenForSideEffects(BuildContext context) {
+  /// `recipeEditProvider` is NOT autoDispose, so on a revisit it may already
+  /// be cached `AsyncData` at listener-registration time. `ref.listen` never
+  /// supports `fireImmediately` in this `flutter_riverpod` version (by
+  /// design — see its doc comment), so it would only fire on a FUTURE state
+  /// transition, which never happens for an already-resolved provider,
+  /// leaving the form permanently empty. `listenManual` DOES support
+  /// `fireImmediately: true`, which is required here; the `_prefilled`
+  /// guard keeps repeated/immediate firing idempotent.
+  void _listenForSideEffects() {
     final recipeId = widget.recipeId;
     if (recipeId != null) {
-      ref.listen<AsyncValue<Recipe?>>(recipeEditProvider(recipeId), (
-        previous,
-        next,
-      ) {
-        next.whenData((recipe) {
-          if (recipe == null || _prefilled) return;
-          _prefilled = true;
-          ref.read(recipeFormControllerProvider.notifier).prefill(recipe);
-          for (final draft in _bomLinesControl.value ?? const <BomDraft>[]) {
-            _attachBomListener(draft);
-          }
-        });
-      });
+      _recipeEditSubscription = ref.listenManual<AsyncValue<Recipe?>>(
+        recipeEditProvider(recipeId),
+        (previous, next) {
+          next.whenData((recipe) {
+            if (recipe == null || _prefilled) return;
+            _prefilled = true;
+            ref.read(recipeFormControllerProvider.notifier).prefill(recipe);
+            for (final draft in _bomLinesControl.value ?? const <BomDraft>[]) {
+              _attachBomListener(draft);
+            }
+          });
+        },
+        fireImmediately: true,
+      );
     }
 
-    ref.listen<AsyncValue<void>>(recipeSubmissionProvider, (previous, next) {
-      next.whenOrNull(
-        error: (error, _) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text((error as FailureException).message)),
-        ),
-        data: (_) {
-          if (previous is AsyncLoading) Navigator.of(context).pop();
-        },
-      );
-    });
+    _submissionSubscription = ref.listenManual<AsyncValue<void>>(
+      recipeSubmissionProvider,
+      (previous, next) {
+        next.whenOrNull(
+          error: (error, _) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text((error as FailureException).message)),
+            );
+          },
+          data: (_) {
+            if (!mounted) return;
+            if (previous is AsyncLoading) Navigator.of(context).pop();
+          },
+        );
+      },
+    );
   }
 
   /// Re-validates [_bomLinesControl] whenever a row's quantity text
@@ -182,8 +207,6 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _listenForSideEffects(context);
-
     final editValue = widget.recipeId == null
         ? const AsyncValue<Recipe?>.data(null)
         : ref.watch(recipeEditProvider(widget.recipeId));
