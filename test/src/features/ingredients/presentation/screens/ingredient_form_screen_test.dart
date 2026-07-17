@@ -103,6 +103,23 @@ void main() {
     stock: Quantity(value: 0.5, unit: Unit.package),
   );
 
+  // count mode with a set conversionFactor: recipes use taza (volume),
+  // pantry counts whole units — optional factor expresses stock-units per
+  // recipe-unit.
+  const zanahoria = Ingredient(
+    id: 'ing-zanahoria',
+    name: 'Zanahoria',
+    emoji: '🥕',
+    category: Category.vegetal,
+    conversionFactor: 4,
+    measurementMode: MeasurementMode.count,
+  );
+  const zanahoriaPantry = PantryItem.quantityTracked(
+    ingredientId: 'ing-zanahoria',
+    category: Category.vegetal,
+    stock: Quantity(value: 12, unit: Unit.count),
+  );
+
   // boolean mode: no numeric stock, just a have/don't-have flag.
   const comino = Ingredient(
     id: 'ing-comino',
@@ -401,15 +418,169 @@ void main() {
       },
     );
 
-    testWidgets('Por unidad has no Avanzado section at all', (tester) async {
+    testWidgets(
+      'Por unidad shows a collapsed Avanzado section with an optional '
+      'conversionFactor field',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Avanzado'), findsOneWidget);
+        expect(
+          find.byKey(const Key('ingredient-conversion-factor-field')),
+          findsNothing,
+        );
+
+        await expandAdvanced(tester);
+
+        expect(
+          find.byKey(const Key('ingredient-conversion-factor-field')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('opcional'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Por peso: Confirm stays disabled until conversionFactor is filled '
+      '(required, unchanged)',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Pollo',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '2',
+        );
+        await tester.pumpAndSettle();
+
+        final confirmButton = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Confirmar'),
+        );
+        expect(confirmButton.onPressed, isNull);
+      },
+    );
+
+    testWidgets('Por unidad: Confirm is enabled with an empty conversionFactor '
+        '(optional, does not block save)', (tester) async {
       await pumpScreen(tester);
       await tester.pumpAndSettle();
 
+      await tester.enterText(
+        find.byKey(const Key('ingredient-name-field')),
+        'Huevo',
+      );
       await tester.tap(find.text('Por unidad'));
       await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const Key('ingredient-stock-field')),
+        '7',
+      );
+      await tester.pumpAndSettle();
 
-      expect(find.text('Avanzado'), findsNothing);
+      final confirmButton = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Confirmar'),
+      );
+      expect(confirmButton.onPressed, isNotNull);
     });
+
+    testWidgets(
+      'Por unidad: confirming with an empty conversionFactor persists null',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Huevo',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '7',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedIngredient = captured[0] as Ingredient;
+
+        expect(savedIngredient.conversionFactor, isNull);
+      },
+    );
+
+    testWidgets(
+      'Por unidad: typing a conversionFactor and confirming persists it',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Zanahoria',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '12',
+        );
+        await expandAdvanced(tester);
+        await tester.enterText(
+          find.byKey(const Key('ingredient-conversion-factor-field')),
+          '4',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedIngredient = captured[0] as Ingredient;
+
+        expect(savedIngredient.conversionFactor, 4);
+      },
+    );
 
     testWidgets('Sí-No has no Avanzado section at all', (tester) async {
       await pumpScreen(tester);
@@ -1103,6 +1274,45 @@ void main() {
       );
       expect(haveFlag.selected, {true});
     });
+
+    testWidgets(
+      'Por unidad pre-fills an existing conversionFactor and does not '
+      'wipe it on confirm',
+      (tester) async {
+        when(
+          () => mockIngredientRepository.getById('ing-zanahoria'),
+        ).thenAnswer((_) async => const Right(zanahoria));
+        when(
+          () => mockPantryRepository.getById('ing-zanahoria'),
+        ).thenAnswer((_) async => const Right(zanahoriaPantry));
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester, ingredientId: 'ing-zanahoria');
+        await tester.pumpAndSettle();
+
+        await expandAdvanced(tester);
+        expect(_textOf(tester, 'ingredient-conversion-factor-field'), '4');
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedIngredient = captured[0] as Ingredient;
+
+        expect(savedIngredient.conversionFactor, 4);
+      },
+    );
 
     testWidgets('edit Confirm reuses the existing id and never mints a '
         'new one', (tester) async {
