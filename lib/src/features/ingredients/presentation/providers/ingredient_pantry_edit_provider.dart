@@ -7,7 +7,7 @@ import 'package:menuario/src/shared/shared.dart';
 ///
 /// `retry: null` — see [FailureException] note on `ingredientEditProvider`.
 final ingredientPantryEditProvider =
-    FutureProvider.family<PantryItem?, String?>(
+    FutureProvider.autoDispose.family<PantryItem?, String?>(
       (ref, id) async {
         if (id == null) return null;
 

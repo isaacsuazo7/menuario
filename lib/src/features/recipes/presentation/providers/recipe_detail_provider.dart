@@ -6,7 +6,7 @@ import 'package:menuario/src/shared/shared.dart';
 /// deep-linkable without depending on [recipeListProvider] first loading.
 ///
 /// `retry: null` — see [FailureException] note on `recipeListProvider`.
-final recipeDetailProvider = FutureProvider.family<Recipe, String>(
+final recipeDetailProvider = FutureProvider.autoDispose.family<Recipe, String>(
   (ref, id) async {
     final repository = ref.watch(recipeRepositoryProvider);
     final result = await repository.getById(id);

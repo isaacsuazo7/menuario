@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
+import 'package:menuario/src/features/recipes/presentation/providers/recipe_edit_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
@@ -344,6 +345,49 @@ void main() {
     });
 
     testWidgets(
+      'reactivating a disabled recipe via the Activa switch on the edit '
+      'form persists enabled: true (Bug C follow-up: reactivation only '
+      'happens through this switch, never from a grid-card tap)',
+      (tester) async {
+        const disabledRecipe = Recipe(
+          id: 'r-disabled',
+          name: 'Vieja receta',
+          enabled: false,
+          bomLines: [],
+        );
+        when(
+          () => mockRecipeRepository.getById('r-disabled'),
+        ).thenAnswer((_) async => const Right(disabledRecipe));
+        when(
+          () => mockRecipeRepository.save(any()),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester, recipeId: 'r-disabled');
+        await tester.pumpAndSettle();
+
+        final toggleBefore = tester.widget<SwitchListTile>(
+          find.byKey(const Key('recipe-enabled-field')),
+        );
+        expect(toggleBefore.value, isFalse);
+
+        await tester.tap(find.byKey(const Key('recipe-enabled-field')));
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockRecipeRepository.save(captureAny()),
+        ).captured;
+        final saved = captured.single as Recipe;
+
+        expect(saved.id, 'r-disabled');
+        expect(saved.enabled, isTrue);
+      },
+    );
+
+    testWidgets(
       'shows a SnackBar and stays on the form when save returns a Failure',
       (tester) async {
         when(() => mockRecipeRepository.newId()).thenReturn('r-new');
@@ -390,6 +434,45 @@ void main() {
       expect(find.widgetWithText(TextField, 'Avena con leche'), findsOneWidget);
       expect(find.byKey(const Key('recipe-video-url-field-0')), findsOneWidget);
     });
+
+    testWidgets(
+      'still pre-fills when recipeEditProvider is already resolved/cached '
+      'before the form mounts (revisit-without-fireImmediately regression '
+      'guard: recipeEditProvider is NOT autoDispose, so it stays cached '
+      'across screens for the session)',
+      (tester) async {
+        when(
+          () => mockRecipeRepository.getById('r1'),
+        ).thenAnswer((_) async => const Right(existingRecipe));
+
+        final container = ProviderContainer(overrides: overrides());
+        addTearDown(container.dispose);
+
+        // Resolve recipeEditProvider('r1') to completion BEFORE the form
+        // ever mounts — mirrors a real revisit: the family provider is
+        // already cached as AsyncData once resolved elsewhere in the
+        // session (e.g. an earlier visit to this recipe's edit form).
+        await container.read(recipeEditProvider('r1').future);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(home: RecipeFormScreen(recipeId: 'r1')),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.widgetWithText(TextField, 'Avena con leche'),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('recipe-video-url-field-0')),
+          findsOneWidget,
+        );
+        expect(find.text('Editar receta'), findsOneWidget);
+      },
+    );
 
     testWidgets(
       'edit Confirm reuses the existing id, never mints a new one, and '

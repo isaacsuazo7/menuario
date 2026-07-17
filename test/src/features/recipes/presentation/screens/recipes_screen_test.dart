@@ -290,14 +290,20 @@ void main() {
   );
 
   testWidgets(
-    'tapping a disabled card reactivates it in place without navigating',
+    'tapping a disabled card navigates to its recipe detail route without '
+    'reactivating it (product decision: reactivation only via the "Activa" '
+    'switch on the edit form)',
     (tester) async {
+      final mockIngredientRepository = MockIngredientRepository();
       when(
         () => mockRecipeRepository.list(),
       ).thenAnswer((_) async => const Right([disabledRecipe]));
       when(
-        () => mockRecipeRepository.save(any()),
-      ).thenAnswer((_) async => const Right(null));
+        () => mockRecipeRepository.getById('r5'),
+      ).thenAnswer((_) async => const Right(disabledRecipe));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([]));
 
       final router = GoRouter(
         initialLocation: ShellRoutes.recipes,
@@ -321,6 +327,9 @@ void main() {
         ProviderScope(
           overrides: [
             recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+            ingredientRepositoryProvider.overrideWithValue(
+              mockIngredientRepository,
+            ),
           ],
           child: MaterialApp.router(routerConfig: router),
         ),
@@ -330,13 +339,8 @@ void main() {
       await tester.tap(find.text('Vieja receta'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(RecipeDetailScreen), findsNothing);
-      final captured = verify(
-        () => mockRecipeRepository.save(captureAny()),
-      ).captured;
-      expect(captured, hasLength(1));
-      expect((captured.single as Recipe).id, disabledRecipe.id);
-      expect((captured.single as Recipe).enabled, isTrue);
+      expect(find.byType(RecipeDetailScreen), findsOneWidget);
+      verifyNever(() => mockRecipeRepository.save(any()));
     },
   );
 
