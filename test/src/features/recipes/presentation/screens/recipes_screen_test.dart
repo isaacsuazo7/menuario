@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/core/routing/app_routes.dart';
+import 'package:menuario/src/features/recipes/presentation/providers/selected_meal_type_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_detail_screen.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipe_form_screen.dart';
 import 'package:menuario/src/features/recipes/presentation/screens/recipes_screen.dart';
@@ -183,6 +184,169 @@ void main() {
 
     expect(find.text('Avena'), findsOneWidget);
     expect(find.text('Misterio'), findsOneWidget);
+  });
+
+  group('meal-type filter swipe <-> chip sync', () {
+    // Lee el container real del árbol para probar la sincronización
+    // bidireccional, no solo el cambio visual.
+    ProviderContainer containerOf(WidgetTester tester) {
+      return ProviderScope.containerOf(
+        tester.element(find.byType(PageView)),
+        listen: false,
+      );
+    }
+
+    double? pageOf(WidgetTester tester) {
+      return tester.widget<PageView>(find.byType(PageView)).controller?.page;
+    }
+
+    // ±500 y no ±400: en el viewport de 800px un arrastre de media página
+    // cae justo en el borde de redondeo de PageScrollPhysics y se queda.
+    const dragLeft = Offset(-500.0, 0.0);
+    const dragRight = Offset(500.0, 0.0);
+
+    testWidgets('swiping left advances to the next meal-type filter', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe, untaggedRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+      final container = containerOf(tester);
+      expect(container.read(selectedMealTypeProvider), isNull);
+
+      await tester.drag(find.byType(PageView), dragLeft);
+      await tester.pumpAndSettle();
+
+      expect(container.read(selectedMealTypeProvider), MealType.pregym);
+      expect(pageOf(tester), 1.0);
+    });
+
+    testWidgets('swiping back right returns to the previous filter', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe, untaggedRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+      final container = containerOf(tester);
+
+      await tester.drag(find.byType(PageView), dragLeft);
+      await tester.pumpAndSettle();
+      expect(container.read(selectedMealTypeProvider), MealType.pregym);
+
+      await tester.drag(find.byType(PageView), dragRight);
+      await tester.pumpAndSettle();
+
+      expect(container.read(selectedMealTypeProvider), isNull);
+      expect(pageOf(tester), 0.0);
+    });
+
+    testWidgets('swiping twice lands on Desayuno and narrows the grid', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe, untaggedRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+      final container = containerOf(tester);
+
+      await tester.drag(find.byType(PageView), dragLeft);
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(PageView), dragLeft);
+      await tester.pumpAndSettle();
+
+      expect(container.read(selectedMealTypeProvider), MealType.desayuno);
+      expect(pageOf(tester), 2.0);
+      expect(find.text('Avena'), findsOneWidget);
+      expect(find.text('Misterio'), findsNothing);
+    });
+
+    testWidgets('tapping a chip moves the PageView (the other sync '
+        'direction)', (tester) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe, untaggedRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+      final container = containerOf(tester);
+      expect(pageOf(tester), 0.0);
+
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Merienda'));
+      await tester.pumpAndSettle();
+
+      expect(pageOf(tester), 3.0);
+      expect(container.read(selectedMealTypeProvider), MealType.merienda);
+
+      // La fila de chips desborda el viewport y se auto-scrollea al chip
+      // activo, así que 'Todas' puede haber quedado fuera de vista.
+      await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Todas'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ChoiceChip, 'Todas'));
+      await tester.pumpAndSettle();
+
+      expect(pageOf(tester), 0.0);
+      expect(container.read(selectedMealTypeProvider), isNull);
+    });
+
+    testWidgets('swiping scrolls the newly selected chip into view', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([desayunoRecipe]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      final rowRect = tester.getRect(find.byType(SingleChildScrollView));
+      final aderezo = find.widgetWithText(ChoiceChip, 'Aderezo');
+
+      // Con siete chips la fila desborda: Aderezo arranca fuera de vista.
+      expect(tester.getCenter(aderezo).dx, greaterThan(rowRect.right));
+
+      // Swipe hasta el último filtro, el más lejano de la fila.
+      for (var i = 0; i < MealType.values.length; i++) {
+        await tester.drag(find.byType(PageView), dragLeft);
+        await tester.pumpAndSettle();
+      }
+
+      expect(tester.getCenter(aderezo).dx, lessThan(rowRect.right));
+      expect(tester.getCenter(aderezo).dx, greaterThan(rowRect.left));
+    });
+
+    testWidgets('the chip row follows the daily order used by MealSlot', (
+      tester,
+    ) async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+
+      final labels = tester
+          .widgetList<ChoiceChip>(find.byType(ChoiceChip))
+          .map((chip) => (chip.label as Text).data)
+          .toList();
+
+      expect(labels, [
+        'Todas',
+        'Pre-gym',
+        'Desayuno',
+        'Merienda',
+        'Almuerzo',
+        'Cena',
+        'Aderezo',
+      ]);
+    });
   });
 
   testWidgets('a card with a 2-line name and a meal chip does not overflow', (

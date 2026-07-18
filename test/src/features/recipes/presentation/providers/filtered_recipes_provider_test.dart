@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/selected_meal_type_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -61,7 +60,7 @@ void main() {
       final container = makeContainer();
       await container.read(recipeListProvider.future);
 
-      final result = container.read(filteredRecipesProvider);
+      final result = container.read(filteredRecipesProvider(null));
 
       expect(result.value, [
         desayunoRecipe,
@@ -75,9 +74,8 @@ void main() {
   test('a specific meal type excludes untagged recipes', () async {
     final container = makeContainer();
     await container.read(recipeListProvider.future);
-    container.read(selectedMealTypeProvider.notifier).select(MealType.desayuno);
 
-    final result = container.read(filteredRecipesProvider);
+    final result = container.read(filteredRecipesProvider(MealType.desayuno));
 
     expect(result.value, [desayunoRecipe, disabledRecipe]);
   });
@@ -86,7 +84,7 @@ void main() {
     final container = makeContainer();
     await container.read(recipeListProvider.future);
 
-    final result = container.read(filteredRecipesProvider);
+    final result = container.read(filteredRecipesProvider(null));
 
     expect(result.value, contains(disabledRecipe));
   });
@@ -96,13 +94,29 @@ void main() {
     () async {
       final container = makeContainer();
       await container.read(recipeListProvider.future);
-      container
-          .read(selectedMealTypeProvider.notifier)
-          .select(MealType.desayuno);
 
-      final result = container.read(filteredRecipesProvider);
+      final result = container.read(filteredRecipesProvider(MealType.desayuno));
 
       expect(result.value, contains(disabledRecipe));
     },
   );
+
+  test('each meal type is filtered independently of the others', () async {
+    final container = makeContainer();
+    await container.read(recipeListProvider.future);
+
+    // Assert — una página por filtro, sin estado compartido entre ellas.
+    expect(
+      container.read(filteredRecipesProvider(MealType.almuerzo)).value,
+      [almuerzoRecipe],
+    );
+    expect(
+      container.read(filteredRecipesProvider(MealType.desayuno)).value,
+      [desayunoRecipe, disabledRecipe],
+    );
+    expect(
+      container.read(filteredRecipesProvider(MealType.cena)).value,
+      isEmpty,
+    );
+  });
 }
