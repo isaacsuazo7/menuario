@@ -75,6 +75,23 @@ dev_dependencies:
   fake_cloud_firestore: ^4.1.1
   mock_exceptions: ^0.8.2
 
+  # Generates the Android launcher icons from assets/icon/.
+  # Regenerate with: fvm dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.4
+
+# Source artwork lives in assets/icon/ and is NOT bundled into the app —
+# it is only read at icon-generation time.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/icon-foreground.png"
+  # The artwork's furthest ink sits at ~99.9% of the canvas radius, so it
+  # needs the full default inset to stay inside the 72dp circular mask.
+  adaptive_icon_foreground_inset: 16
+  adaptive_icon_monochrome: "assets/icon/icon-foreground.png"
+
 flutter:
 
   # The following line ensures that the Material Icons font is
