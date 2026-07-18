@@ -1,33 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/core/error/failure_exception.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/recipe_detail_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/recipe_edit_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 /// Drives the recipe create/edit save, exposing loading/error/success as
 /// [AsyncValue].
 ///
-/// On success invalidates every read surface a saved [Recipe] can affect:
-/// the list/filtered grid, the ingredient lookup (BOM row names), AND the
-/// saved id's own detail/edit providers — the last two close the "editing a
-/// recipe leaves its open detail stale" gap (an inline video edit + save
-/// used to leave `recipeDetailProvider(id)`/`recipeEditProvider(id)`
-/// un-invalidated).
+/// En éxito NO invalida nada: parchea la receta guardada dentro de
+/// [recipeListProvider], y de ahí se propaga por `ref.watch` al resto de
+/// superficies de lectura ([filteredRecipesProvider] y
+/// [recipeDetailProvider] derivan de la lista). El formulario es una ruta
+/// raíz y sus consumidores viven en ramas del shell pausadas por
+/// `TickerMode`: una invalidación cruzada quedaría pendiente ahí y estalla
+/// en el siguiente build (`setState during build`).
 final recipeSubmissionProvider =
     NotifierProvider.autoDispose<RecipeSubmissionNotifier, AsyncValue<void>>(
       RecipeSubmissionNotifier.new,
-      dependencies: [
-        recipeRepositoryProvider,
-        recipeListProvider,
-        filteredRecipesProvider,
-        ingredientsByIdProvider,
-        recipeDetailProvider,
-        recipeEditProvider,
-      ],
+      dependencies: [recipeRepositoryProvider, recipeListProvider],
     );
 
 class RecipeSubmissionNotifier extends Notifier<AsyncValue<void>> {
@@ -45,11 +35,12 @@ class RecipeSubmissionNotifier extends Notifier<AsyncValue<void>> {
 
       result.fold((failure) => throw FailureException(failure), (_) {
         state = const AsyncData(null);
-        ref.invalidate(recipeListProvider);
-        ref.invalidate(filteredRecipesProvider);
-        ref.invalidate(ingredientsByIdProvider);
-        ref.invalidate(recipeDetailProvider(recipe.id));
-        ref.invalidate(recipeEditProvider(recipe.id));
+        // Solo si el recetario ya está montado: leer su notifier cuando no
+        // existe dispararía una carga completa innecesaria, y su primera
+        // carga ya traería la receta recién guardada.
+        if (ref.exists(recipeListProvider)) {
+          ref.read(recipeListProvider.notifier).upsertRecipe(recipe);
+        }
       });
     } on FailureException catch (e, stackTrace) {
       state = AsyncError(e, stackTrace);

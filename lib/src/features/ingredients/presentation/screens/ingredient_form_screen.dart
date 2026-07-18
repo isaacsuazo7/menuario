@@ -8,7 +8,6 @@ import 'package:menuario/src/features/ingredients/presentation/providers/ingredi
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredient_pantry_edit_provider.dart';
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredients_list_provider.dart';
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
 import 'package:menuario/src/shared/presentation/single_emoji_input_formatter.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:reactive_forms/reactive_forms.dart';
@@ -55,12 +54,12 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
-    // Solo se parchea la despensa si ya está montada: leer su notifier
-    // cuando no existe dispararía una carga completa innecesaria.
-    final pantryIsLoaded = ProviderScope.containerOf(
-      context,
-      listen: false,
-    ).exists(pantryControllerProvider);
+    // Solo se parchean los providers ya montados: leer su notifier cuando
+    // no existen dispararía una carga completa innecesaria. Si no están
+    // montados no hay nada que sincronizar — su primera carga ya traerá el
+    // ingrediente recién guardado.
+    final pantryIsLoaded = ref.exists(pantryControllerProvider);
+    final catalogIsLoaded = ref.exists(ingredientsListProvider);
 
     final result = await catalogRepository.saveWithPantry(
       ingredient: ingredient,
@@ -73,15 +72,19 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
       (failure) =>
           messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) {
-        ref.invalidate(ingredientsListProvider);
-        ref.invalidate(ingredientsByIdProvider);
-        // La despensa se parchea en sitio en vez de invalidarse: este form
-        // es una ruta raíz y la Despensa vive en una rama del shell que
-        // go_router pausa con TickerMode, donde la invalidación queda
-        // pendiente y estalla en el siguiente build (setState during
-        // build). `ingredientRepositoryProvider` ya no se invalida por lo
-        // mismo: arrastraba a `pantryControllerProvider` como dependiente
-        // y era redundante con las dos invalidaciones de arriba.
+        // Todo se parchea en sitio en vez de invalidarse: este form es una
+        // ruta raíz y sus lectores (catálogo, Despensa, Recetario) viven en
+        // ramas del shell que go_router pausa con TickerMode. Con las
+        // suscripciones pausadas el elemento queda `isActive == false`, el
+        // scheduler no lo reconstruye y el siguiente build de esa rama lo
+        // hace a mitad de frame -> setState during build.
+        // `ingredientsByIdProvider` deriva de `ingredientsListProvider`,
+        // así que este único upsert alcanza a ambos.
+        if (catalogIsLoaded) {
+          ref
+              .read(ingredientsListProvider.notifier)
+              .upsertIngredient(ingredient);
+        }
         if (pantryIsLoaded) {
           ref
               .read(pantryControllerProvider.notifier)

@@ -51,4 +51,50 @@ void main() {
       throwsA(isA<FailureException>()),
     );
   });
+
+  group('upsertRecipe', () {
+    const avena = Recipe(id: 'r1', name: 'Avena', bomLines: []);
+    const filete = Recipe(id: 'r2', name: 'Filete', bomLines: []);
+
+    test('replaces an existing recipe in its current position', () async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([avena, filete]));
+
+      final container = makeContainer();
+      await container.read(recipeListProvider.future);
+
+      const edited = Recipe(id: 'r1', name: 'Avena con miel', bomLines: []);
+      container.read(recipeListProvider.notifier).upsertRecipe(edited);
+
+      expect(container.read(recipeListProvider).value, [edited, filete]);
+    });
+
+    test('appends a recipe that is not in the list yet', () async {
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([avena]));
+
+      final container = makeContainer();
+      await container.read(recipeListProvider.future);
+
+      container.read(recipeListProvider.notifier).upsertRecipe(filete);
+
+      expect(container.read(recipeListProvider).value, [avena, filete]);
+    });
+
+    test('is a no-op while the list has not loaded yet', () async {
+      when(() => mockRecipeRepository.list()).thenAnswer((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        return const Right([avena]);
+      });
+
+      final container = makeContainer();
+      container.listen(recipeListProvider, (_, _) {});
+
+      container.read(recipeListProvider.notifier).upsertRecipe(filete);
+
+      expect(container.read(recipeListProvider).value, isNull);
+    });
+  });
 }
