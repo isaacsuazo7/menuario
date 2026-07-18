@@ -6,6 +6,7 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredient_edit_provider.dart';
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredient_pantry_edit_provider.dart';
 import 'package:menuario/src/features/ingredients/presentation/screens/ingredient_form_screen.dart';
+import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -1798,5 +1799,92 @@ void main() {
 
       expect(savedIngredient.needType, NeedType.optional);
     });
+  });
+
+  group('pantry sync on save', () {
+    /// Pumps the form over a pushable route on a caller-owned [container],
+    /// so the already-loaded pantry can be inspected after Confirm.
+    Future<void> pumpPushableScreenOn(
+      WidgetTester tester,
+      ProviderContainer container,
+    ) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const IngredientFormScreen(),
+                    ),
+                  ),
+                  child: const Text('open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+      'confirming patches the loaded pantry in place instead of '
+      'invalidating it (no second pantry/ingredient refetch)',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+        when(
+          () => mockPantryRepository.list(),
+        ).thenAnswer((_) async => const Right([polloPantry]));
+        when(
+          () => mockIngredientRepository.list(),
+        ).thenAnswer((_) async => const Right([pollo]));
+
+        final container = ProviderContainer(overrides: overrides());
+        addTearDown(container.dispose);
+        await container.read(pantryControllerProvider.future);
+
+        await pumpPushableScreenOn(tester, container);
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Huevo',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '7',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        // La despensa no se recarga: una sola lectura por repositorio.
+        verify(() => mockPantryRepository.list()).called(1);
+        verify(() => mockIngredientRepository.list()).called(1);
+
+        final rows = container.read(pantryControllerProvider).value!;
+        expect(rows.map((row) => row.item.ingredientId), [
+          'ing-pollo',
+          'ing-new-id',
+        ]);
+        expect(rows.last.ingredient.name, 'Huevo');
+      },
+    );
   });
 }

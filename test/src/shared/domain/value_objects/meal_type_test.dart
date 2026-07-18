@@ -1,18 +1,37 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:menuario/src/shared/domain/value_objects/meal_slot.dart';
 import 'package:menuario/src/shared/domain/value_objects/meal_type.dart';
 
 void main() {
   group('MealType', () {
-    test('should expose exactly the six recipe meal types, pregym first', () {
-      // Act & Assert
-      expect(MealType.values, [
-        MealType.pregym,
-        MealType.desayuno,
-        MealType.almuerzo,
-        MealType.merienda,
-        MealType.cena,
-        MealType.aderezo,
-      ]);
+    test(
+      'should expose the six recipe meal types in daily order, mirroring '
+      'MealSlot, with aderezo last',
+      () {
+        // Act & Assert
+        expect(MealType.values, [
+          MealType.pregym,
+          MealType.desayuno,
+          MealType.merienda,
+          MealType.almuerzo,
+          MealType.cena,
+          MealType.aderezo,
+        ]);
+      },
+    );
+
+    test('should mirror MealSlot order for every shared name', () {
+      // Arrange
+      final slotNames = MealSlot.values.map((slot) => slot.name).toList();
+
+      // Act
+      final sharedTypeNames = MealType.values
+          .map((type) => type.name)
+          .where(slotNames.contains)
+          .toList();
+
+      // Assert
+      expect(sharedTypeNames, slotNames);
     });
 
     group('label', () {

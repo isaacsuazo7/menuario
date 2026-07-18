@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
-import 'package:menuario/src/features/recipes/presentation/providers/selected_meal_type_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 
-/// [recipeListProvider] narrowed by [selectedMealTypeProvider].
+/// [recipeListProvider] narrowed by a [MealType] filter.
+///
+/// Keyed by the filter instead of reading `selectedMealTypeProvider` so the
+/// Recetario's swipeable [PageView] can build each filter's page with its
+/// own correctly-filtered list, not just the selected one's.
 ///
 /// `null` (Todas) passes every recipe through, including those with a
 /// `null` `mealType`. A specific [MealType] only matches recipes whose
@@ -16,14 +19,14 @@ import 'package:menuario/src/shared/shared.dart';
 /// unreachably. Other `enabled`-scoped consumers (weekly-planning picker,
 /// budget/coverage aggregation) apply their own independent `enabled`
 /// filter and are unaffected by this provider's scope.
-final filteredRecipesProvider = Provider<AsyncValue<List<Recipe>>>((ref) {
-  final recipesValue = ref.watch(recipeListProvider);
-  final selectedMealType = ref.watch(selectedMealTypeProvider);
+final filteredRecipesProvider =
+    Provider.family<AsyncValue<List<Recipe>>, MealType?>((ref, mealType) {
+      final recipesValue = ref.watch(recipeListProvider);
 
-  return recipesValue.whenData((recipes) {
-    if (selectedMealType == null) return recipes;
-    return recipes
-        .where((recipe) => recipe.mealType == selectedMealType)
-        .toList();
-  });
-}, dependencies: [recipeListProvider, selectedMealTypeProvider]);
+      return recipesValue.whenData((recipes) {
+        if (mealType == null) return recipes;
+        return recipes
+            .where((recipe) => recipe.mealType == mealType)
+            .toList();
+      });
+    }, dependencies: [recipeListProvider]);

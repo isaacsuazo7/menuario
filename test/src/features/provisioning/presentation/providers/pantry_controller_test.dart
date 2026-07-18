@@ -496,4 +496,86 @@ void main() {
       expect((row.item as BooleanTrackedPantryItem).haveIt, isFalse);
     });
   });
+
+  group('upsertRow', () {
+    test('replaces an existing row in place, keeping its position', () async {
+      when(() => mockPantryRepository.list()).thenAnswer(
+        (_) async => const Right([avenaItem, cominoItem, zanahoriaItem]),
+      );
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([avena, comino, zanahoria]));
+
+      final container = makeContainer();
+      await container.read(pantryControllerProvider.future);
+
+      const renamedComino = Ingredient(
+        id: 'ing-comino',
+        name: 'Comino molido',
+        emoji: '🌿',
+        category: Category.condimento,
+      );
+      const updatedItem = PantryItem.booleanTracked(
+        ingredientId: 'ing-comino',
+        category: Category.condimento,
+        haveIt: true,
+      );
+
+      container
+          .read(pantryControllerProvider.notifier)
+          .upsertRow(ingredient: renamedComino, item: updatedItem);
+
+      final rows = container.read(pantryControllerProvider).value!;
+      expect(rows, hasLength(3));
+      expect(rows[0].item, avenaItem);
+      expect(rows[1].item, updatedItem);
+      expect(rows[1].ingredient, renamedComino);
+      expect(rows[2].item, zanahoriaItem);
+    });
+
+    test('appends a newly created ingredient at the end', () async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([avenaItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([avena]));
+
+      final container = makeContainer();
+      await container.read(pantryControllerProvider.future);
+
+      container
+          .read(pantryControllerProvider.notifier)
+          .upsertRow(ingredient: zanahoria, item: zanahoriaItem);
+
+      final rows = container.read(pantryControllerProvider).value!;
+      expect(rows, hasLength(2));
+      expect(rows[0].item, avenaItem);
+      expect(rows[1].item, zanahoriaItem);
+      expect(rows[1].ingredient, zanahoria);
+    });
+
+    test('no-ops while the pantry has never loaded', () async {
+      final listCompleter = Completer<Either<Failure, List<PantryItem>>>();
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) => listCompleter.future);
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([avena]));
+
+      final container = makeContainer();
+      unawaited(container.read(pantryControllerProvider.future));
+
+      container
+          .read(pantryControllerProvider.notifier)
+          .upsertRow(ingredient: zanahoria, item: zanahoriaItem);
+
+      expect(container.read(pantryControllerProvider).value, isNull);
+
+      listCompleter.complete(const Right([avenaItem]));
+      final rows = await container.read(pantryControllerProvider.future);
+      expect(rows.map((row) => row.item), [avenaItem]);
+    });
+  });
 }

@@ -7,36 +7,65 @@ import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/filtered_recipes_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_list_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/selected_meal_type_provider.dart';
+import 'package:menuario/src/shared/presentation/tab_page_sync.dart';
 import 'package:menuario/src/shared/shared.dart';
+
+/// Page 0 is "Todas" (`null`); pages 1..N are [MealType.values] in order.
+int _pageIndexOf(MealType? mealType) =>
+    mealType == null ? 0 : MealType.values.indexOf(mealType) + 1;
+
+/// Inverse of [_pageIndexOf].
+MealType? _mealTypeAtPage(int index) =>
+    index == 0 ? null : MealType.values[index - 1];
 
 /// The "Recetario" tab: a 2-column grid of recipes, filterable by
 /// [MealType], with loading/error/empty states.
 ///
+/// The filter chips double as swipeable pages — dragging horizontally moves
+/// to the next/previous filter, the same affordance Hoy and Abastecer ship.
+/// [selectedMealTypeProvider] stays the single source of truth: the
+/// [PageView] reports settles into it, and a root-level `ref.listen` drives
+/// the page back (guarded inside [TabPageSync.syncPageToIndex] so the two
+/// directions never fight).
+///
 /// Rendered inside the shell's single [AppBar]; keeps its own [Scaffold]
 /// (without an `appBar`) purely to provide the [Material] ancestor its
 /// [ChoiceChip]/[Card] descendants require.
-class RecipesScreen extends ConsumerWidget {
+class RecipesScreen extends ConsumerStatefulWidget {
   const RecipesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final filteredRecipes = ref.watch(filteredRecipesProvider);
+  ConsumerState<RecipesScreen> createState() => _RecipesScreenState();
+}
+
+class _RecipesScreenState extends ConsumerState<RecipesScreen>
+    with TabPageSync<RecipesScreen> {
+  @override
+  int get initialTabIndex => _pageIndexOf(ref.read(selectedMealTypeProvider));
+
+  @override
+  Widget build(BuildContext context) {
+    // Provider -> page: keep the swipe view in sync when the filter changes
+    // (chip tap or anywhere else). ref.listen MUST sit at build()'s root.
+    ref.listen<MealType?>(selectedMealTypeProvider, (previous, next) {
+      syncPageToIndex(_pageIndexOf(next));
+    });
 
     return Scaffold(
       body: Column(
         children: [
           const _MealFilterChips(),
           Expanded(
-            child: AppAsyncValueWidget<List<Recipe>>(
-              value: filteredRecipes,
-              onRetry: () => ref.invalidate(recipeListProvider),
-              loadingBuilder: (context) => const _RecipeGridSkeleton(),
-              builder: (context, recipes) {
-                if (recipes.isEmpty) {
-                  return const _EmptyRecipes();
-                }
-                return _RecipeGrid(recipes: recipes);
-              },
+            // El grid scrollea en vertical y el PageView en horizontal:
+            // ejes ortogonales, sin competencia de gestos.
+            child: PageView.builder(
+              controller: pageController,
+              itemCount: MealType.values.length + 1,
+              onPageChanged: (index) => ref
+                  .read(selectedMealTypeProvider.notifier)
+                  .select(_mealTypeAtPage(index)),
+              itemBuilder: (context, index) =>
+                  _RecipeFilterPage(mealType: _mealTypeAtPage(index)),
             ),
           ),
         ],
@@ -49,12 +78,78 @@ class RecipesScreen extends ConsumerWidget {
   }
 }
 
-class _MealFilterChips extends ConsumerWidget {
-  const _MealFilterChips();
+/// One swipe page: the grid for a single [mealType] filter (`null` = Todas).
+///
+/// Each page owns its [AppAsyncValueWidget] so the content sliding in during
+/// a drag is already the destination filter's, not a copy of the current
+/// one. Only the visible page is built, so loading/error/empty still render
+/// exactly once.
+class _RecipeFilterPage extends ConsumerWidget {
+  const _RecipeFilterPage({required this.mealType});
+
+  final MealType? mealType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final filteredRecipes = ref.watch(filteredRecipesProvider(mealType));
+
+    return AppAsyncValueWidget<List<Recipe>>(
+      value: filteredRecipes,
+      onRetry: () => ref.invalidate(recipeListProvider),
+      loadingBuilder: (context) => const _RecipeGridSkeleton(),
+      builder: (context, recipes) {
+        if (recipes.isEmpty) {
+          return const _EmptyRecipes();
+        }
+        return _RecipeGrid(recipes: recipes);
+      },
+    );
+  }
+}
+
+/// The horizontally scrollable filter row.
+///
+/// Stateful only to keep one [GlobalKey] per chip: with seven chips the row
+/// overflows a phone's width, so a swipe to Cena/Aderezo would otherwise
+/// leave the selected chip off-screen. [Scrollable.ensureVisible] on a
+/// post-frame callback centres it — cheaper and more robust than measuring
+/// offsets against a [ScrollController].
+class _MealFilterChips extends ConsumerStatefulWidget {
+  const _MealFilterChips();
+
+  @override
+  ConsumerState<_MealFilterChips> createState() => _MealFilterChipsState();
+}
+
+class _MealFilterChipsState extends ConsumerState<_MealFilterChips> {
+  late final List<GlobalKey> _chipKeys = List.generate(
+    MealType.values.length + 1,
+    (_) => GlobalKey(),
+  );
+
+  void _revealChip(MealType? mealType) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final context = _chipKeys[_pageIndexOf(mealType)].currentContext;
+      if (context == null) return;
+      Scrollable.ensureVisible(
+        context,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final selectedMealType = ref.watch(selectedMealTypeProvider);
+
+    // Mantiene el chip activo a la vista cuando el filtro cambia por swipe.
+    // ref.listen SIEMPRE en el root de build().
+    ref.listen<MealType?>(selectedMealTypeProvider, (previous, next) {
+      _revealChip(next);
+    });
 
     return Padding(
       padding: MenuarioSpacing.paddingAll8,
@@ -63,6 +158,7 @@ class _MealFilterChips extends ConsumerWidget {
         child: Row(
           children: [
             ChoiceChip(
+              key: _chipKeys[0],
               label: const Text('Todas'),
               selected: selectedMealType == null,
               onSelected: (_) =>
@@ -71,6 +167,7 @@ class _MealFilterChips extends ConsumerWidget {
             for (final mealType in MealType.values) ...[
               MenuarioSpacing.gapH8,
               ChoiceChip(
+                key: _chipKeys[_pageIndexOf(mealType)],
                 label: Text(mealType.label),
                 selected: selectedMealType == mealType,
                 onSelected: (_) => ref
