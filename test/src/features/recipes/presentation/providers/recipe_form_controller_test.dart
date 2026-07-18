@@ -71,6 +71,17 @@ void main() {
       expect(bomLines.valid, isTrue);
     });
 
+    test('valid when a quantity-less ("al gusto") line has an ingredient '
+        'but no quantity at all', () {
+      final form = makeContainer().read(recipeFormControllerProvider);
+      final bomLines = form.control('bomLines') as FormControl<List<BomDraft>>;
+
+      final draft = BomDraft(ingredientId: 'ing-oregano', quantityLess: true);
+      bomLines.value = [draft];
+
+      expect(bomLines.valid, isTrue);
+    });
+
     test('an empty bomLines list is valid', () {
       final form = makeContainer().read(recipeFormControllerProvider);
       final bomLines = form.control('bomLines') as FormControl<List<BomDraft>>;
@@ -148,6 +159,30 @@ void main() {
       ]);
     });
 
+    test('a quantity-less draft becomes a BomLine with a null quantity', () {
+      final container = makeContainer();
+      final notifier = container.read(recipeFormControllerProvider.notifier);
+      final form = container.read(recipeFormControllerProvider);
+      final bomLines = form.control('bomLines') as FormControl<List<BomDraft>>;
+
+      form.control('name').value = 'Pollo asado';
+      bomLines.value = [
+        BomDraft(ingredientId: 'ing-1', quantity: 3, unit: Unit.gram),
+        BomDraft(ingredientId: 'ing-oregano', quantityLess: true),
+      ];
+
+      final recipe = notifier.toEntity('recipe-3');
+
+      expect(recipe.bomLines, [
+        const BomLine(
+          recipeId: 'recipe-3',
+          ingredientId: 'ing-1',
+          quantity: Quantity(value: 3, unit: Unit.gram),
+        ),
+        const BomLine(recipeId: 'recipe-3', ingredientId: 'ing-oregano'),
+      ]);
+    });
+
     test('an empty emoji becomes null on the entity', () {
       final container = makeContainer();
       final notifier = container.read(recipeFormControllerProvider.notifier);
@@ -202,6 +237,28 @@ void main() {
       expect(bomLines.single.ingredientId, 'ing-1');
       expect(bomLines.single.quantityController.text, '2');
       expect(bomLines.single.unit, Unit.count);
+      expect(bomLines.single.quantityLess, isFalse);
+    });
+
+    test('a quantity-less BomLine prefills an empty, quantity-less draft', () {
+      final container = makeContainer();
+      final notifier = container.read(recipeFormControllerProvider.notifier);
+      const recipe = Recipe(
+        id: 'r2',
+        name: 'Pollo asado',
+        bomLines: [BomLine(recipeId: 'r2', ingredientId: 'ing-oregano')],
+      );
+
+      notifier.prefill(recipe);
+      final form = container.read(recipeFormControllerProvider);
+
+      final bomLines =
+          (form.control('bomLines') as FormControl<List<BomDraft>>).value!;
+      expect(bomLines.single.ingredientId, 'ing-oregano');
+      expect(bomLines.single.quantityController.text, isEmpty);
+      expect(bomLines.single.quantityLess, isTrue);
+      // A prefilled "al gusto" line must not block the confirm button.
+      expect(form.control('bomLines').valid, isTrue);
     });
   });
 }

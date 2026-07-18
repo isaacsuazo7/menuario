@@ -38,14 +38,27 @@ String _formatQuantity(num value) {
 /// file as a private implementation detail) so `recipe_form_screen.dart`,
 /// which owns the `List<BomDraft>` state, can reference the type.
 class BomDraft {
-  BomDraft({this.ingredientId, num? quantity, Unit? unit})
-    : unit = unit ?? Unit.count,
-      quantityController = TextEditingController(
-        text: quantity == null ? '' : _formatQuantity(quantity),
-      );
+  BomDraft({
+    this.ingredientId,
+    num? quantity,
+    Unit? unit,
+    this.quantityLess = false,
+  }) : unit = unit ?? Unit.count,
+       quantityController = TextEditingController(
+         text: quantity == null ? '' : _formatQuantity(quantity),
+       );
 
   /// The selected [Ingredient.id], or `null` until picked.
   String? ingredientId;
+
+  /// Whether this line is "al gusto": the picked ingredient is
+  /// boolean-tracked, so it carries no quantity and no unit.
+  ///
+  /// Held on the draft rather than re-derived from the ingredient because
+  /// `_BomLinesValidator` sees only the draft list, never the ingredient
+  /// catalog. Kept in sync by the form screen's ingredient-pick handler and
+  /// by `RecipeFormController.prefill`.
+  bool quantityLess;
 
   /// This line's quantity unit — one of `recipeUnitsFor(ingredient)` for
   /// the picked ingredient. [Unit.count] is only a placeholder default
@@ -113,7 +126,13 @@ class BomEditorSection extends StatelessWidget {
 
 /// A single BOM row: ingredient-select button, quantity field and a unit
 /// dropdown restricted to `recipeUnitsFor(ingredient)` — disabled (no
-/// items, `onChanged: null`) until an ingredient is picked. Renders in two
+/// items, `onChanged: null`) until an ingredient is picked.
+///
+/// When [BomDraft.quantityLess] is set (a boolean-tracked ingredient), the
+/// quantity field and unit dropdown are replaced outright by a static
+/// "Al gusto" label: `recipeUnitsFor` returns `{}` for those ingredients,
+/// so there is no unit to offer and no number worth asking for. Renders in
+/// two
 /// lines (ingredient row, then quantity + unit + remove row) so the unit
 /// dropdown has enough width for the widest labels (`Kilogramos (kg)`,
 /// `Cucharada (cda)`), which the old single-line 3-field layout cramped.
@@ -198,39 +217,53 @@ class _BomLineRowState extends State<_BomLineRow> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: 2,
-                child: TextField(
-                  key: Key('recipe-bom-quantity-field-${widget.index}'),
-                  controller: widget.draft.quantityController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(labelText: 'Cantidad'),
-                ),
-              ),
-              MenuarioSpacing.gapH8,
-              Expanded(
-                flex: 3,
-                child: DropdownButtonFormField<Unit>(
-                  key: Key('recipe-bom-unit-field-${widget.index}'),
-                  initialValue: selectedUnit,
-                  isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Unidad'),
-                  items: [
-                    for (final unit in allowedUnits)
-                      DropdownMenuItem(
-                        value: unit,
-                        child: Text(_unitLabel(unit)),
+              if (widget.draft.quantityLess)
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: MenuarioSpacing.md),
+                    child: Text(
+                      alGustoLabel,
+                      style: MenuarioTypography.body.withColor(
+                        Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                  ],
-                  onChanged: allowedUnits.isEmpty
-                      ? null
-                      : (value) {
-                          if (value != null) widget.onUnitChanged(value);
-                        },
+                    ),
+                  ),
+                )
+              else ...[
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    key: Key('recipe-bom-quantity-field-${widget.index}'),
+                    controller: widget.draft.quantityController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Cantidad'),
+                  ),
                 ),
-              ),
+                MenuarioSpacing.gapH8,
+                Expanded(
+                  flex: 3,
+                  child: DropdownButtonFormField<Unit>(
+                    key: Key('recipe-bom-unit-field-${widget.index}'),
+                    initialValue: selectedUnit,
+                    isExpanded: true,
+                    decoration: const InputDecoration(labelText: 'Unidad'),
+                    items: [
+                      for (final unit in allowedUnits)
+                        DropdownMenuItem(
+                          value: unit,
+                          child: Text(_unitLabel(unit)),
+                        ),
+                    ],
+                    onChanged: allowedUnits.isEmpty
+                        ? null
+                        : (value) {
+                            if (value != null) widget.onUnitChanged(value);
+                          },
+                  ),
+                ),
+              ],
               IconButton(
                 key: Key('recipe-bom-remove-${widget.index}'),
                 icon: const Icon(Icons.delete_outline),

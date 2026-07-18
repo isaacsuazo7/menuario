@@ -134,15 +134,15 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Semana'), findsOneWidget);
-    // Bottom-bar labels are short; the AppBar keeps the long tab titles.
     expect(find.text('Stock'), findsOneWidget);
     expect(find.text('Recetas'), findsOneWidget);
+    // The AppBar title matches its tab label exactly — the old long-form
+    // titles are gone.
     expect(find.text('Abastecer'), findsNothing);
     expect(find.text('Recetario'), findsNothing);
   });
 
-  testWidgets('bottom bar shows short labels while the AppBar keeps the '
-      'long tab title', (tester) async {
+  testWidgets('the AppBar title matches the active tab label', (tester) async {
     final mockUser = MockUser();
     when(
       () => mockAuthService.authStateChanges,
@@ -155,10 +155,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('Abastecer'),
-      ),
+      find.descendant(of: find.byType(AppBar), matching: find.text('Stock')),
       findsOneWidget,
     );
     expect(
@@ -173,10 +170,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.descendant(
-        of: find.byType(AppBar),
-        matching: find.text('Recetario'),
-      ),
+      find.descendant(of: find.byType(AppBar), matching: find.text('Recetas')),
       findsOneWidget,
     );
   });
@@ -202,10 +196,7 @@ void main() {
       // The shell's single AppBar title switched to the new active tab.
       expect(find.byType(AppBar), findsOneWidget);
       expect(
-        find.descendant(
-          of: find.byType(AppBar),
-          matching: find.text('Abastecer'),
-        ),
+        find.descendant(of: find.byType(AppBar), matching: find.text('Stock')),
         findsOneWidget,
       );
     },

@@ -11,8 +11,11 @@ import 'package:menuario/src/shared/shared.dart';
 /// `ingredients_list_screen.dart`'s grouping) and pops with the tapped
 /// ingredient's id on selection.
 ///
-/// Boolean-mode ingredients are excluded — `recipeUnitsFor` returns `{}`
-/// for them, so they have no sensible BOM unit to pick.
+/// EVERY ingredient is selectable, boolean-mode ones included: a recipe
+/// must be able to list everything it uses, and condiments/seeds are used
+/// for real even though nobody weighs them. They become "al gusto" BOM
+/// lines — no quantity, no unit (`recipeUnitsFor` returns `{}`) — and their
+/// buy signal comes from the pantry's `haveIt` flag instead.
 ///
 /// There is NO inline "create ingredient" action: ingredient creation is a
 /// product decision reserved for the Ingredients screen. The old inline
@@ -39,13 +42,7 @@ class RecipeIngredientPickerSheet extends ConsumerWidget {
           Flexible(
             child: AppAsyncValueWidget<List<Ingredient>>(
               value: ingredientsValue,
-              builder: (context, ingredients) {
-                final selectable = ingredients
-                    .where(
-                      (ingredient) =>
-                          ingredient.measurementMode != MeasurementMode.boolean,
-                    )
-                    .toList();
+              builder: (context, selectable) {
                 if (selectable.isEmpty) {
                   return const Padding(
                     padding: MenuarioSpacing.paddingAll16,

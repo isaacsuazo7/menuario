@@ -175,7 +175,7 @@ class _Ingredients extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '${line.quantity.value} ${line.quantity.unit.symbol}',
+                  bomQuantityLabel(line.quantity),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),

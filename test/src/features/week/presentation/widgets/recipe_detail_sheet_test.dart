@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart' hide Unit;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
 import 'package:menuario/src/features/week/presentation/providers/plan_controller.dart';
 import 'package:menuario/src/features/week/presentation/widgets/_recipe_detail_sheet.dart';
 import 'package:menuario/src/features/week/presentation/widgets/_recipe_picker_sheet.dart';
@@ -91,6 +92,65 @@ void main() {
     expect(find.text('Ver receta'), findsOneWidget);
     expect(find.text('Cambiar'), findsOneWidget);
     expect(find.text('Quitar'), findsOneWidget);
+  });
+
+  testWidgets('renders "Al gusto" for a quantity-less ingredient row', (
+    tester,
+  ) async {
+    const cilantro = Ingredient(
+      id: 'i-cilantro',
+      name: 'Cilantro',
+      emoji: '🌿',
+      category: Category.condimento,
+      measurementMode: MeasurementMode.boolean,
+    );
+    const huevo = Ingredient(
+      id: 'i-huevo',
+      name: 'Huevo',
+      emoji: '🥚',
+      category: Category.proteina,
+    );
+    const recipeConCilantro = Recipe(
+      id: 'r-almuerzo',
+      name: 'Pollo al horno',
+      emoji: '🍗',
+      mealType: MealType.almuerzo,
+      bomLines: [
+        BomLine(
+          recipeId: 'r-almuerzo',
+          ingredientId: 'i-huevo',
+          quantity: Quantity(value: 2, unit: Unit.count),
+        ),
+        BomLine(recipeId: 'r-almuerzo', ingredientId: 'i-cilantro'),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          weekPlanRepositoryProvider.overrideWithValue(mockWeekPlanRepository),
+          recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
+          ingredientsByIdProvider.overrideWith(
+            (ref) async => const {'i-huevo': huevo, 'i-cilantro': cilantro},
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: RecipeDetailSheet(
+              day: DayOfWeek.mar,
+              mealSlot: MealSlot.almuerzo,
+              recipe: recipeConCilantro,
+              entry: entry,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cilantro'), findsOneWidget);
+    expect(find.text('Al gusto'), findsOneWidget);
+    expect(find.text('2 u'), findsOneWidget);
   });
 
   testWidgets('"Cambiar" closes the detail sheet and opens the picker', (

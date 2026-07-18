@@ -399,6 +399,69 @@ void main() {
       );
     });
 
+    group('"al gusto" (quantity-less) BOM lines', () {
+      const cilantro = Ingredient(
+        id: 'ing-cilantro',
+        name: 'Cilantro',
+        category: Category.condimento,
+        measurementMode: MeasurementMode.boolean,
+      );
+      const recipeConCilantro = Recipe(
+        id: 'recipe-con-cilantro',
+        name: 'Sopa de pollo',
+        bomLines: [
+          BomLine(
+            recipeId: 'recipe-con-cilantro',
+            ingredientId: 'ing-pollo',
+            quantity: Quantity(value: 170, unit: Unit.gram),
+          ),
+          BomLine(
+            recipeId: 'recipe-con-cilantro',
+            ingredientId: 'ing-cilantro',
+          ),
+        ],
+      );
+
+      test('a boolean-tracked ingredient on a planned recipe never enters '
+          'the weekly-need map — it has no number to contribute', () async {
+        when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+          (_) async => const Right(
+            WeekPlan(
+              entries: [
+                PlanEntry(
+                  day: DayOfWeek.lun,
+                  mealSlot: MealSlot.cena,
+                  recipeId: 'recipe-con-cilantro',
+                  cooked: false,
+                ),
+              ],
+            ),
+          ),
+        );
+        when(
+          () => mockRecipeRepository.list(),
+        ).thenAnswer((_) async => const Right([recipeConCilantro]));
+        when(
+          () => mockIngredientRepository.list(),
+        ).thenAnswer((_) async => const Right([pollo, cilantro]));
+
+        final container = makeContainer();
+        await container.read(planControllerProvider.future);
+        await container.read(recipeListProvider.future);
+        await container.read(ingredientsByIdProvider.future);
+
+        final result = container.read(weeklyConsumptionByIngredientProvider);
+
+        // The quantified sibling still resolves normally.
+        final map = result.value!;
+        expect(
+          map['ing-pollo'],
+          const Right<Failure, Quantity>(Quantity(value: 170, unit: Unit.gram)),
+        );
+        expect(map, isNot(contains('ing-cilantro')));
+      });
+    });
+
     group('NeedType routing', () {
       const espinaca = Ingredient(
         id: 'ing-espinaca',

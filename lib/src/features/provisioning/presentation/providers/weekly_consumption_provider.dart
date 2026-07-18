@@ -87,6 +87,11 @@ final weeklyConsumptionByIngredientProvider =
         final quantityIngredientIds = <String>{};
         for (final recipe in plannedRecipes) {
           for (final line in recipe.bomLines) {
+            // An "al gusto" line has no number to need — gathering it here
+            // would mint a phantom zero-need entry whose coverage tint then
+            // reads `neutral`. Its buy signal is the pantry's `haveIt` flag.
+            if (line.quantity == null) continue;
+
             final ingredient = ingredientsById[line.ingredientId];
             if (ingredient != null &&
                 ingredient.measurementMode != MeasurementMode.boolean &&

@@ -170,9 +170,7 @@ class _IngredientRow extends StatelessWidget {
     return ListTile(
       leading: EmojiAvatar(emoji: ingredient.emoji ?? '🥄', size: 32),
       title: Text(ingredient.name),
-      trailing: Text(
-        '${bomLine.quantity.value} ${bomLine.quantity.unit.symbol}',
-      ),
+      trailing: Text(bomQuantityLabel(bomLine.quantity)),
     );
   }
 }
