@@ -55,6 +55,12 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
 
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
+    // Solo se parchea la despensa si ya está montada: leer su notifier
+    // cuando no existe dispararía una carga completa innecesaria.
+    final pantryIsLoaded = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).exists(pantryControllerProvider);
 
     final result = await catalogRepository.saveWithPantry(
       ingredient: ingredient,
@@ -68,9 +74,19 @@ class _IngredientFormScreenState extends ConsumerState<IngredientFormScreen> {
           messenger.showSnackBar(SnackBar(content: Text(failure.message))),
       (_) {
         ref.invalidate(ingredientsListProvider);
-        ref.invalidate(ingredientRepositoryProvider);
         ref.invalidate(ingredientsByIdProvider);
-        ref.invalidate(pantryControllerProvider);
+        // La despensa se parchea en sitio en vez de invalidarse: este form
+        // es una ruta raíz y la Despensa vive en una rama del shell que
+        // go_router pausa con TickerMode, donde la invalidación queda
+        // pendiente y estalla en el siguiente build (setState during
+        // build). `ingredientRepositoryProvider` ya no se invalida por lo
+        // mismo: arrastraba a `pantryControllerProvider` como dependiente
+        // y era redundante con las dos invalidaciones de arriba.
+        if (pantryIsLoaded) {
+          ref
+              .read(pantryControllerProvider.notifier)
+              .upsertRow(ingredient: ingredient, item: pantryItem);
+        }
         navigator.pop(id);
       },
     );

@@ -180,6 +180,34 @@ class PantryController extends AsyncNotifier<List<PantryRow>> {
     }, (_) => null);
   }
 
+  /// Inserta o reemplaza la fila de [ingredient] tras guardarlo desde el
+  /// formulario del catálogo, sin recargar la despensa entera.
+  ///
+  /// Se parchea en sitio (`state = ...`) en lugar de invalidar el provider
+  /// desde otra pantalla: la invalidación deja el elemento sucio mientras
+  /// la rama del shell está pausada por `TickerMode`, y el siguiente build
+  /// de la Despensa lo vacía a mitad de frame -> `setState during build`.
+  /// Reemplaza en su posición actual (o agrega al final si es nuevo), así
+  /// el orden de la lista se mantiene estable.
+  void upsertRow({required Ingredient ingredient, required PantryItem item}) {
+    final current = state.value;
+    if (current == null) return;
+
+    final row = PantryRow(item: item, ingredient: ingredient);
+    final exists = current.any(
+      (candidate) => candidate.item.ingredientId == ingredient.id,
+    );
+
+    state = AsyncData(
+      exists
+          ? [
+              for (final candidate in current)
+                candidate.item.ingredientId == ingredient.id ? row : candidate,
+            ]
+          : [...current, row],
+    );
+  }
+
   /// Patches [ingredientId]'s row back to [snapshot] against the LATEST
   /// state (not the pre-edit list), so a concurrent edit on another item
   /// that already landed is never clobbered.
