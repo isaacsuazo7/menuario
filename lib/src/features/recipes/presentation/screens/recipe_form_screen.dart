@@ -9,6 +9,7 @@ import 'package:menuario/src/features/recipes/presentation/providers/recipe_form
 import 'package:menuario/src/features/recipes/presentation/providers/recipe_submission_provider.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_bom_editor.dart';
 import 'package:menuario/src/features/recipes/presentation/widgets/_recipe_ingredient_picker_sheet.dart';
+import 'package:menuario/src/shared/presentation/single_emoji_input_formatter.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
@@ -250,6 +251,7 @@ class _RecipeFormBody extends ConsumerWidget {
             key: Key('recipe-emoji-field'),
             formControlName: 'emoji',
             keyboardType: _emojiKeyboardType,
+            inputFormatters: const [SingleEmojiInputFormatter()],
             decoration: InputDecoration(labelText: 'Emoji (opcional)'),
           ),
           MenuarioSpacing.gapV16,

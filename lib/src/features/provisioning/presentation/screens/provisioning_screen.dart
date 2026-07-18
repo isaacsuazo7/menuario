@@ -7,6 +7,7 @@ import 'package:menuario/src/features/provisioning/presentation/providers/pantry
 import 'package:menuario/src/features/provisioning/presentation/widgets/_category_section.dart';
 import 'package:menuario/src/features/shopping/presentation/providers/provisioning_tab_provider.dart';
 import 'package:menuario/src/features/shopping/presentation/widgets/shopping_list_section.dart';
+import 'package:menuario/src/shared/presentation/tab_page_sync.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 /// The "Abastecer" tab body: a `[Despensa | Comprar]` toggle switching
@@ -16,12 +17,27 @@ import 'package:menuario/src/shared/shared.dart';
 /// Rendered inside the shell's single [Scaffold]/[AppBar]; keeps its own
 /// [Scaffold] (without an `appBar`) purely to provide the [Material]
 /// ancestor its [ListTile]/[Switch] descendants require.
-class ProvisioningScreen extends ConsumerWidget {
+class ProvisioningScreen extends ConsumerStatefulWidget {
   const ProvisioningScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProvisioningScreen> createState() => _ProvisioningScreenState();
+}
+
+class _ProvisioningScreenState extends ConsumerState<ProvisioningScreen>
+    with TabPageSync<ProvisioningScreen> {
+  @override
+  int get initialTabIndex => ref.read(provisioningTabProvider).index;
+
+  @override
+  Widget build(BuildContext context) {
     final tab = ref.watch(provisioningTabProvider);
+
+    // Provider -> page: keep the swipe view in sync when the tab changes
+    // (toggle tap or anywhere else). ref.listen MUST sit at build()'s root.
+    ref.listen<ProvisioningTab>(provisioningTabProvider, (previous, next) {
+      syncPageToIndex(next.index);
+    });
 
     return Scaffold(
       body: Column(
@@ -46,10 +62,13 @@ class ProvisioningScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: switch (tab) {
-              ProvisioningTab.despensa => const _DespensaBody(),
-              ProvisioningTab.comprar => const ShoppingListSection(),
-            },
+            child: PageView(
+              controller: pageController,
+              onPageChanged: (index) => ref
+                  .read(provisioningTabProvider.notifier)
+                  .set(ProvisioningTab.values[index]),
+              children: const [_DespensaBody(), ShoppingListSection()],
+            ),
           ),
         ],
       ),

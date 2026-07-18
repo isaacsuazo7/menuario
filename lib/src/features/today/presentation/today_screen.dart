@@ -9,6 +9,7 @@ import 'package:menuario/src/features/today/presentation/widgets/_cook_body.dart
 import 'package:menuario/src/features/today/presentation/widgets/_eat_body.dart';
 import 'package:menuario/src/features/today/presentation/widgets/_today_header.dart';
 import 'package:menuario/src/features/week/presentation/providers/plan_controller.dart';
+import 'package:menuario/src/shared/presentation/tab_page_sync.dart';
 import 'package:menuario/src/shared/shared.dart';
 
 /// The active [WeekPlan] and every loaded [Recipe], combined so [TodayScreen]
@@ -52,16 +53,31 @@ AsyncValue<_TodayScreenData> _combine(
 /// Rendered inside the shell's single [Scaffold]/[AppBar]; keeps its own
 /// [Scaffold] (without an `appBar`), matching [ProvisioningScreen] and
 /// `WeekScreen`.
-class TodayScreen extends ConsumerWidget {
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen>
+    with TabPageSync<TodayScreen> {
+  @override
+  int get initialTabIndex => ref.read(todayTabProvider).index;
+
+  @override
+  Widget build(BuildContext context) {
     final planAsync = ref.watch(planControllerProvider);
     final recipesAsync = ref.watch(recipeListProvider);
     final authAsync = ref.watch(authStateProvider);
     final combined = _combine(planAsync, recipesAsync, authAsync);
     final tab = ref.watch(todayTabProvider);
+
+    // Provider -> page: keep the swipe view in sync when the tab changes
+    // (toggle tap or anywhere else). ref.listen MUST sit at build()'s root.
+    ref.listen<TodayTab>(todayTabProvider, (previous, next) {
+      syncPageToIndex(next.index);
+    });
 
     return Scaffold(
       body: AppAsyncValueWidget<_TodayScreenData>(
@@ -92,10 +108,13 @@ class TodayScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: switch (tab) {
-                  TodayTab.cocinar => const CookBody(),
-                  TodayTab.comer => const EatBody(),
-                },
+                child: PageView(
+                  controller: pageController,
+                  onPageChanged: (index) => ref
+                      .read(todayTabProvider.notifier)
+                      .set(TodayTab.values[index]),
+                  children: const [CookBody(), EatBody()],
+                ),
               ),
             ],
           );
