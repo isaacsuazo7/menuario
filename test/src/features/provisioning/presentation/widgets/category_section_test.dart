@@ -54,7 +54,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
-          theme: MenuarioTheme.light,
+          theme: MenuarioTheme.light(),
           home: Scaffold(body: CategorySection(group: group)),
         ),
       ),
@@ -80,7 +80,7 @@ void main() {
     await pumpSection(tester, group);
 
     expect(find.text('Cereal'), findsOneWidget);
-    final palette = MenuarioTheme.light.extension<MenuarioCategoryColors>()!;
+    final palette = MenuarioTheme.light().extension<MenuarioCategoryColors>()!;
     expect(colorDotColor(tester), palette.cereal);
   });
 
@@ -112,7 +112,7 @@ void main() {
     await pumpSection(tester, group);
 
     expect(find.text('Otro'), findsOneWidget);
-    final palette = MenuarioTheme.light.extension<MenuarioCategoryColors>()!;
+    final palette = MenuarioTheme.light().extension<MenuarioCategoryColors>()!;
     final dotColor = colorDotColor(tester);
     expect(dotColor, isNot(palette.proteina));
     expect(dotColor, isNot(palette.vegetal));

@@ -1,78 +1,45 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/features/today/presentation/greeting.dart';
 
 void main() {
-  group('firstNameFrom', () {
-    test('returns the first word of a multi-word display name', () {
-      expect(firstNameFrom('Isaac Suazo'), 'Isaac');
+  group('greetingFor', () {
+    test('19:00 through 04:59 is the night greeting', () {
+      expect(greetingFor(DateTime(2024, 1, 1, 19)).label, 'Buenas noches');
+      expect(greetingFor(DateTime(2024, 1, 1, 23, 59)).label, 'Buenas noches');
+      expect(greetingFor(DateTime(2024, 1, 1)).label, 'Buenas noches');
+      expect(greetingFor(DateTime(2024, 1, 1, 4, 59)).label, 'Buenas noches');
     });
 
-    test('returns the whole name when it is a single word', () {
-      expect(firstNameFrom('Isaac'), 'Isaac');
+    test('05:00 through 11:59 is the morning greeting', () {
+      expect(greetingFor(DateTime(2024, 1, 1, 5)).label, 'Buenos días');
+      expect(greetingFor(DateTime(2024, 1, 1, 11, 59)).label, 'Buenos días');
     });
 
-    test('returns an empty string when displayName is null', () {
-      expect(firstNameFrom(null), '');
+    test('12:00 through 18:59 is the afternoon greeting', () {
+      expect(greetingFor(DateTime(2024, 1, 1, 12)).label, 'Buenas tardes');
+      expect(greetingFor(DateTime(2024, 1, 1, 18, 59)).label, 'Buenas tardes');
     });
 
-    test('returns an empty string when displayName is empty', () {
-      expect(firstNameFrom(''), '');
-    });
-
-    test('returns an empty string when displayName is only whitespace', () {
-      expect(firstNameFrom('   '), '');
-    });
-  });
-
-  group('greetingNameFrom', () {
-    test('prefers the display name over the email', () {
+    test('each period carries its own Material icon', () {
       expect(
-        greetingNameFrom(displayName: 'Isaac Suazo', email: 'other@x.com'),
-        'Isaac',
+        greetingFor(DateTime(2024, 1, 1, 9)).icon,
+        Icons.wb_sunny_outlined,
+      );
+      expect(
+        greetingFor(DateTime(2024, 1, 1, 15)).icon,
+        Icons.wb_twilight_outlined,
+      );
+      expect(
+        greetingFor(DateTime(2024, 1, 1, 21)).icon,
+        Icons.dark_mode_outlined,
       );
     });
 
-    test('falls back to the capitalized email local-part token', () {
-      expect(
-        greetingNameFrom(displayName: null, email: 'isaac.suazo@x.com'),
-        'Isaac',
-      );
-    });
-
-    test('strips the domain from the email', () {
-      expect(greetingNameFrom(email: 'bob@example.com'), 'Bob');
-    });
-
-    test('splits the local part on "_" and takes the first token', () {
-      expect(greetingNameFrom(email: 'john_doe@x.com'), 'John');
-    });
-
-    test('splits the local part on "+" and takes the first token', () {
-      expect(greetingNameFrom(email: 'jane+promos@x.com'), 'Jane');
-    });
-
-    test('keeps a hyphen as part of the name (does not split on "-")', () {
-      expect(greetingNameFrom(email: 'dev-claude@cit.hn'), 'Dev-claude');
-    });
-
-    test('lowercases the tail when capitalizing an ALL-CAPS local part', () {
-      expect(greetingNameFrom(email: 'ISAAC@x.com'), 'Isaac');
-    });
-
-    test('falls through a whitespace-only display name to the email', () {
-      expect(greetingNameFrom(displayName: '   ', email: 'bob@x.com'), 'Bob');
-    });
-
-    test('returns empty when both display name and email are null', () {
-      expect(greetingNameFrom(displayName: null, email: null), '');
-    });
-
-    test('returns empty when both display name and email are empty', () {
-      expect(greetingNameFrom(displayName: '', email: ''), '');
-    });
-
-    test('returns empty when the email has an empty local part', () {
-      expect(greetingNameFrom(email: '@x.com'), '');
+    test('midnight is night, not morning', () {
+      final midnight = greetingFor(DateTime(2024, 1, 1));
+      expect(midnight.label, 'Buenas noches');
+      expect(midnight.icon, Icons.dark_mode_outlined);
     });
   });
 

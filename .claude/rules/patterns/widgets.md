@@ -8,9 +8,10 @@ paths:
 
 ## AppAsyncValueWidget (OBLIGATORIO)
 
-**SIEMPRE usar `AppAsyncValueWidget<T>` para renderizar `AsyncValue`.** Es el
-ÚNICO widget compartido de UI del proyecto
-(`lib/src/shared/presentation/widgets/app_async_value_widget.dart`).
+**SIEMPRE usar `AppAsyncValueWidget<T>` para renderizar `AsyncValue`**
+(`lib/src/shared/presentation/widgets/app_async_value_widget.dart`). Es uno de
+los tres widgets compartidos de UI del proyecto, junto con `EmojiAvatar` y
+`MealTypeTag` (ver `rules/shared/components.md`).
 
 ### ✅ CORRECTO
 
@@ -201,8 +202,9 @@ Si el método `build()` supera **~150-200 líneas**, dividirlo en widgets privad
 | 2+ pantallas del **mismo** feature | `features/[feature]/presentation/widgets/` | Público |
 | 2+ **features** distintos | `shared/presentation/widgets/` | Público |
 
-- El único widget compartido actual es `AppAsyncValueWidget`. Antes de crear uno
-  nuevo en `shared/presentation/widgets/`, confirmar reutilización real (no especulativa).
+- Los widgets compartidos actuales son `AppAsyncValueWidget`, `EmojiAvatar` y
+  `MealTypeTag`. Antes de crear uno nuevo en `shared/presentation/widgets/`,
+  confirmar reutilización real (no especulativa).
 
 ## Checklist de Widgets
 

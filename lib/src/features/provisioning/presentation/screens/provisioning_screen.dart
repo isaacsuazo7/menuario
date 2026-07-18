@@ -41,24 +41,37 @@ class _ProvisioningScreenState extends ConsumerState<ProvisioningScreen>
 
     return Scaffold(
       body: Column(
+        // Stretch so the tab band spans the full width: an opaque band that
+        // only covered its own natural width would still let the coverage
+        // colors of the list show either side of it.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: MenuarioSpacing.paddingAll16,
-            child: SegmentedButton<ProvisioningTab>(
-              segments: const [
-                ButtonSegment(
-                  value: ProvisioningTab.despensa,
-                  label: Text('Despensa'),
+          Material(
+            key: const Key('provisioning-tab-band'),
+            // The band owns an opaque background of its own. Without it the
+            // red/amber coverage rows underneath show through, and the band
+            // reads as floating over the list instead of anchoring it.
+            color: Theme.of(context).colorScheme.surface,
+            child: Padding(
+              padding: MenuarioSpacing.paddingAll16,
+              child: Center(
+                child: SegmentedButton<ProvisioningTab>(
+                  segments: const [
+                    ButtonSegment(
+                      value: ProvisioningTab.despensa,
+                      label: Text('Despensa'),
+                    ),
+                    ButtonSegment(
+                      value: ProvisioningTab.comprar,
+                      label: Text('Comprar'),
+                    ),
+                  ],
+                  selected: {tab},
+                  onSelectionChanged: (selection) => ref
+                      .read(provisioningTabProvider.notifier)
+                      .set(selection.first),
                 ),
-                ButtonSegment(
-                  value: ProvisioningTab.comprar,
-                  label: Text('Comprar'),
-                ),
-              ],
-              selected: {tab},
-              onSelectionChanged: (selection) => ref
-                  .read(provisioningTabProvider.notifier)
-                  .set(selection.first),
+              ),
             ),
           ),
           Expanded(

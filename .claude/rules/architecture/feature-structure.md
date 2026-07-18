@@ -118,4 +118,4 @@ Solo existen barrels transversales en `core/` y `shared/` (ver reglas de imports
 - `shared/domain/` - Entidades, contratos y **services** (`coverage_calculator`,
   `measurement_converter`, `provisioning_calculator`, `stock_lens_service`)
 - `shared/data/` - DTOs, datasources y repositorios compartidos
-- `shared/presentation/widgets/` - `AppAsyncValueWidget<T>` (único widget compartido)
+- `shared/presentation/widgets/` - `AppAsyncValueWidget<T>`, `EmojiAvatar`, `MealTypeTag`

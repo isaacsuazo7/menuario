@@ -5,20 +5,27 @@ import 'package:menuario/src/core/theme/coverage_colors.dart';
 
 /// Centralized Material 3 theme definitions for Menuario.
 ///
-/// Both [dark] and [light] derive their [ColorScheme] from the same
-/// [menuarioSeed], keeping re-coloring the whole app a one-line change.
+/// Both [dark] and [light] derive their [ColorScheme] from the seed they are
+/// given, defaulting to [menuarioSeed]. The seed is the user's single color
+/// lever: everything else — including every text color — is derived by
+/// Material 3, never hand-picked.
 abstract final class MenuarioTheme {
   const MenuarioTheme._();
 
   /// The default theme — dark by design (app-shell design D2).
-  static ThemeData get dark => _build(brightness: Brightness.dark);
+  static ThemeData dark({Color seed = menuarioSeed}) =>
+      _build(brightness: Brightness.dark, seed: seed);
 
   /// The light counterpart, reachable via [ThemeMode] switching.
-  static ThemeData get light => _build(brightness: Brightness.light);
+  static ThemeData light({Color seed = menuarioSeed}) =>
+      _build(brightness: Brightness.light, seed: seed);
 
-  static ThemeData _build({required Brightness brightness}) {
+  static ThemeData _build({
+    required Brightness brightness,
+    required Color seed,
+  }) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: menuarioSeed,
+      seedColor: seed,
       brightness: brightness,
     );
 

@@ -133,7 +133,7 @@ class _CategorySection extends StatelessWidget {
         for (final ingredient in ingredients)
           ListTile(
             key: Key('recipe-bom-ingredient-option-${ingredient.id}'),
-            leading: Text(ingredient.emoji ?? '🥄'),
+            leading: EmojiAvatar(emoji: ingredient.emoji ?? '🥄', size: 32),
             title: Text(ingredient.name),
             onTap: () => Navigator.of(context).pop(ingredient.id),
           ),

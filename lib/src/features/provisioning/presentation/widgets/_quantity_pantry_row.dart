@@ -103,10 +103,7 @@ class QuantityPantryRow extends ConsumerWidget {
 
     return ListTile(
       tileColor: tileColor,
-      leading: Text(
-        ingredient.emoji ?? '🥫',
-        style: const TextStyle(fontSize: 24),
-      ),
+      leading: EmojiAvatar(emoji: ingredient.emoji ?? '🥫', size: 32),
       title: Text(ingredient.name),
       subtitle: InkWell(onTap: handleOpenSetStock, child: Text(display)),
       trailing: Row(

@@ -40,10 +40,7 @@ class BooleanPantryRow extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: Text(
-        ingredient.emoji ?? '🥫',
-        style: const TextStyle(fontSize: 24),
-      ),
+      leading: EmojiAvatar(emoji: ingredient.emoji ?? '🥫', size: 32),
       title: Text(ingredient.name),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

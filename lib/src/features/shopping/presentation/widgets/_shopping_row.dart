@@ -56,10 +56,7 @@ class _BooleanRow extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: Text(
-        row.ingredient.emoji ?? '🥫',
-        style: const TextStyle(fontSize: 24),
-      ),
+      leading: EmojiAvatar(emoji: row.ingredient.emoji ?? '🥫', size: 32),
       title: Text(row.ingredient.name),
       trailing: Checkbox(value: false, onChanged: (_) => handleToggleHave()),
     );
@@ -112,10 +109,7 @@ class _QuantityRow extends ConsumerWidget {
     }
 
     return ListTile(
-      leading: Text(
-        row.ingredient.emoji ?? '🥫',
-        style: const TextStyle(fontSize: 24),
-      ),
+      leading: EmojiAvatar(emoji: row.ingredient.emoji ?? '🥫', size: 32),
       title: Text(
         row.ingredient.name,
         style: checked

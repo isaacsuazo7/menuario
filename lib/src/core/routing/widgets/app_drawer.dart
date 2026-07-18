@@ -10,8 +10,9 @@ import 'package:menuario/src/core/theme/spacing.dart';
 /// Identity-first drawer for the authenticated shell.
 ///
 /// Leads with a [_UserHeader] (avatar + name + email), keeps the
-/// "Ingredientes" catalog and "Calendario de cocina" schedule-editor
-/// entries below it, and pins "Cerrar sesión" to the bottom.
+/// "Ingredientes" catalog, "Calendario de cocina" schedule-editor and
+/// "Apariencia" theme entries below it, and pins "Cerrar sesión" to the
+/// bottom.
 /// [AuthService.signOut] emits `null` on the underlying auth stream,
 /// which `appRouterProvider`'s gate picks up to redirect back to the sign-in
 /// screen.
@@ -43,6 +44,14 @@ class AppDrawer extends ConsumerWidget {
               onTap: () {
                 Navigator.of(context).pop();
                 context.pushNamed(CookScheduleRoutes.edit);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: const Text('Apariencia'),
+              onTap: () {
+                Navigator.of(context).pop();
+                context.pushNamed(SettingsRoutes.appearance);
               },
             ),
             const Spacer(),

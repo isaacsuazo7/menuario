@@ -8,8 +8,8 @@ paths:
 ## Ubicación
 ```
 lib/src/core/theme/          (archivos planos, barrel: theme.dart)
-├── app_seed.dart            → const menuarioSeed
-├── app_theme.dart           → MenuarioTheme (dark/light)
+├── app_seed.dart            → menuarioSeed, menuarioSeedOptions, menuarioSeedFor
+├── app_theme.dart           → MenuarioTheme.dark({seed}) / .light({seed})
 ├── category_colors.dart     → MenuarioCategoryColors (ThemeExtension)
 ├── coverage_colors.dart     → MenuarioCoverageColors (ThemeExtension)
 ├── spacing.dart             → MenuarioSpacing
@@ -28,34 +28,90 @@ import 'package:menuario/src/core/theme/spacing.dart';
 ## Colores — Material 3 (sin paleta estática)
 
 menuario **NO** tiene una clase de paleta con constantes de color. El color se
-define con Material 3 a partir de un `seed`:
+define con Material 3 a partir de un `seed`, y **el seed lo elige la persona
+usuaria** (se persiste; ver "Seed configurable").
 
 ```dart
 // lib/src/core/theme/app_seed.dart
-const menuarioSeed = Color(0xFF4F46E5);
+const menuarioSeed = Color(0xFF4F46E5); // el default (Índigo)
 ```
+
+⚠️ **`MenuarioTheme.dark` / `MenuarioTheme.light` son FUNCIONES, no getters.**
+Reciben el seed por parámetro con nombre y caen al default cuando no se pasa:
 
 ```dart
 // lib/src/core/theme/app_theme.dart
 abstract final class MenuarioTheme {
-  static ThemeData get dark => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: menuarioSeed,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      );
+  const MenuarioTheme._();
 
-  static ThemeData get light => ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: menuarioSeed),
-        useMaterial3: true,
-      );
+  static ThemeData dark({Color seed = menuarioSeed}) =>
+      _build(brightness: Brightness.dark, seed: seed);
+
+  static ThemeData light({Color seed = menuarioSeed}) =>
+      _build(brightness: Brightness.light, seed: seed);
+
+  static ThemeData _build({
+    required Brightness brightness,
+    required Color seed,
+  }) {
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: seed,
+      brightness: brightness,
+    );
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: colorScheme,
+      extensions: [
+        MenuarioCategoryColors.fromBrightness(brightness),
+        MenuarioCoverageColors.fromBrightness(brightness),
+      ],
+    );
+  }
 }
 ```
 
-- **El tema oscuro (`dark`) es el predeterminado por diseño.**
-- Los colores se leen SIEMPRE desde el `ColorScheme` del contexto, nunca desde
-  una constante global:
+```dart
+// ✅ CORRECTO — se invocan
+theme: MenuarioTheme.light(seed: selectedSeed),
+darkTheme: MenuarioTheme.dark(seed: selectedSeed),
+
+// ❌ INCORRECTO — ya no son getters
+theme: MenuarioTheme.light,
+```
+
+### Seed configurable y persistido
+
+El seed **no** está fijo en el código: se elige desde la pantalla *Apariencia*
+y se persiste junto al `ThemeMode` (`ThemeSettings` en el shared kernel,
+`shared/data/repositories/theme_settings_repository_impl.dart`).
+
+La lista de seeds es **cerrada y curada** — no hay color picker libre:
+
+```dart
+typedef MenuarioSeedOption = ({String label, Color color});
+
+const menuarioSeedOptions = <MenuarioSeedOption>[
+  (label: 'Índigo', color: menuarioSeed),      // default
+  (label: 'Esmeralda', color: Color(0xFF059669)),
+  (label: 'Cian', color: Color(0xFF0891B2)),
+  (label: 'Violeta', color: Color(0xFF7C3AED)),
+  (label: 'Rosa', color: Color(0xFFDB2777)),
+  (label: 'Ámbar', color: Color(0xFFD97706)),
+  (label: 'Terracota', color: Color(0xFFC2410C)),
+];
+```
+
+`menuarioSeedFor(int? value)` resuelve un seed curado desde su ARGB32
+persistido y devuelve `null` si el valor no pertenece a la lista, de modo que
+un documento manipulado degrada al default en vez de tematizar la app con un
+color no validado.
+
+- **El tema oscuro (`dark`) es el predeterminado por diseño**; el `ThemeMode`
+  también es configurable por la persona usuaria.
+- **Consecuencia para los widgets:** como el seed cambia en runtime, ningún
+  color de UI puede estar hardcodeado. Todo color debe derivarse del
+  `ColorScheme` del contexto para que re-tinte con el seed elegido:
 
 ```dart
 final scheme = Theme.of(context).colorScheme;

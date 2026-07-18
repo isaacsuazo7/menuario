@@ -6,16 +6,17 @@ paths:
 
 # Catálogo de Componentes Compartidos
 
-⚠️ **menuario NO tiene una librería de componentes de diseño propia.** El único
-widget de UI compartido es `AppAsyncValueWidget<T>`. Todo lo demás se construye
-con **widgets crudos de Material** (`FilledButton`, `TextField`, `Card`,
-`showModalBottomSheet`, etc.):
-no existen en este proyecto.
+⚠️ **menuario NO tiene una librería de componentes de diseño propia.** Solo hay
+tres widgets de UI compartidos (`AppAsyncValueWidget<T>`, `EmojiAvatar`,
+`MealTypeTag`). Todo lo demás se construye con **widgets crudos de Material**
+(`FilledButton`, `TextField`, `Card`, `showModalBottomSheet`, etc.).
 
 ## Ubicación
 ```
 lib/src/shared/presentation/widgets/
-└── app_async_value_widget.dart   → AppAsyncValueWidget<T>
+├── app_async_value_widget.dart   → AppAsyncValueWidget<T>
+├── emoji_avatar.dart             → EmojiAvatar
+└── meal_type_tag.dart            → MealTypeTag
 ```
 
 Import (vía el barrel de shared, que exporta este widget):
@@ -24,7 +25,7 @@ Import (vía el barrel de shared, que exporta este widget):
 import 'package:menuario/src/shared/shared.dart';
 ```
 
-## Único widget compartido
+## Widgets compartidos
 
 ### AppAsyncValueWidget
 
@@ -56,6 +57,42 @@ Notas importantes:
   provider lanza `FailureException` (ver `error-handling.md`).
 - El estado de carga usa `loadingBuilder` si se provee; si no, un indicador por
   defecto.
+
+### EmojiAvatar
+
+Todo emoji de la app se renderiza dentro de este tile redondeado y tintado
+(`colorScheme.surfaceContainerHighest`). **Nunca** dejar un emoji como `Text`
+suelto: el fondo le da peso óptico y un footprint predecible que mantiene
+alineadas las filas de lista.
+
+```dart
+EmojiAvatar(emoji: ingredient.emoji ?? '🥄', size: 32)   // filas de lista
+EmojiAvatar(emoji: recipe.emoji ?? '🍽️', size: 40)       // filas de comida
+EmojiAvatar(emoji: recipe.emoji ?? '🍽️', size: 72)       // header de detalle
+```
+
+| Parámetro | Tipo | Notas |
+|---|---|---|
+| `emoji` | `String` | **requerido** |
+| `size` | `double` | lado del cuadrado; default `40`. El radio y el tamaño de fuente se derivan de él |
+| `border` | `BoxBorder?` | anillo de acento opcional (lo usa `MealEmojiTile`) |
+| `child` | `Widget?` | reemplaza al emoji (p. ej. el `+` de estado vacío) |
+
+`MealEmojiTile` (feature `week`) se construye SOBRE `EmojiAvatar`; conserva el
+anillo de acento del slot y el `+` de estado vacío.
+
+### MealTypeTag
+
+La píldora rellena que etiqueta el `MealType` de una receta. Deriva sus
+colores de `colorScheme.secondaryContainer` / `onSecondaryContainer`, así que
+re-tinta con el seed elegido.
+
+```dart
+MealTypeTag(mealType: recipe.mealType!)
+```
+
+No usar `Chip` ni un `Text` pelado para el meal type: se ven sin terminar y no
+siguen la paleta.
 
 ## Componentes que NO existen (usar Material crudo)
 

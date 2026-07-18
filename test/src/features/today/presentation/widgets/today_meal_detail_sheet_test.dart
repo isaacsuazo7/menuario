@@ -92,6 +92,23 @@ void main() {
     expect(find.text('Harina'), findsOneWidget);
   });
 
+  testWidgets('renders the meal type as the shared filled tag', (tester) async {
+    await pumpSheet(tester);
+
+    expect(find.widgetWithText(MealTypeTag, 'Desayuno'), findsOneWidget);
+  });
+
+  testWidgets('backs the ingredient emoji with the shared avatar', (
+    tester,
+  ) async {
+    await pumpSheet(tester);
+
+    expect(
+      find.descendant(of: find.byType(EmojiAvatar), matching: find.text('🌾')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('shows exactly one action: "Ver receta"', (tester) async {
     await pumpSheet(tester);
 

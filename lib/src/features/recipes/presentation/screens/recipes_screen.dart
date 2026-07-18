@@ -233,7 +233,7 @@ class _RecipeCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(recipe.emoji ?? '🍽️', style: MenuarioTypography.h2),
+                EmojiAvatar(emoji: recipe.emoji ?? '🍽️', size: 56),
                 MenuarioSpacing.gapV4,
                 Text(
                   recipe.name,
@@ -246,10 +246,7 @@ class _RecipeCard extends StatelessWidget {
                   MenuarioSpacing.gapV4,
                   FittedBox(
                     fit: BoxFit.scaleDown,
-                    child: Chip(
-                      label: Text(recipe.mealType!.label),
-                      visualDensity: VisualDensity.compact,
-                    ),
+                    child: MealTypeTag(mealType: recipe.mealType!),
                   ),
                 ],
                 if (!recipe.enabled) ...[

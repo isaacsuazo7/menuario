@@ -183,6 +183,36 @@ void main() {
     expect(find.text('Calendario de cocina'), findsOneWidget);
   });
 
+  testWidgets('shows the Apariencia navigation item', (tester) async {
+    final user = buildUser(displayName: 'Isaac Suazo', email: 'isaac@cit.hn');
+
+    await pumpDrawer(tester, user: user);
+
+    expect(find.text('Apariencia'), findsOneWidget);
+  });
+
+  testWidgets('keeps Apariencia above the pinned "Cerrar sesión"', (
+    tester,
+  ) async {
+    final user = buildUser(displayName: 'Isaac Suazo', email: 'isaac@cit.hn');
+
+    await pumpDrawer(tester, user: user);
+
+    final appearanceY = tester.getCenter(find.text('Apariencia')).dy;
+    final signOutY = tester.getCenter(find.text('Cerrar sesión')).dy;
+    expect(appearanceY, lessThan(signOutY));
+  });
+
+  testWidgets('lists Apariencia below Calendario de cocina', (tester) async {
+    final user = buildUser(displayName: 'Isaac Suazo', email: 'isaac@cit.hn');
+
+    await pumpDrawer(tester, user: user);
+
+    final scheduleY = tester.getCenter(find.text('Calendario de cocina')).dy;
+    final appearanceY = tester.getCenter(find.text('Apariencia')).dy;
+    expect(appearanceY, greaterThan(scheduleY));
+  });
+
   testWidgets('pins "Cerrar sesión" below the Ingredientes item', (
     tester,
   ) async {

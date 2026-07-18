@@ -283,4 +283,39 @@ void main() {
 
     expect(find.text('Deshabilitada'), findsNothing);
   });
+
+  testWidgets('renders the meal type as the shared filled tag, not a Chip', (
+    tester,
+  ) async {
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, avena, leche]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.widgetWithText(MealTypeTag, 'Desayuno'), findsOneWidget);
+  });
+
+  testWidgets('backs every emoji with the shared avatar', (tester) async {
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithThreeIngredients));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, avena, leche]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    // The header emoji plus one per resolved ingredient row.
+    expect(find.byType(EmojiAvatar), findsNWidgets(4));
+    expect(
+      find.descendant(of: find.byType(EmojiAvatar), matching: find.text('🥣')),
+      findsOneWidget,
+    );
+  });
 }

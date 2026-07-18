@@ -201,7 +201,7 @@ void main() {
           recipeRepositoryProvider.overrideWithValue(mockRecipeRepository),
         ],
         child: MaterialApp(
-          theme: MenuarioTheme.dark,
+          theme: MenuarioTheme.dark(),
           home: Scaffold(body: QuantityPantryRow(row: withRow ?? polloRow)),
         ),
       ),
@@ -487,7 +487,7 @@ void main() {
         expect(tile.tileColor, isNotNull);
         expect(
           tile.tileColor,
-          MenuarioTheme.dark
+          MenuarioTheme.dark()
               .extension<MenuarioCoverageColors>()!
               .cubierto
               .withValues(alpha: 0.35),
@@ -503,7 +503,7 @@ void main() {
 
         expect(find.text('170 g · necesitás 340 g'), findsOneWidget);
         final tile = tester.widget<ListTile>(find.byType(ListTile));
-        final coverage = MenuarioTheme.dark
+        final coverage = MenuarioTheme.dark()
             .extension<MenuarioCoverageColors>()!;
         expect(tile.tileColor, coverage.justo.withValues(alpha: 0.35));
         expect(tile.tileColor, isNot(coverage.falta.withValues(alpha: 0.35)));
@@ -518,7 +518,7 @@ void main() {
       final tile = tester.widget<ListTile>(find.byType(ListTile));
       expect(
         tile.tileColor,
-        MenuarioTheme.dark
+        MenuarioTheme.dark()
             .extension<MenuarioCoverageColors>()!
             .falta
             .withValues(alpha: 0.35),
@@ -538,7 +538,7 @@ void main() {
         final tile = tester.widget<ListTile>(find.byType(ListTile));
         expect(
           tile.tileColor,
-          MenuarioTheme.dark
+          MenuarioTheme.dark()
               .extension<MenuarioCoverageColors>()!
               .falta
               .withValues(alpha: 0.35),

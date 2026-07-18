@@ -1,42 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:menuario/src/core/auth/auth_providers.dart';
 import 'package:menuario/src/core/theme/spacing.dart';
 import 'package:menuario/src/core/theme/typography.dart';
 import 'package:menuario/src/features/today/presentation/greeting.dart';
 import 'package:menuario/src/features/today/presentation/providers/now_provider.dart';
 
-/// The "Bienvenido {first name}" + Spanish long date header.
+/// The time-of-day greeting + Spanish long date header.
 ///
-/// Reads [authStateProvider] for the name and [nowProvider] for the date —
-/// both overridable seams, so this widget is testable without touching
-/// Firebase or the wall clock.
+/// Carries no user name on purpose — the signed-in identity already lives in
+/// the drawer. Reads [nowProvider] (never `DateTime.now()`) so both the
+/// greeting and the date stay testable without the wall clock.
 class TodayHeader extends ConsumerWidget {
   const TodayHeader({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authStateProvider).value;
     final now = ref.watch(nowProvider);
-    final firstName = greetingNameFrom(
-      displayName: user?.displayName,
-      email: user?.email,
-    );
-    final greeting = firstName.isEmpty
-        ? '¡Bienvenido!'
-        : 'Bienvenido $firstName';
+    final greeting = greetingFor(now);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Padding(
       padding: MenuarioSpacing.paddingAll16,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(greeting, style: MenuarioTypography.h2),
+          Row(
+            children: [
+              Icon(greeting.icon, color: colorScheme.primary),
+              MenuarioSpacing.gapH8,
+              Text(greeting.label, style: MenuarioTypography.h2),
+            ],
+          ),
           MenuarioSpacing.gapV4,
           Text(
             spanishLongDate(now),
             style: MenuarioTypography.h6.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ],

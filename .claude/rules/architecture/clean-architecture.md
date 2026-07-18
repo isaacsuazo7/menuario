@@ -12,7 +12,7 @@ paths:
 lib/src/
 ├── core/           # Funcionalidad compartida transversal (auth, error, firebase, routing, theme)
 ├── features/       # Módulos de dominio (vertical slices)
-└── shared/         # SHARED KERNEL: domain/data compartidos + el único widget compartido
+└── shared/         # SHARED KERNEL: domain/data compartidos + los widgets compartidos
 ```
 
 ## Estructura de una Feature

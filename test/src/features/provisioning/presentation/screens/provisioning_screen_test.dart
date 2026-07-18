@@ -130,6 +130,53 @@ void main() {
     expect(find.text('Reintentar'), findsOneWidget);
   });
 
+  group('tab band', () {
+    Finder bandFinder() => find.byKey(const Key('provisioning-tab-band'));
+
+    Future<void> pumpWithPantry(WidgetTester tester) async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([avenaItem, cominoItem]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([avena, comino]));
+
+      await pumpScreen(tester);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('carries its own opaque surface so coverage colors never '
+        'bleed through it', (tester) async {
+      await pumpWithPantry(tester);
+
+      final band = bandFinder();
+      expect(band, findsOneWidget);
+
+      final material = tester.widget<Material>(band);
+      final context = tester.element(band);
+      expect(material.color, Theme.of(context).colorScheme.surface);
+    });
+
+    testWidgets('spans the full width', (tester) async {
+      await pumpWithPantry(tester);
+
+      expect(
+        tester.getSize(bandFinder()).width,
+        tester.getSize(find.byType(PageView)).width,
+      );
+    });
+
+    testWidgets('sits above the scroll area without overlapping it', (
+      tester,
+    ) async {
+      await pumpWithPantry(tester);
+
+      final bandBottom = tester.getRect(bandFinder()).bottom;
+      final scrollTop = tester.getRect(find.byType(PageView)).top;
+      expect(bandBottom, lessThanOrEqualTo(scrollTop));
+    });
+  });
+
   group('Despensa/Comprar toggle', () {
     late MockWeekPlanRepository mockWeekPlanRepository;
     late MockRecipeRepository mockRecipeRepository;

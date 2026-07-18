@@ -55,24 +55,15 @@ class MealEmojiTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      width: _size,
-      height: _size,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: filled
-            ? null
-            : Border.all(color: slot.accent.withValues(alpha: 0.45)),
-      ),
-      alignment: Alignment.center,
+    return EmojiAvatar(
+      emoji: emoji,
+      size: _size,
+      border: filled
+          ? null
+          : Border.all(color: slot.accent.withValues(alpha: 0.45)),
       child: filled
-          ? Text(emoji, style: const TextStyle(fontSize: 20))
-          : Icon(
-              Icons.add,
-              size: 20,
-              color: colorScheme.onSurfaceVariant,
-            ),
+          ? null
+          : Icon(Icons.add, size: 20, color: colorScheme.onSurfaceVariant),
     );
   }
 }

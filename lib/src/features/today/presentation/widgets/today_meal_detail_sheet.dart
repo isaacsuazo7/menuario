@@ -88,11 +88,9 @@ class _Header extends StatelessWidget {
               Text(recipe.name, style: MenuarioTypography.h4),
               if (recipe.mealType != null) ...[
                 MenuarioSpacing.gapV4,
-                Text(
-                  recipe.mealType!.label,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: MealTypeTag(mealType: recipe.mealType!),
                 ),
               ],
             ],
@@ -132,7 +130,10 @@ class _Ingredients extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 2),
             child: Row(
               children: [
-                Text(ingredientsById[line.ingredientId]?.emoji ?? '•'),
+                EmojiAvatar(
+                  emoji: ingredientsById[line.ingredientId]?.emoji ?? '•',
+                  size: 32,
+                ),
                 MenuarioSpacing.gapH8,
                 Expanded(
                   child: Text(

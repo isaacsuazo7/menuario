@@ -114,7 +114,7 @@ class _IngredientCategorySection extends StatelessWidget {
         ),
         for (final ingredient in ingredients)
           ListTile(
-            leading: Text(ingredient.emoji ?? '🥄'),
+            leading: EmojiAvatar(emoji: ingredient.emoji ?? '🥄', size: 32),
             title: Text(ingredient.name),
             onTap: () => context.pushNamed(
               IngredientRoutes.form,
