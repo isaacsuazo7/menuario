@@ -120,6 +120,28 @@ void main() {
     stock: Quantity(value: 12, unit: Unit.count),
   );
 
+  // count mode WITH purchase packaging: stocked and consumed in units,
+  // bought by the caja (1 caja = 8 bolsas x 3 u). The package exists only
+  // so purchases round up to whole cajas — it never becomes the stock unit.
+  const salmas = Ingredient(
+    id: 'ing-salmas',
+    name: 'Salmas',
+    emoji: '🍘',
+    category: Category.otro,
+    measurementMode: MeasurementMode.count,
+    package: PackageSpec(
+      label: 'caja',
+      innerLabel: 'bolsa',
+      innerQty: 3,
+      innerCount: 8,
+    ),
+  );
+  const salmasPantry = PantryItem.quantityTracked(
+    ingredientId: 'ing-salmas',
+    category: Category.otro,
+    stock: Quantity(value: 12, unit: Unit.count),
+  );
+
   // boolean mode: no numeric stock, just a have/don't-have flag.
   const comino = Ingredient(
     id: 'ing-comino',
@@ -358,6 +380,63 @@ void main() {
     );
 
     testWidgets(
+      'Por paquete reveals the OPTIONAL inner-pack fields (caja -> bolsas '
+      '-> unidades)',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Por paquete'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('ingredient-package-inner-label-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'the inner-pack fields show the computed total, so the user never '
+      'multiplies by hand',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Por paquete'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-label-field')),
+          'caja',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-label-field')),
+          'bolsa',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          '3',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          '8',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('8 bolsas × 3 u = 24 u por caja'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'Sí-No shows only the have-flag, hiding stock and package fields',
       (tester) async {
         await pumpScreen(tester);
@@ -378,22 +457,74 @@ void main() {
       },
     );
 
-    testWidgets('Por unidad shows no package fields and no have-flag', (
-      tester,
-    ) async {
-      await pumpScreen(tester);
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Por unidad reveals the OPTIONAL purchase-packaging block (stocked in '
+      'units, bought by the caja) but no base unit and no have-flag',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Por unidad'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('ingredient-package-label-field')),
-        findsNothing,
-      );
-      expect(find.byKey(const Key('ingredient-have-it-field')), findsNothing);
-      expect(find.byKey(const Key('ingredient-stock-field')), findsOneWidget);
-    });
+        expect(find.text('Cómo lo comprás (opcional)'), findsOneWidget);
+        expect(
+          find.byKey(const Key('ingredient-package-label-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ingredient-package-yield-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          findsOneWidget,
+        );
+        // The total is already in units — a base dimension is meaningless.
+        expect(
+          find.byKey(const Key('ingredient-package-base-unit-field')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('ingredient-have-it-field')), findsNothing);
+        expect(find.byKey(const Key('ingredient-stock-field')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Por unidad shows the computed total for the inner pack (salmas: 1 '
+      'caja = 8 bolsas x 3 u)',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-label-field')),
+          'caja',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-label-field')),
+          'bolsa',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          '3',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          '8',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('8 bolsas × 3 u = 24 u por caja'), findsOneWidget);
+      },
+    );
   });
 
   group('conversionFactor behind Avanzado', () {
@@ -440,7 +571,12 @@ void main() {
           find.byKey(const Key('ingredient-conversion-factor-field')),
           findsOneWidget,
         );
-        expect(find.textContaining('opcional'), findsOneWidget);
+        // Matches the conversionFactor helper specifically — several other
+        // count-mode labels also carry the word "opcional".
+        expect(
+          find.textContaining('unidades de stock por unidad'),
+          findsOneWidget,
+        );
       },
     );
 
@@ -830,9 +966,128 @@ void main() {
       final savedPantryItem = captured[1] as QuantityTrackedPantryItem;
 
       expect(savedIngredient.measurementMode, MeasurementMode.count);
+      expect(savedIngredient.package, isNull);
       expect(savedPantryItem.stock.value, 7);
       expect(savedPantryItem.stock.unit, Unit.count);
     });
+
+    testWidgets(
+      'Por unidad with purchase packaging stays MeasurementMode.count and '
+      'carries the package (salmas: stocked in u, bought by the caja)',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Salmas',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-label-field')),
+          'caja',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-label-field')),
+          'bolsa',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          '3',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          '8',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '12',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedIngredient = captured[0] as Ingredient;
+        final savedPantryItem = captured[1] as QuantityTrackedPantryItem;
+
+        expect(savedIngredient.measurementMode, MeasurementMode.count);
+        final savedPackage = savedIngredient.package;
+        expect(savedPackage, isNotNull);
+        expect(savedPackage!.label, 'caja');
+        expect(savedPackage.innerLabel, 'bolsa');
+        expect(savedPackage.innerQty, 3);
+        expect(savedPackage.innerCount, 8);
+        expect(savedPackage.effectiveYieldQty, 24);
+        expect(savedPackage.baseDimension, isNull);
+        // Stock is untouched by the package: still whole units.
+        expect(savedPantryItem.stock.value, 12);
+        expect(savedPantryItem.stock.unit, Unit.count);
+      },
+    );
+
+    testWidgets(
+      'Por unidad with a half-filled inner pair keeps Confirm disabled',
+      (tester) async {
+        await pumpScreen(tester);
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Salmas',
+        );
+        await tester.tap(find.text('Por unidad'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-label-field')),
+          'caja',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          '3',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '12',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        expect(
+          tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+          isNull,
+        );
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          '8',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        expect(
+          tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+          isNotNull,
+        );
+      },
+    );
 
     testWidgets(
       'Por paquete with yield+base unit saves packageBase and canonical L',
@@ -914,6 +1169,76 @@ void main() {
         );
         expect(savedPantryItem.stock.value, 3.5);
         expect(savedPantryItem.stock.unit, Unit.liter);
+      },
+    );
+
+    testWidgets(
+      'Por paquete with an inner level persists it, so the total units per '
+      'outer pack stay derived (salmas caja = 8 bolsas x 3 u)',
+      (tester) async {
+        when(
+          () => mockIngredientCatalogRepository.newId(),
+        ).thenReturn('ing-new-id');
+        when(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: any(named: 'ingredient'),
+            pantryItem: any(named: 'pantryItem'),
+          ),
+        ).thenAnswer((_) async => const Right(null));
+
+        await pumpPushableScreen(tester);
+
+        await tester.enterText(
+          find.byKey(const Key('ingredient-name-field')),
+          'Salmas',
+        );
+        await tester.tap(find.text('Por paquete'));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-label-field')),
+          'caja',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-label-field')),
+          'bolsa',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-qty-field')),
+          '3',
+        );
+        await tester.enterText(
+          find.byKey(const Key('ingredient-package-inner-count-field')),
+          '8',
+        );
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const Key('ingredient-stock-field')),
+          '1',
+        );
+        await expandAdvanced(tester);
+        await tester.enterText(
+          find.byKey(const Key('ingredient-conversion-factor-field')),
+          '1',
+        );
+        await tester.pumpAndSettle();
+
+        await tester.ensureVisible(find.text('Confirmar'));
+        await tester.tap(find.text('Confirmar'));
+        await tester.pumpAndSettle();
+
+        final captured = verify(
+          () => mockIngredientCatalogRepository.saveWithPantry(
+            ingredient: captureAny(named: 'ingredient'),
+            pantryItem: captureAny(named: 'pantryItem'),
+          ),
+        ).captured;
+        final savedPackage = (captured[0] as Ingredient).package!;
+
+        expect(savedPackage.label, 'caja');
+        expect(savedPackage.innerLabel, 'bolsa');
+        expect(savedPackage.innerQty, 3);
+        expect(savedPackage.innerCount, 8);
+        expect(savedPackage.effectiveYieldQty, 24);
       },
     );
 
@@ -1255,6 +1580,32 @@ void main() {
           find.byKey(const Key('ingredient-default-lens-field')),
           findsNothing,
         );
+      },
+    );
+
+    testWidgets(
+      'Por unidad pre-fills an existing purchase package (salmas caja = 8 '
+      'bolsas x 3 u), so it can be edited instead of re-created',
+      (tester) async {
+        when(
+          () => mockIngredientRepository.getById('ing-salmas'),
+        ).thenAnswer((_) async => const Right(salmas));
+        when(
+          () => mockPantryRepository.getById('ing-salmas'),
+        ).thenAnswer((_) async => const Right(salmasPantry));
+
+        await pumpScreen(tester, ingredientId: 'ing-salmas');
+        await tester.pumpAndSettle();
+
+        expect(_textOf(tester, 'ingredient-package-label-field'), 'caja');
+        expect(
+          _textOf(tester, 'ingredient-package-inner-label-field'),
+          'bolsa',
+        );
+        expect(_textOf(tester, 'ingredient-package-inner-qty-field'), '3');
+        expect(_textOf(tester, 'ingredient-package-inner-count-field'), '8');
+        expect(_textOf(tester, 'ingredient-stock-field'), '12');
+        expect(find.text('8 bolsas × 3 u = 24 u por caja'), findsOneWidget);
       },
     );
 

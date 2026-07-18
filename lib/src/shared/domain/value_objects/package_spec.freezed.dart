@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PackageSpec {
 
- String get label; num? get yieldQty; Unit? get baseDimension;
+ String get label; num? get yieldQty; Unit? get baseDimension; String? get innerLabel; num? get innerQty; num? get innerCount;
 /// Create a copy of PackageSpec
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $PackageSpecCopyWith<PackageSpec> get copyWith => _$PackageSpecCopyWithImpl<Pack
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackageSpec&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimension, baseDimension) || other.baseDimension == baseDimension));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackageSpec&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimension, baseDimension) || other.baseDimension == baseDimension)&&(identical(other.innerLabel, innerLabel) || other.innerLabel == innerLabel)&&(identical(other.innerQty, innerQty) || other.innerQty == innerQty)&&(identical(other.innerCount, innerCount) || other.innerCount == innerCount));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimension);
+int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimension,innerLabel,innerQty,innerCount);
 
 @override
 String toString() {
-  return 'PackageSpec(label: $label, yieldQty: $yieldQty, baseDimension: $baseDimension)';
+  return 'PackageSpec(label: $label, yieldQty: $yieldQty, baseDimension: $baseDimension, innerLabel: $innerLabel, innerQty: $innerQty, innerCount: $innerCount)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $PackageSpecCopyWith<$Res>  {
   factory $PackageSpecCopyWith(PackageSpec value, $Res Function(PackageSpec) _then) = _$PackageSpecCopyWithImpl;
 @useResult
 $Res call({
- String label, num? yieldQty, Unit? baseDimension
+ String label, num? yieldQty, Unit? baseDimension, String? innerLabel, num? innerQty, num? innerCount
 });
 
 
@@ -62,12 +62,15 @@ class _$PackageSpecCopyWithImpl<$Res>
 
 /// Create a copy of PackageSpec
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimension = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimension = freezed,Object? innerLabel = freezed,Object? innerQty = freezed,Object? innerCount = freezed,}) {
   return _then(_self.copyWith(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,yieldQty: freezed == yieldQty ? _self.yieldQty : yieldQty // ignore: cast_nullable_to_non_nullable
 as num?,baseDimension: freezed == baseDimension ? _self.baseDimension : baseDimension // ignore: cast_nullable_to_non_nullable
-as Unit?,
+as Unit?,innerLabel: freezed == innerLabel ? _self.innerLabel : innerLabel // ignore: cast_nullable_to_non_nullable
+as String?,innerQty: freezed == innerQty ? _self.innerQty : innerQty // ignore: cast_nullable_to_non_nullable
+as num?,innerCount: freezed == innerCount ? _self.innerCount : innerCount // ignore: cast_nullable_to_non_nullable
+as num?,
   ));
 }
 /// Create a copy of PackageSpec
@@ -164,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  Unit? baseDimension)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  Unit? baseDimension,  String? innerLabel,  num? innerQty,  num? innerCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PackageSpec() when $default != null:
-return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimension,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   return orElse();
 
 }
@@ -185,10 +188,10 @@ return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  Unit? baseDimension)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  Unit? baseDimension,  String? innerLabel,  num? innerQty,  num? innerCount)  $default,) {final _that = this;
 switch (_that) {
 case _PackageSpec():
-return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimension,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -205,10 +208,10 @@ return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  num? yieldQty,  Unit? baseDimension)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  num? yieldQty,  Unit? baseDimension,  String? innerLabel,  num? innerQty,  num? innerCount)?  $default,) {final _that = this;
 switch (_that) {
 case _PackageSpec() when $default != null:
-return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimension,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   return null;
 
 }
@@ -219,13 +222,16 @@ return $default(_that.label,_that.yieldQty,_that.baseDimension);case _:
 /// @nodoc
 
 
-class _PackageSpec implements PackageSpec {
-  const _PackageSpec({required this.label, this.yieldQty, this.baseDimension});
+class _PackageSpec extends PackageSpec {
+  const _PackageSpec({required this.label, this.yieldQty, this.baseDimension, this.innerLabel, this.innerQty, this.innerCount}): super._();
   
 
 @override final  String label;
 @override final  num? yieldQty;
 @override final  Unit? baseDimension;
+@override final  String? innerLabel;
+@override final  num? innerQty;
+@override final  num? innerCount;
 
 /// Create a copy of PackageSpec
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +243,16 @@ _$PackageSpecCopyWith<_PackageSpec> get copyWith => __$PackageSpecCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackageSpec&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimension, baseDimension) || other.baseDimension == baseDimension));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackageSpec&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimension, baseDimension) || other.baseDimension == baseDimension)&&(identical(other.innerLabel, innerLabel) || other.innerLabel == innerLabel)&&(identical(other.innerQty, innerQty) || other.innerQty == innerQty)&&(identical(other.innerCount, innerCount) || other.innerCount == innerCount));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimension);
+int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimension,innerLabel,innerQty,innerCount);
 
 @override
 String toString() {
-  return 'PackageSpec(label: $label, yieldQty: $yieldQty, baseDimension: $baseDimension)';
+  return 'PackageSpec(label: $label, yieldQty: $yieldQty, baseDimension: $baseDimension, innerLabel: $innerLabel, innerQty: $innerQty, innerCount: $innerCount)';
 }
 
 
@@ -257,7 +263,7 @@ abstract mixin class _$PackageSpecCopyWith<$Res> implements $PackageSpecCopyWith
   factory _$PackageSpecCopyWith(_PackageSpec value, $Res Function(_PackageSpec) _then) = __$PackageSpecCopyWithImpl;
 @override @useResult
 $Res call({
- String label, num? yieldQty, Unit? baseDimension
+ String label, num? yieldQty, Unit? baseDimension, String? innerLabel, num? innerQty, num? innerCount
 });
 
 
@@ -274,12 +280,15 @@ class __$PackageSpecCopyWithImpl<$Res>
 
 /// Create a copy of PackageSpec
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimension = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimension = freezed,Object? innerLabel = freezed,Object? innerQty = freezed,Object? innerCount = freezed,}) {
   return _then(_PackageSpec(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,yieldQty: freezed == yieldQty ? _self.yieldQty : yieldQty // ignore: cast_nullable_to_non_nullable
 as num?,baseDimension: freezed == baseDimension ? _self.baseDimension : baseDimension // ignore: cast_nullable_to_non_nullable
-as Unit?,
+as Unit?,innerLabel: freezed == innerLabel ? _self.innerLabel : innerLabel // ignore: cast_nullable_to_non_nullable
+as String?,innerQty: freezed == innerQty ? _self.innerQty : innerQty // ignore: cast_nullable_to_non_nullable
+as num?,innerCount: freezed == innerCount ? _self.innerCount : innerCount // ignore: cast_nullable_to_non_nullable
+as num?,
   ));
 }
 

@@ -41,5 +41,44 @@ void main() {
       expect(json['baseDimensionSymbol'], isNull);
       expect(json['baseDimensionKind'], isNull);
     });
+
+    test('a two-level spec (salmas caja = 8 bolsas x 3 u) survives '
+        'fromEntity->toJson->fromJson->toEntity', () {
+      // Arrange
+      const entity = PackageSpec(
+        label: 'caja',
+        innerLabel: 'bolsa',
+        innerQty: 3,
+        innerCount: 8,
+      );
+
+      // Act
+      final json = PackageSpecDTO.fromEntity(entity).toJson();
+      final result = PackageSpecDTO.fromJson(json).toEntity();
+
+      // Assert
+      expect(result, entity);
+      expect(result.effectiveYieldQty, 24);
+      expect(json['innerLabel'], 'bolsa');
+      expect(json['innerQty'], 3);
+      expect(json['innerCount'], 8);
+    });
+
+    test('an existing document with NO inner keys reads back with null inner '
+        'fields and its legacy yieldQty intact', () {
+      // Arrange — the exact shape already stored in Firestore today.
+      const stored = <String, dynamic>{'label': 'caja', 'yieldQty': 24};
+
+      // Act
+      final result = PackageSpecDTO.fromJson(stored).toEntity();
+
+      // Assert
+      expect(result.label, 'caja');
+      expect(result.yieldQty, 24);
+      expect(result.innerLabel, isNull);
+      expect(result.innerQty, isNull);
+      expect(result.innerCount, isNull);
+      expect(result.effectiveYieldQty, 24);
+    });
   });
 }

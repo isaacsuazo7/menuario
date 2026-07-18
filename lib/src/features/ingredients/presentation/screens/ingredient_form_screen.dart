@@ -9,6 +9,7 @@ import 'package:menuario/src/features/ingredients/presentation/providers/ingredi
 import 'package:menuario/src/features/ingredients/presentation/providers/ingredients_list_provider.dart';
 import 'package:menuario/src/features/provisioning/presentation/providers/pantry_controller.dart';
 import 'package:menuario/src/features/recipes/presentation/providers/ingredients_by_id_provider.dart';
+import 'package:menuario/src/shared/presentation/single_emoji_input_formatter.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:reactive_forms/reactive_forms.dart';
 
@@ -167,6 +168,7 @@ class _IngredientFormBody extends ConsumerWidget {
               ReactiveTextField<String>(
                 key: const Key('ingredient-emoji-field'),
                 formControlName: 'emoji',
+                inputFormatters: const [SingleEmojiInputFormatter()],
                 decoration: const InputDecoration(
                   labelText: 'Emoji (opcional)',
                 ),
@@ -254,39 +256,9 @@ class _IngredientFormBody extends ConsumerWidget {
                 onSelectionChanged: (selection) =>
                     form.control('needType').value = selection.first,
               ),
-              if (modeChoice == IngredientModeChoice.package) ...[
+              if (IngredientFormController.allowsPackage(form)) ...[
                 MenuarioSpacing.gapV16,
-                ReactiveTextField<String>(
-                  key: const Key('ingredient-package-label-field'),
-                  formControlName: 'packageLabel',
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre del paquete (ej. bolsa, caja, pana)',
-                  ),
-                ),
-                MenuarioSpacing.gapV16,
-                ReactiveTextField<String>(
-                  key: const Key('ingredient-package-yield-field'),
-                  formControlName: 'packageYield',
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(labelText: '¿Cuánto trae?'),
-                ),
-                MenuarioSpacing.gapV16,
-                DropdownButtonFormField<Unit?>(
-                  key: const Key('ingredient-package-base-unit-field'),
-                  initialValue: form.control('packageBaseUnit').value as Unit?,
-                  decoration: const InputDecoration(labelText: 'Unidad base'),
-                  items: [
-                    for (final unit in ingredientBaseUnitOptions)
-                      DropdownMenuItem(
-                        value: unit,
-                        child: Text(ingredientBaseUnitLabel(unit)),
-                      ),
-                  ],
-                  onChanged: (value) =>
-                      form.control('packageBaseUnit').value = value,
-                ),
+                _PackageSection(form: form, modeChoice: modeChoice),
               ],
               if (allowsConversionFactor) ...[
                 MenuarioSpacing.gapV16,
@@ -334,6 +306,137 @@ class _IngredientFormBody extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// How the ingredient is PACKAGED for purchase.
+///
+/// For `Por paquete` the package IS the stock unit, so its name, yield and
+/// base unit are required together. For `Por unidad` the ingredient is
+/// stocked and consumed in units but may still be BOUGHT by the pack
+/// (salmas: 1 caja = 8 bolsas × 3 u) — the whole block is then optional and
+/// exists only so purchases round up to whole packs, which is why the base
+/// unit is not offered there (the total is already in units).
+class _PackageSection extends StatelessWidget {
+  const _PackageSection({required this.form, required this.modeChoice});
+
+  final FormGroup form;
+  final IngredientModeChoice modeChoice;
+
+  @override
+  Widget build(BuildContext context) {
+    final isCount = modeChoice == IngredientModeChoice.count;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (isCount) ...[
+          Text('Cómo lo comprás (opcional)', style: MenuarioTypography.body),
+          MenuarioSpacing.gapV8,
+        ],
+        ReactiveTextField<String>(
+          key: const Key('ingredient-package-label-field'),
+          formControlName: 'packageLabel',
+          decoration: InputDecoration(
+            labelText: isCount
+                ? 'Nombre del paquete (ej. caja)'
+                : 'Nombre del paquete (ej. bolsa, caja, pana)',
+          ),
+        ),
+        MenuarioSpacing.gapV16,
+        ReactiveTextField<String>(
+          key: const Key('ingredient-package-yield-field'),
+          formControlName: 'packageYield',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: isCount
+                ? '¿Cuántas unidades trae en total?'
+                : '¿Cuánto trae?',
+          ),
+        ),
+        if (!isCount) ...[
+          MenuarioSpacing.gapV16,
+          DropdownButtonFormField<Unit?>(
+            key: const Key('ingredient-package-base-unit-field'),
+            initialValue: form.control('packageBaseUnit').value as Unit?,
+            decoration: const InputDecoration(labelText: 'Unidad base'),
+            items: [
+              for (final unit in ingredientBaseUnitOptions)
+                DropdownMenuItem(
+                  value: unit,
+                  child: Text(ingredientBaseUnitLabel(unit)),
+                ),
+            ],
+            onChanged: (value) => form.control('packageBaseUnit').value = value,
+          ),
+        ],
+        MenuarioSpacing.gapV16,
+        _InnerPackSection(form: form),
+      ],
+    );
+  }
+}
+
+/// The OPTIONAL second packaging level: an outer pack (caja) holding N
+/// inner packs (bolsas) of M units each.
+///
+/// Both quantities are optional — leaving them empty keeps the package
+/// single-level, exactly as before. Filling them derives the total units
+/// per outer pack and shows it as helper text, so the user never
+/// hand-multiplies (which is where their numbers went wrong).
+class _InnerPackSection extends StatelessWidget {
+  const _InnerPackSection({required this.form});
+
+  final FormGroup form;
+
+  @override
+  Widget build(BuildContext context) {
+    final helperText = IngredientFormController.innerPackHelperText(form);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '¿La caja trae paquetes adentro? (opcional)',
+          style: MenuarioTypography.body,
+        ),
+        MenuarioSpacing.gapV8,
+        ReactiveTextField<String>(
+          key: const Key('ingredient-package-inner-label-field'),
+          formControlName: 'packageInnerLabel',
+          decoration: const InputDecoration(
+            labelText: 'Nombre del paquete interno (ej. bolsa)',
+          ),
+        ),
+        MenuarioSpacing.gapV16,
+        ReactiveTextField<String>(
+          key: const Key('ingredient-package-inner-qty-field'),
+          formControlName: 'packageInnerQty',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: '¿Cuántas unidades trae cada paquete interno?',
+          ),
+        ),
+        MenuarioSpacing.gapV16,
+        ReactiveTextField<String>(
+          key: const Key('ingredient-package-inner-count-field'),
+          formControlName: 'packageInnerCount',
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: '¿Cuántos paquetes internos trae?',
+          ),
+        ),
+        if (helperText != null) ...[
+          MenuarioSpacing.gapV8,
+          Text(
+            helperText,
+            style: MenuarioTypography.body.withColor(
+              Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

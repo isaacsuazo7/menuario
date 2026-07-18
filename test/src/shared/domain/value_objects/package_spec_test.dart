@@ -60,4 +60,107 @@ void main() {
       expect(updated.yieldQty, 2);
     });
   });
+
+  group('PackageSpec.effectiveYieldQty', () {
+    test('multiplies the inner level when innerQty and innerCount are both '
+        'set (salmas caja = 8 bolsas x 3 u)', () {
+      // Arrange & Act
+      const salmas = PackageSpec(
+        label: 'caja',
+        innerLabel: 'bolsa',
+        innerQty: 3,
+        innerCount: 8,
+      );
+
+      // Assert
+      expect(salmas.effectiveYieldQty, 24);
+    });
+
+    test('the inner product wins over a stale hand-computed yieldQty', () {
+      // Arrange & Act
+      const galletas = PackageSpec(
+        label: 'caja',
+        yieldQty: 99,
+        innerLabel: 'bolsa',
+        innerQty: 2,
+        innerCount: 10,
+      );
+
+      // Assert
+      expect(galletas.effectiveYieldQty, 20);
+    });
+
+    test('falls back to yieldQty when no inner level is described', () {
+      // Arrange & Act
+      const legacy = PackageSpec(label: 'caja', yieldQty: 24);
+
+      // Assert
+      expect(legacy.effectiveYieldQty, 24);
+    });
+
+    test('falls back to yieldQty when only one inner field is set', () {
+      // Arrange & Act
+      const halfFilled = PackageSpec(
+        label: 'caja',
+        yieldQty: 24,
+        innerLabel: 'bolsa',
+        innerQty: 3,
+      );
+
+      // Assert
+      expect(halfFilled.effectiveYieldQty, 24);
+    });
+
+    test('is null when neither yieldQty nor a complete inner level is set', () {
+      // Arrange & Act
+      const abstract = PackageSpec(label: 'bolsa');
+
+      // Assert
+      expect(abstract.effectiveYieldQty, isNull);
+    });
+  });
+
+  group('PackageSpec.innerBreakdown', () {
+    test('renders the two-level breakdown, pluralizing the inner label', () {
+      // Arrange & Act
+      const salmas = PackageSpec(
+        label: 'caja',
+        innerLabel: 'bolsa',
+        innerQty: 3,
+        innerCount: 8,
+      );
+
+      // Assert
+      expect(salmas.innerBreakdown, '8 bolsas × 3 u');
+    });
+
+    test('keeps the inner label singular for a single inner pack', () {
+      // Arrange & Act
+      const single = PackageSpec(
+        label: 'caja',
+        innerLabel: 'bolsa',
+        innerQty: 3,
+        innerCount: 1,
+      );
+
+      // Assert
+      expect(single.innerBreakdown, '1 bolsa × 3 u');
+    });
+
+    test('defaults the inner label when only the quantities are known', () {
+      // Arrange & Act
+      const unlabeled = PackageSpec(label: 'caja', innerQty: 2, innerCount: 10);
+
+      // Assert
+      expect(unlabeled.innerBreakdown, '10 paquetes × 2 u');
+    });
+
+    test('is null for a single-level package', () {
+      // Arrange & Act
+      const legacy = PackageSpec(label: 'caja', yieldQty: 24);
+
+      // Assert
+      expect(legacy.innerBreakdown, isNull);
+    });
+  });
 }

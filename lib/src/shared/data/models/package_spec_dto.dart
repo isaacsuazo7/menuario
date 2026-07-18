@@ -12,6 +12,11 @@ part 'package_spec_dto.g.dart';
 /// [PackageSpec.baseDimension] (a full [Unit] value object, not just a
 /// symbol string) without hardcoding a symbol->[Unit] lookup table; both
 /// are null for packageAbstract packages, which carry no base dimension.
+///
+/// [innerLabel]/[innerQty]/[innerCount] round-trip [PackageSpec]'s
+/// optional inner nesting level. All three are nullable and absent from
+/// every document written before this rollout, so an existing Firestore
+/// map simply deserializes them to null — no migration, no crash.
 @freezed
 abstract class PackageSpecDTO with _$PackageSpecDTO {
   const factory PackageSpecDTO({
@@ -19,6 +24,9 @@ abstract class PackageSpecDTO with _$PackageSpecDTO {
     num? yieldQty,
     String? baseDimensionSymbol,
     String? baseDimensionKind,
+    String? innerLabel,
+    num? innerQty,
+    num? innerCount,
   }) = _PackageSpecDTO;
 
   const PackageSpecDTO._();
@@ -33,6 +41,9 @@ abstract class PackageSpecDTO with _$PackageSpecDTO {
       yieldQty: entity.yieldQty,
       baseDimensionSymbol: entity.baseDimension?.symbol,
       baseDimensionKind: entity.baseDimension?.dimension.name,
+      innerLabel: entity.innerLabel,
+      innerQty: entity.innerQty,
+      innerCount: entity.innerCount,
     );
   }
 }
@@ -50,6 +61,9 @@ extension PackageSpecDTOX on PackageSpecDTO {
               symbol: baseDimensionSymbol!,
               dimension: UnitDimension.values.byName(baseDimensionKind!),
             ),
+      innerLabel: innerLabel,
+      innerQty: innerQty,
+      innerCount: innerCount,
     );
   }
 }

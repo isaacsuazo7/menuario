@@ -12,6 +12,9 @@ _PackageSpecDTO _$PackageSpecDTOFromJson(Map<String, dynamic> json) =>
       yieldQty: json['yieldQty'] as num?,
       baseDimensionSymbol: json['baseDimensionSymbol'] as String?,
       baseDimensionKind: json['baseDimensionKind'] as String?,
+      innerLabel: json['innerLabel'] as String?,
+      innerQty: json['innerQty'] as num?,
+      innerCount: json['innerCount'] as num?,
     );
 
 Map<String, dynamic> _$PackageSpecDTOToJson(_PackageSpecDTO instance) =>
@@ -20,4 +23,7 @@ Map<String, dynamic> _$PackageSpecDTOToJson(_PackageSpecDTO instance) =>
       'yieldQty': instance.yieldQty,
       'baseDimensionSymbol': instance.baseDimensionSymbol,
       'baseDimensionKind': instance.baseDimensionKind,
+      'innerLabel': instance.innerLabel,
+      'innerQty': instance.innerQty,
+      'innerCount': instance.innerCount,
     };
