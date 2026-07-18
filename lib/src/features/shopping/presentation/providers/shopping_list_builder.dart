@@ -162,18 +162,61 @@ class ShoppingListBuilder {
         isBooleanTracked: false,
         pantryItem: pantryItem,
         pantryExists: pantryExists,
-        quantityDisplay: purchase?.display,
+        quantityDisplay: purchase == null
+            ? null
+            : purchaseDisplayFor(purchase: purchase, ingredient: ingredient),
       ),
     );
   }
 }
 
+/// [PurchaseQuantity.display], annotated with the two-level breakdown when
+/// [ingredient] is bought in an outer pack that nests inner ones — e.g.
+/// `'1 caja (8 bolsas × 3 u)'`, so the shopper sees WHY one caja covers the
+/// shortfall without re-multiplying it themselves.
+///
+/// Single-level packages (and every non-package purchase shape) render
+/// exactly as before.
+String purchaseDisplayFor({
+  required PurchaseQuantity purchase,
+  required Ingredient ingredient,
+}) {
+  final breakdown = ingredient.package?.innerBreakdown;
+  if (purchase is! PackagePurchase || breakdown == null) {
+    return purchase.display;
+  }
+  return '${purchase.display} ($breakdown)';
+}
+
+/// [PackageSpec.effectiveYieldQty] only when it can actually divide a
+/// shortfall, else `null` — "no hay empaque usable".
+///
+/// A legacy or hand-edited Firestore doc can carry `yieldQty: 0` (making
+/// [MeasurementConverter.toPurchaseQuantity]'s `(value / yieldQty).ceil()`
+/// throw `UnsupportedError` on `Infinity`, outside any `Either`) or a
+/// negative one (rendering "-3 caja", since [PurchaseQuantity]'s
+/// `packs >= 0` check is an `assert` stripped in release). A `?? 1`
+/// fallback catches neither, because both values are non-null.
+num? _usableYieldQty(Ingredient ingredient) {
+  final total = ingredient.package?.effectiveYieldQty;
+  if (total == null || total <= 0) return null;
+  return total;
+}
+
 /// The default purchase [Presentation] synthesized for an ingredient absent
 /// from the pantry (assume-zero anchor), derived from
 /// [Ingredient.measurementMode] rather than the legacy `measurementKind`/
-/// `booleanTracked` pair: `mass` -> `counter`, `count` -> `loose`,
-/// `packageBase` -> `package` (its own `yieldQty`/`label`), `packageAbstract`
-/// -> `package` (a single decimal pack of its own `label`).
+/// `booleanTracked` pair: `mass` -> `counter`, `count` -> `package` when it
+/// carries a [PackageSpec.effectiveYieldQty] (e.g. salmas caja = 8 bolsas ×
+/// 3 u = 24, so a 3 u shortfall buys 1 caja, not 3 loose units) else
+/// `loose`, `packageBase` -> `package` (its own `effectiveYieldQty`/
+/// `label`), `packageAbstract` -> `package` (a single decimal pack of its
+/// own `label`).
+///
+/// Always reads [PackageSpec.effectiveYieldQty], never the raw `yieldQty`,
+/// so a two-level package rounds up to whole OUTER packs off its DERIVED
+/// total rather than a hand-multiplied one — and only when that total is
+/// usable, see [_usableYieldQty].
 ///
 /// Keeps [MeasurementConverter.toPurchaseQuantity]'s ceiling behavior fed
 /// with the [Presentation] shape it still expects, without
@@ -185,9 +228,15 @@ class ShoppingListBuilder {
 Presentation presentationForPurchase(Ingredient ingredient) {
   return switch (ingredient.measurementMode) {
     MeasurementMode.mass => const Presentation.counter(),
-    MeasurementMode.count => const Presentation.loose(),
+    MeasurementMode.count => switch (_usableYieldQty(ingredient)) {
+      final num yieldQty => Presentation.package(
+        yieldQty: yieldQty,
+        label: ingredient.package?.label ?? 'paquete',
+      ),
+      null => const Presentation.loose(),
+    },
     MeasurementMode.packageBase => Presentation.package(
-      yieldQty: ingredient.package?.yieldQty ?? 1,
+      yieldQty: _usableYieldQty(ingredient) ?? 1,
       label: ingredient.package?.label ?? 'paquete',
     ),
     MeasurementMode.packageAbstract => Presentation.package(

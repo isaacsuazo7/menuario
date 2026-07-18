@@ -167,6 +167,32 @@ void main() {
         expect(lenses[1].canonicalPerUnit, 1);
       });
 
+      test('packageBase mode with a two-level package derives the pack '
+          'lens factor, ignoring a stale hand-written yieldQty', () {
+        // Arrange — 3 u x 8 bolsas = 24, while yieldQty still says 10.
+        const galletas = Ingredient(
+          id: 'ingredient-galletas',
+          name: 'Galletas de arroz',
+          category: Category.cereal,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'caja',
+            yieldQty: 10,
+            baseDimension: Unit.count,
+            innerLabel: 'bolsa',
+            innerQty: 3,
+            innerCount: 8,
+          ),
+        );
+
+        // Act
+        final lenses = service.lensesFor(galletas);
+
+        // Assert
+        expect(lenses[0].label, 'caja');
+        expect(lenses[0].canonicalPerUnit, 24);
+      });
+
       test('packageAbstract mode offers a single decimal package lens '
           '(lechuga bolsa)', () {
         // Act

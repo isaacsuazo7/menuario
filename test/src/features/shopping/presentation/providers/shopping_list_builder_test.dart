@@ -88,6 +88,63 @@ void main() {
       },
     );
 
+    test('a two-level packaged ingredient rounds up to whole OUTER packs and '
+        'surfaces the breakdown (3 u short -> 1 caja)', () {
+      // Arrange
+      const salmas = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(
+          label: 'caja',
+          innerLabel: 'bolsa',
+          innerQty: 3,
+          innerCount: 8,
+        ),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-salmas': Right(Quantity(value: 3, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-salmas': salmas},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      final row = result.groups.single.rows.single;
+      expect(row.quantityDisplay, '1 caja (8 bolsas × 3 u)');
+    });
+
+    test('a legacy single-level packaged ingredient still rounds a 3 u '
+        'shortfall to 1 caja, with no breakdown', () {
+      // Arrange — the shape already stored in Firestore today.
+      const salmas = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: 24),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-salmas': Right(Quantity(value: 3, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-salmas': salmas},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      final row = result.groups.single.rows.single;
+      expect(row.quantityDisplay, '1 caja');
+    });
+
     test('a fully-stocked ingredient does not appear', () {
       // Arrange
       const huevoStock = PantryItem.quantityTracked(
@@ -263,6 +320,88 @@ void main() {
       expect(result.skipped, isEmpty);
     });
 
+    test('a count ingredient WITH a package rounds a small shortfall up to a '
+        'whole package (salmas 3 u short, caja yields 24 -> 1 caja), not '
+        'loose units', () {
+      // Arrange
+      const salmas = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: 24),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-salmas': Right(Quantity(value: 3, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-salmas': salmas},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      final row = result.groups.single.rows.single;
+      expect(row.ingredientId, 'ing-salmas');
+      expect(row.quantityDisplay, '1 caja');
+    });
+
+    test('a count ingredient WITHOUT a package still buys loose units '
+        '(banano 3 u short -> 3 unidades)', () {
+      // Arrange
+      const banano = Ingredient(
+        id: 'ing-banano',
+        name: 'Banano',
+        category: Category.fruta,
+        measurementMode: MeasurementMode.count,
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-banano': Right(Quantity(value: 3, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-banano': banano},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      final row = result.groups.single.rows.single;
+      expect(row.ingredientId, 'ing-banano');
+      expect(row.quantityDisplay, '3 unidades');
+    });
+
+    test('a count ingredient whose weekly consumption failed for a missing '
+        'conversion factor is skipped as needsFactor, not other (tomate '
+        'consumed in taza without a factor)', () {
+      // Arrange — mirrors weeklyNeed returning Left(missingConversionFactor)
+      // for a count ingredient consumed in a non-count unit with no factor.
+      const tomate = Ingredient(
+        id: 'ing-tomate',
+        name: 'Tomate',
+        category: Category.vegetal,
+        measurementMode: MeasurementMode.count,
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: <String, Either<Failure, Quantity>>{
+          'ing-tomate': Left(Failure.missingConversionFactor('Tomate')),
+        },
+        ingredientsById: const {'ing-tomate': tomate},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.groups, isEmpty);
+      expect(result.skipped, hasLength(1));
+      expect(result.skipped.single.name, 'Tomate');
+      expect(result.skipped.single.reason, SkipReason.needsFactor);
+    });
+
     test('a weeklyFixed ingredient with less than 1 package in stock appears '
         'in Comprar (buy 1) — the map already carries its 1-package need, '
         'the builder needs no NeedType branching of its own', () {
@@ -296,6 +435,70 @@ void main() {
       expect(row.ingredientId, 'ing-espinaca');
       expect(row.quantityDisplay, '1 bolsa');
     });
+
+    test('a malformed package (yieldQty 0) degrades that row to loose units '
+        'and the rest of the list still renders', () {
+      // Arrange — un doc legacy/editado a mano con un total inválido.
+      const salmas = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: 0),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-salmas': Right(Quantity(value: 3, unit: Unit.count)),
+          'ing-platano': Right(Quantity(value: 2, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-salmas': salmas, 'ing-platano': platano},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      final rows = [for (final group in result.groups) ...group.rows];
+      expect(rows, hasLength(2));
+      expect(
+        rows
+            .firstWhere((row) => row.ingredientId == 'ing-salmas')
+            .quantityDisplay,
+        '3 unidades',
+      );
+      expect(
+        rows
+            .firstWhere((row) => row.ingredientId == 'ing-platano')
+            .quantityDisplay,
+        '2 unidades',
+      );
+    });
+
+    test('a negative package total degrades that row to loose units instead '
+        'of rendering a negative pack count', () {
+      // Arrange
+      const salmas = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: -3),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-salmas': Right(Quantity(value: 3, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-salmas': salmas},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      expect(result.groups.single.rows.single.quantityDisplay, '3 unidades');
+    });
   });
 
   group('presentationForPurchase adapter', () {
@@ -310,7 +513,7 @@ void main() {
       expect(presentationForPurchase(ingredient), const Presentation.counter());
     });
 
-    test('count mode maps to a loose presentation', () {
+    test('count mode WITHOUT a package maps to a loose presentation', () {
       const ingredient = Ingredient(
         id: 'ing-platano',
         name: 'Plátano',
@@ -319,6 +522,22 @@ void main() {
       );
 
       expect(presentationForPurchase(ingredient), const Presentation.loose());
+    });
+
+    test('count mode WITH a package maps to a package presentation using its '
+        'yieldQty and label (salmas caja/24)', () {
+      const ingredient = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: 24),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 24, label: 'caja'),
+      );
     });
 
     test('packageBase mode maps to a package presentation using its yieldQty '
@@ -331,6 +550,93 @@ void main() {
         package: PackageSpec(
           label: 'bolsa',
           yieldQty: 1,
+          baseDimension: Unit.liter,
+        ),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+      );
+    });
+
+    test('count mode WITH a two-level package uses the derived total units '
+        'per outer pack (salmas caja = 8 bolsas x 3 u)', () {
+      const ingredient = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(
+          label: 'caja',
+          innerLabel: 'bolsa',
+          innerQty: 3,
+          innerCount: 8,
+        ),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 24, label: 'caja'),
+      );
+    });
+
+    test('packageBase mode with a two-level package uses the derived '
+        'total', () {
+      const ingredient = Ingredient(
+        id: 'ing-galletas',
+        name: 'Galletas de arroz',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'caja',
+          baseDimension: Unit.count,
+          innerLabel: 'bolsa',
+          innerQty: 2,
+          innerCount: 10,
+        ),
+      );
+
+      expect(
+        presentationForPurchase(ingredient),
+        const Presentation.package(yieldQty: 20, label: 'caja'),
+      );
+    });
+
+    test('count mode with a non-positive package total falls back to loose, '
+        'never feeding a zero divisor to the converter', () {
+      const zeroYield = Ingredient(
+        id: 'ing-salmas',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: 0),
+      );
+      const negativeYield = Ingredient(
+        id: 'ing-salmas-neg',
+        name: 'Salmas',
+        category: Category.cereal,
+        measurementMode: MeasurementMode.count,
+        package: PackageSpec(label: 'caja', yieldQty: -3),
+      );
+
+      expect(presentationForPurchase(zeroYield), const Presentation.loose());
+      expect(
+        presentationForPurchase(negativeYield),
+        const Presentation.loose(),
+      );
+    });
+
+    test('packageBase mode with a non-positive package total falls back to a '
+        'safe 1-unit pack', () {
+      const ingredient = Ingredient(
+        id: 'ing-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: 0,
           baseDimension: Unit.liter,
         ),
       );

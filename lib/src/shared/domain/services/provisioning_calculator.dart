@@ -101,15 +101,16 @@ class ProvisioningCalculator {
   }
 
   /// "1 whole package" for [ingredient], in its canonical stock unit: for
-  /// `packageBase`, the package's own `yieldQty` expressed in its base
-  /// dimension (e.g. leche bolsa=1 L -> 1 L); for every other mode, a bare
+  /// `packageBase`, the package's own `effectiveYieldQty` (the DERIVED
+  /// total, never the raw `yieldQty`) expressed in its base dimension
+  /// (e.g. leche bolsa=1 L -> 1 L); for every other mode, a bare
   /// `1` in the canonical unit (`packageAbstract` -> 1 'paq', `count` -> 1
   /// unit, `mass` -> 1 g as a defensive fallback — `weeklyFixed` is not
   /// expected on mass-mode ingredients in practice).
   Quantity _oneWeeklyPackage(Ingredient ingredient) {
     final unit = _lensService.canonicalUnitFor(ingredient);
     final value = ingredient.measurementMode == MeasurementMode.packageBase
-        ? (ingredient.package?.yieldQty ?? 1)
+        ? (ingredient.package?.effectiveYieldQty ?? 1)
         : 1;
     return Quantity(value: value, unit: unit);
   }
