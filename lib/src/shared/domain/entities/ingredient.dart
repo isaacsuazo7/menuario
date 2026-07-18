@@ -10,11 +10,12 @@ part 'ingredient.freezed.dart';
 /// how to convert its recipe-unit quantities into its stock unit.
 ///
 /// [conversionFactor] is the per-ingredient recipe-unit → stock-unit
-/// multiplier (e.g. 85 g/taza for avena). It only applies to continuous
-/// ([MeasurementMode.mass]/[MeasurementMode.packageBase]/
-/// [MeasurementMode.packageAbstract]) ingredients; [MeasurementMode.count]
-/// ingredients need none, since their recipe unit already equals their
-/// stock unit. Seeded values are loaded later at pantry data-entry time.
+/// multiplier (e.g. 85 g/taza for avena). It is required in EVERY mode —
+/// [MeasurementMode.count] included — whenever a recipe quantity is not
+/// already expressed in the ingredient's canonical stock unit (e.g. tomate
+/// stocked in `u` but a recipe asking for `1 taza`); a quantity already in
+/// that unit needs none. Optional for count ingredients in the form, since
+/// most of them are only ever asked for in `u`.
 ///
 /// [measurementMode] drives `StockLensService`'s lens set, canonical unit
 /// and formatter; [package] describes a packageBase/packageAbstract

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/provisioning/presentation/screens/provisioning_screen.dart';
+import 'package:menuario/src/features/shopping/presentation/providers/provisioning_tab_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -194,5 +195,109 @@ void main() {
         expect(navigator.canPop(), isFalse);
       },
     );
+
+    group('swipe <-> toggle sync', () {
+      // Lee el container real del árbol para probar la sincronización
+      // bidireccional, no solo el cambio visual.
+      ProviderContainer containerOf(WidgetTester tester) {
+        return ProviderScope.containerOf(
+          tester.element(find.byType(PageView)),
+          listen: false,
+        );
+      }
+
+      double? pageOf(WidgetTester tester) {
+        return tester.widget<PageView>(find.byType(PageView)).controller?.page;
+      }
+
+      Future<void> pumpWithStubs(WidgetTester tester) async {
+        when(
+          () => mockPantryRepository.list(),
+        ).thenAnswer((_) async => const Right([avenaItem]));
+        when(
+          () => mockIngredientRepository.list(),
+        ).thenAnswer((_) async => const Right([avena]));
+        when(
+          () => mockWeekPlanRepository.getActive(),
+        ).thenAnswer((_) async => const Right(WeekPlan(entries: [])));
+        when(
+          () => mockRecipeRepository.list(),
+        ).thenAnswer((_) async => const Right([]));
+
+        await pumpScreenWithComprar(tester);
+        await tester.pumpAndSettle();
+      }
+
+      testWidgets('swiping left shows Comprar and moves the tab provider', (
+        tester,
+      ) async {
+        await pumpWithStubs(tester);
+        final container = containerOf(tester);
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.despensa,
+        );
+
+        await tester.drag(find.byType(PageView), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+
+        expect(find.text('ya tenés todo lo necesario'), findsOneWidget);
+        expect(find.text('Avena'), findsNothing);
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.comprar,
+        );
+        expect(pageOf(tester), 1.0);
+      });
+
+      testWidgets('swiping back right returns to Despensa and the tab '
+          'provider follows', (tester) async {
+        await pumpWithStubs(tester);
+        final container = containerOf(tester);
+
+        await tester.drag(find.byType(PageView), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.comprar,
+        );
+
+        await tester.drag(find.byType(PageView), const Offset(500, 0));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Avena'), findsOneWidget);
+        expect(find.text('ya tenés todo lo necesario'), findsNothing);
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.despensa,
+        );
+        expect(pageOf(tester), 0.0);
+      });
+
+      testWidgets('tapping the SegmentedButton moves the PageView (the other '
+          'sync direction)', (tester) async {
+        await pumpWithStubs(tester);
+        final container = containerOf(tester);
+        expect(pageOf(tester), 0.0);
+
+        await tester.tap(find.text('Comprar'));
+        await tester.pumpAndSettle();
+
+        expect(pageOf(tester), 1.0);
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.comprar,
+        );
+
+        await tester.tap(find.text('Despensa'));
+        await tester.pumpAndSettle();
+
+        expect(pageOf(tester), 0.0);
+        expect(
+          container.read(provisioningTabProvider),
+          ProvisioningTab.despensa,
+        );
+      });
+    });
   });
 }

@@ -113,22 +113,22 @@ void main() {
         expect(result, const Right<Failure, Quantity>(recipeQuantity));
       });
 
-      test('count mode returns Left(unknownUnit) for a non-count recipe '
-          'unit when the ingredient has NO conversionFactor (huevo given '
-          'taza)', () {
+      test('count mode returns Left(missingConversionFactor) for a non-count '
+          'recipe unit when the ingredient has NO conversionFactor (tomate '
+          'given taza) — actionable "Necesitan factor", not "unknownUnit"', () {
         // Arrange
-        const huevo = Ingredient(
-          id: 'ingredient-huevo',
-          name: 'Huevo',
-          category: Category.proteina,
+        const tomate = Ingredient(
+          id: 'ingredient-tomate',
+          name: 'Tomate',
+          category: Category.vegetal,
           measurementMode: MeasurementMode.count,
         );
-        const recipeQuantity = Quantity(value: 3, unit: taza);
+        const recipeQuantity = Quantity(value: 1, unit: taza);
 
         // Act
         final result = converter.toStockUnit(
           recipeQuantity: recipeQuantity,
-          ingredient: huevo,
+          ingredient: tomate,
         );
 
         // Assert
@@ -137,7 +137,7 @@ void main() {
           isA<Left<Failure, Quantity>>().having(
             (left) => left.value.code,
             'code',
-            'unknownUnit',
+            'missingConversionFactor',
           ),
         );
       });
@@ -1035,8 +1035,9 @@ void main() {
         );
       });
 
-      test('kg on a count-mode ingredient still returns Left(unknownUnit), '
-          'the pre-pass does not bypass the mode gate (huevo given kg)', () {
+      test('kg on a count-mode ingredient still returns '
+          'Left(missingConversionFactor), the pre-pass normalizes kg -> g '
+          '(a non-count unit) without a factor set (huevo given kg)', () {
         // Arrange
         const huevo = Ingredient(
           id: 'ingredient-huevo',
@@ -1058,7 +1059,7 @@ void main() {
           isA<Left<Failure, Quantity>>().having(
             (left) => left.value.code,
             'code',
-            'unknownUnit',
+            'missingConversionFactor',
           ),
         );
       });

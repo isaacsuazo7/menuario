@@ -28,6 +28,7 @@ class EatBody extends ConsumerWidget {
     }
 
     return ListView(
+      padding: const EdgeInsets.only(top: MenuarioSpacing.md),
       children: [
         for (final item in items)
           PlanSlotCell(

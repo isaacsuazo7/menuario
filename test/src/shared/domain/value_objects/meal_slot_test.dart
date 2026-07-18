@@ -8,8 +8,8 @@ void main() {
       expect(MealSlot.values, [
         MealSlot.pregym,
         MealSlot.desayuno,
-        MealSlot.almuerzo,
         MealSlot.merienda,
+        MealSlot.almuerzo,
         MealSlot.cena,
       ]);
     });

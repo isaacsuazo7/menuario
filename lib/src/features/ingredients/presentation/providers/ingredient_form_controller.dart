@@ -100,6 +100,9 @@ class IngredientFormController extends Notifier<FormGroup> {
         'packageLabel': FormControl<String>(value: ''),
         'packageYield': FormControl<String>(value: ''),
         'packageBaseUnit': FormControl<Unit?>(),
+        'packageInnerLabel': FormControl<String>(value: ''),
+        'packageInnerQty': FormControl<String>(value: ''),
+        'packageInnerCount': FormControl<String>(value: ''),
         'conversionFactor': FormControl<String>(value: ''),
         'stock': FormControl<String>(value: ''),
         'haveIt': FormControl<bool>(value: false),
@@ -133,6 +136,17 @@ class IngredientFormController extends Notifier<FormGroup> {
         state.control('packageYield').value = formatNumber(package.yieldQty!);
       }
       state.control('packageBaseUnit').value = package.baseDimension;
+      state.control('packageInnerLabel').value = package.innerLabel ?? '';
+      if (package.innerQty != null) {
+        state.control('packageInnerQty').value = formatNumber(
+          package.innerQty!,
+        );
+      }
+      if (package.innerCount != null) {
+        state.control('packageInnerCount').value = formatNumber(
+          package.innerCount!,
+        );
+      }
     }
   }
 
@@ -177,29 +191,131 @@ class IngredientFormController extends Notifier<FormGroup> {
     state.control('lensOverrideLabel').value = null;
   }
 
-  /// The [PackageSpec] built from [form]'s current package fields, or
-  /// `null` when not in `Por paquete` mode or the name is still empty.
-  /// [PackageSpec.yieldQty]/[PackageSpec.baseDimension] are populated ONLY
-  /// when BOTH the yield and base-unit fields are filled.
-  static PackageSpec? packageSpec(FormGroup form) {
-    if (form.control('modeChoice').value != IngredientModeChoice.package) {
-      return null;
+  /// The trimmed text of [form]'s [name] control.
+  static String _text(FormGroup form, String name) =>
+      (form.control(name).value as String? ?? '').trim();
+
+  /// The positive [num] typed into [form]'s [name] control, or `null` when
+  /// it is empty, unparseable or non-positive.
+  static num? _positiveField(FormGroup form, String name) {
+    final value = num.tryParse(_text(form, name));
+    return (value == null || value <= 0) ? null : value;
+  }
+
+  /// Whether the package block is coherent enough to persist.
+  ///
+  /// `Por paquete` REQUIRES a package name. `Por unidad` leaves the whole
+  /// block optional, but once any detail is typed the name becomes required
+  /// too — otherwise [packageSpec] would drop those numbers on save. The
+  /// yield pairs with the base unit only where that unit is shown, and the
+  /// inner level persists only as a COMPLETE pair: a lone innerQty or
+  /// innerCount would likewise be silently dropped.
+  static bool _packageFieldsValid(FormGroup form) {
+    final label = _text(form, 'packageLabel');
+    final yieldText = _text(form, 'packageYield');
+    final innerQtyText = _text(form, 'packageInnerQty');
+    final innerCountText = _text(form, 'packageInnerCount');
+
+    if (label.isEmpty) {
+      final hasDetail =
+          yieldText.isNotEmpty ||
+          innerQtyText.isNotEmpty ||
+          innerCountText.isNotEmpty ||
+          _text(form, 'packageInnerLabel').isNotEmpty;
+      return !usesPackageAsStockUnit(form) && !hasDetail;
     }
+
+    if (yieldText.isNotEmpty && _positiveField(form, 'packageYield') == null) {
+      return false;
+    }
+    if (usesPackageAsStockUnit(form)) {
+      final hasBaseUnit = form.control('packageBaseUnit').value != null;
+      if (yieldText.isNotEmpty != hasBaseUnit) return false;
+    }
+
+    if (innerQtyText.isEmpty != innerCountText.isEmpty) return false;
+    if (innerQtyText.isNotEmpty) {
+      if (_positiveField(form, 'packageInnerQty') == null) return false;
+      if (_positiveField(form, 'packageInnerCount') == null) return false;
+    }
+    return true;
+  }
+
+  /// Whether [form]'s mode can carry a [PackageSpec] at all.
+  ///
+  /// `Por paquete` is measured BY the package; `Por unidad` is measured in
+  /// units but may still be BOUGHT by the package (salmas: stock in `u`,
+  /// purchased by whole cajas). Both therefore render and persist the
+  /// package block — for `Por unidad` it is entirely optional.
+  static bool allowsPackage(FormGroup form) {
+    final mode = form.control('modeChoice').value as IngredientModeChoice;
+    return mode == IngredientModeChoice.package ||
+        mode == IngredientModeChoice.count;
+  }
+
+  /// Whether [form]'s mode uses the package as its STOCK unit, which is the
+  /// only case where a base dimension (`Unidad base`) is meaningful.
+  static bool usesPackageAsStockUnit(FormGroup form) =>
+      form.control('modeChoice').value == IngredientModeChoice.package;
+
+  /// The [PackageSpec] built from [form]'s current package fields, or
+  /// `null` when the mode carries no package ([allowsPackage]) or the name
+  /// is still empty.
+  ///
+  /// [PackageSpec.yieldQty] is the DIRECT total one outer pack holds. In
+  /// `Por paquete` it pairs with [PackageSpec.baseDimension] and is
+  /// populated only when BOTH are filled (an unpaired yield has no unit to
+  /// live in). In `Por unidad` the total is already in whole units, so the
+  /// yield stands alone and the base dimension stays null.
+  ///
+  /// The inner level ([PackageSpec.innerQty]/[PackageSpec.innerCount]) is
+  /// likewise populated only as a complete PAIR — a half-filled inner level
+  /// would silently change [PackageSpec.effectiveYieldQty]'s fallback.
+  static PackageSpec? packageSpec(FormGroup form) {
+    if (!allowsPackage(form)) return null;
+
     final label = (form.control('packageLabel').value as String? ?? '').trim();
     if (label.isEmpty) return null;
 
-    final yieldQty = num.tryParse(
-      (form.control('packageYield').value as String? ?? '').trim(),
-    );
+    final yieldQty = _positiveField(form, 'packageYield');
     final baseUnit = form.control('packageBaseUnit').value as Unit?;
-    final hasBase = yieldQty != null && yieldQty > 0 && baseUnit != null;
+    final needsBaseUnit = usesPackageAsStockUnit(form);
+    final hasYield =
+        yieldQty != null && (!needsBaseUnit || baseUnit != null);
+
+    final innerQty = _positiveField(form, 'packageInnerQty');
+    final innerCount = _positiveField(form, 'packageInnerCount');
+    final hasInner = innerQty != null && innerCount != null;
+    final innerLabel =
+        (form.control('packageInnerLabel').value as String? ?? '').trim();
+
     return PackageSpec(
       label: label,
-      yieldQty: hasBase ? yieldQty : null,
-      baseDimension: hasBase ? baseUnit : null,
+      yieldQty: hasYield ? yieldQty : null,
+      baseDimension: hasYield && needsBaseUnit ? baseUnit : null,
+      innerLabel: hasInner && innerLabel.isNotEmpty ? innerLabel : null,
+      innerQty: hasInner ? innerQty : null,
+      innerCount: hasInner ? innerCount : null,
     );
   }
 
+  /// The "8 bolsas × 3 u = 24 u por caja" helper line, or `null` while the
+  /// inner level is still incomplete — so the user reads the total instead
+  /// of multiplying it by hand.
+  static String? innerPackHelperText(FormGroup form) {
+    final spec = packageSpec(form);
+    final breakdown = spec?.innerBreakdown;
+    final total = spec?.effectiveYieldQty;
+    if (spec == null || breakdown == null || total == null) return null;
+    return '$breakdown = ${formatNumber(total)} u por ${spec.label}';
+  }
+
+  /// The [MeasurementMode] the form currently describes.
+  ///
+  /// Only `Por paquete` resolves between packageBase/packageAbstract. `Por
+  /// unidad` stays [MeasurementMode.count] even once a package is attached
+  /// — a count ingredient bought by the caja is still STOCKED and consumed
+  /// in units; promoting it to a package mode would re-scale its pantry.
   static MeasurementMode measurementMode(FormGroup form) {
     final mode = form.control('modeChoice').value as IngredientModeChoice;
     return switch (mode) {
@@ -291,20 +407,7 @@ class IngredientFormController extends Notifier<FormGroup> {
       return true;
     }
 
-    if (mode == IngredientModeChoice.package) {
-      final label = (form.control('packageLabel').value as String? ?? '')
-          .trim();
-      if (label.isEmpty) return false;
-      final yieldText = (form.control('packageYield').value as String? ?? '')
-          .trim();
-      final hasYieldText = yieldText.isNotEmpty;
-      final hasBaseUnit = form.control('packageBaseUnit').value != null;
-      if (hasYieldText != hasBaseUnit) return false;
-      if (hasYieldText) {
-        final yieldQty = num.tryParse(yieldText);
-        if (yieldQty == null || yieldQty <= 0) return false;
-      }
-    }
+    if (allowsPackage(form) && !_packageFieldsValid(form)) return false;
 
     final canonical = canonicalStockValue(form);
     return canonical != null && canonical >= 0;

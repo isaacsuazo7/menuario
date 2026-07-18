@@ -457,6 +457,39 @@ void main() {
           const Right<Failure, Quantity>(Quantity(value: 1, unit: Unit.liter)),
         );
       });
+
+      test('weeklyFixed (packageBase) with a two-level package needs the '
+          'DERIVED total, not a stale yieldQty', () {
+        // Arrange — 2 u x 10 bolsas = 20, while yieldQty still says 7.
+        const galletasFixed = Ingredient(
+          id: 'ingredient-galletas-fixed',
+          name: 'Galletas de arroz',
+          category: Category.cereal,
+          measurementMode: MeasurementMode.packageBase,
+          package: PackageSpec(
+            label: 'caja',
+            yieldQty: 7,
+            baseDimension: Unit.count,
+            innerLabel: 'bolsa',
+            innerQty: 2,
+            innerCount: 10,
+          ),
+          needType: NeedType.weeklyFixed,
+        );
+
+        // Act
+        final result = calculator.weeklyNeed(
+          ingredient: galletasFixed,
+          recipes: const [],
+          weekPlan: const WeekPlan(entries: []),
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 20, unit: Unit.count)),
+        );
+      });
     });
 
     group('shortfall', () {

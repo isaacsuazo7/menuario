@@ -45,8 +45,9 @@ class StockLensService {
   /// - `mass`: `g` (1:1) and `lb` (453.59237 g), both decimal.
   /// - `count`: a single integer-only `u` lens.
   /// - `packageBase`: the pack lens (`package.label`, factor
-  ///   `package.yieldQty`) and the base-dimension lens (`baseDimension`'s
-  ///   symbol, 1:1), both decimal.
+  ///   `package.effectiveYieldQty` — the DERIVED total, never the raw
+  ///   `yieldQty`) and the base-dimension lens (`baseDimension`'s symbol,
+  ///   1:1), both decimal.
   /// - `packageAbstract`: a single decimal pack lens (`package.label`,
   ///   1:1).
   /// - `boolean`: no lenses — never numerically tracked.
@@ -66,7 +67,7 @@ class StockLensService {
       MeasurementMode.packageBase => [
         StockLens(
           label: ingredient.package!.label,
-          canonicalPerUnit: ingredient.package!.yieldQty ?? 1,
+          canonicalPerUnit: ingredient.package!.effectiveYieldQty ?? 1,
           allowsDecimal: true,
         ),
         StockLens(

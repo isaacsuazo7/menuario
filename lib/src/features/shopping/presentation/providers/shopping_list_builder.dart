@@ -60,9 +60,11 @@ class ShoppingListBuilder {
         skipped.add(
           SkippedItem(
             name: ingredient.name,
-            reason: failure.code == 'missingConversionFactor'
-                ? SkipReason.needsFactor
-                : SkipReason.other,
+            reason: switch (failure.code) {
+              'missingConversionFactor' => SkipReason.needsFactor,
+              'invalidPackage' => SkipReason.invalidPackage,
+              _ => SkipReason.other,
+            },
           ),
         );
         continue;
@@ -144,9 +146,16 @@ class ShoppingListBuilder {
     }
     final shortfall = (shortfallResult as Right<Failure, Quantity>).value;
 
+    final presentationResult = presentationForPurchase(ingredient);
+    if (presentationResult case Left(value: final failure)) {
+      return Left(failure);
+    }
+    final presentation =
+        (presentationResult as Right<Failure, Presentation>).value;
+
     final purchaseResult = _calculator.purchaseQuantity(
       shortfall: shortfall,
-      presentation: presentationForPurchase(ingredient),
+      presentation: presentation,
     );
     if (purchaseResult case Left(value: final failure)) {
       return Left(failure);
@@ -162,18 +171,61 @@ class ShoppingListBuilder {
         isBooleanTracked: false,
         pantryItem: pantryItem,
         pantryExists: pantryExists,
-        quantityDisplay: purchase?.display,
+        quantityDisplay: purchase == null
+            ? null
+            : purchaseDisplayFor(purchase: purchase, ingredient: ingredient),
       ),
     );
   }
 }
 
+/// [PurchaseQuantity.display], annotated with the two-level breakdown when
+/// [ingredient] is bought in an outer pack that nests inner ones — e.g.
+/// `'1 caja (8 bolsas × 3 u)'`, so the shopper sees WHY one caja covers the
+/// shortfall without re-multiplying it themselves.
+///
+/// Single-level packages (and every non-package purchase shape) render
+/// exactly as before.
+String purchaseDisplayFor({
+  required PurchaseQuantity purchase,
+  required Ingredient ingredient,
+}) {
+  final breakdown = ingredient.package?.innerBreakdown;
+  if (purchase is! PackagePurchase || breakdown == null) {
+    return purchase.display;
+  }
+  return '${purchase.display} ($breakdown)';
+}
+
+/// [PackageSpec.effectiveYieldQty] only when it can actually divide a
+/// shortfall, else `null` — "no hay empaque usable".
+///
+/// A legacy or hand-edited Firestore doc can carry `yieldQty: 0` (making
+/// [MeasurementConverter.toPurchaseQuantity]'s `(value / yieldQty).ceil()`
+/// throw `UnsupportedError` on `Infinity`, outside any `Either`) or a
+/// negative one (rendering "-3 caja", since [PurchaseQuantity]'s
+/// `packs >= 0` check is an `assert` stripped in release). A `?? 1`
+/// fallback catches neither, because both values are non-null.
+num? _usableYieldQty(Ingredient ingredient) {
+  final total = ingredient.package?.effectiveYieldQty;
+  if (total == null || total <= 0) return null;
+  return total;
+}
+
 /// The default purchase [Presentation] synthesized for an ingredient absent
 /// from the pantry (assume-zero anchor), derived from
 /// [Ingredient.measurementMode] rather than the legacy `measurementKind`/
-/// `booleanTracked` pair: `mass` -> `counter`, `count` -> `loose`,
-/// `packageBase` -> `package` (its own `yieldQty`/`label`), `packageAbstract`
-/// -> `package` (a single decimal pack of its own `label`).
+/// `booleanTracked` pair: `mass` -> `counter`, `count` -> `package` when it
+/// carries a [PackageSpec.effectiveYieldQty] (e.g. salmas caja = 8 bolsas ×
+/// 3 u = 24, so a 3 u shortfall buys 1 caja, not 3 loose units) else
+/// `loose`, `packageBase` -> `package` (its own `effectiveYieldQty`/
+/// `label`), `packageAbstract` -> `package` (a single decimal pack of its
+/// own `label`).
+///
+/// Always reads [PackageSpec.effectiveYieldQty], never the raw `yieldQty`,
+/// so a two-level package rounds up to whole OUTER packs off its DERIVED
+/// total rather than a hand-multiplied one — and only when that total is
+/// usable, see [_usableYieldQty].
 ///
 /// Keeps [MeasurementConverter.toPurchaseQuantity]'s ceiling behavior fed
 /// with the [Presentation] shape it still expects, without
@@ -182,18 +234,32 @@ class ShoppingListBuilder {
 /// `boolean`-mode ingredients never reach this adapter (they are gathered
 /// via [ProvisioningCalculator.shouldSurfaceBooleanItem] instead), so
 /// `loose` is only a harmless placeholder for that case.
-Presentation presentationForPurchase(Ingredient ingredient) {
+///
+/// `count` degrades to `loose` when the package total is unusable — buying
+/// loose units is a valid reading of a count ingredient. `packageBase`
+/// CANNOT: its whole shape is "N base units per pack", so an unusable total
+/// returns `Left(Failure.invalidPackage)` and the caller skips the row with
+/// a named diagnostic instead of rendering a fabricated pack count.
+Either<Failure, Presentation> presentationForPurchase(Ingredient ingredient) {
+  final label = ingredient.package?.label ?? 'paquete';
+
   return switch (ingredient.measurementMode) {
-    MeasurementMode.mass => const Presentation.counter(),
-    MeasurementMode.count => const Presentation.loose(),
-    MeasurementMode.packageBase => Presentation.package(
-      yieldQty: ingredient.package?.yieldQty ?? 1,
-      label: ingredient.package?.label ?? 'paquete',
+    MeasurementMode.mass => const Right(Presentation.counter()),
+    MeasurementMode.count => switch (_usableYieldQty(ingredient)) {
+      final num yieldQty => Right(
+        Presentation.package(yieldQty: yieldQty, label: label),
+      ),
+      null => const Right(Presentation.loose()),
+    },
+    MeasurementMode.packageBase => switch (_usableYieldQty(ingredient)) {
+      final num yieldQty => Right(
+        Presentation.package(yieldQty: yieldQty, label: label),
+      ),
+      null => Left(Failure.invalidPackage(ingredient.name)),
+    },
+    MeasurementMode.packageAbstract => Right(
+      Presentation.package(yieldQty: 1, label: label),
     ),
-    MeasurementMode.packageAbstract => Presentation.package(
-      yieldQty: 1,
-      label: ingredient.package?.label ?? 'paquete',
-    ),
-    MeasurementMode.boolean => const Presentation.loose(),
+    MeasurementMode.boolean => const Right(Presentation.loose()),
   };
 }

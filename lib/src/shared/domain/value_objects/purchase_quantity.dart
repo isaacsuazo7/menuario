@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:menuario/src/shared/domain/value_objects/spanish_plural.dart';
 
 part 'purchase_quantity.freezed.dart';
 
@@ -30,8 +31,9 @@ sealed class PurchaseQuantity with _$PurchaseQuantity {
 
   /// A human-readable rendering of this purchase quantity, in Spanish.
   String get display => switch (this) {
-    LoosePurchase(:final units) => '$units unidades',
-    PackagePurchase(:final packs, :final label) => '$packs $label',
+    LoosePurchase(:final units) => '$units ${pluralizeEs('unidad', units)}',
+    PackagePurchase(:final packs, :final label) =>
+      '$packs ${pluralizeEs(label, packs)}',
     CounterPurchase(:final quarterPounds) => _displayPounds(quarterPounds),
   };
 

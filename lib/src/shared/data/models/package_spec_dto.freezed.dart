@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PackageSpecDTO {
 
- String get label; num? get yieldQty; String? get baseDimensionSymbol; String? get baseDimensionKind;
+ String get label; num? get yieldQty; String? get baseDimensionSymbol; String? get baseDimensionKind; String? get innerLabel; num? get innerQty; num? get innerCount;
 /// Create a copy of PackageSpecDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PackageSpecDTOCopyWith<PackageSpecDTO> get copyWith => _$PackageSpecDTOCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackageSpecDTO&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimensionSymbol, baseDimensionSymbol) || other.baseDimensionSymbol == baseDimensionSymbol)&&(identical(other.baseDimensionKind, baseDimensionKind) || other.baseDimensionKind == baseDimensionKind));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PackageSpecDTO&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimensionSymbol, baseDimensionSymbol) || other.baseDimensionSymbol == baseDimensionSymbol)&&(identical(other.baseDimensionKind, baseDimensionKind) || other.baseDimensionKind == baseDimensionKind)&&(identical(other.innerLabel, innerLabel) || other.innerLabel == innerLabel)&&(identical(other.innerQty, innerQty) || other.innerQty == innerQty)&&(identical(other.innerCount, innerCount) || other.innerCount == innerCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimensionSymbol,baseDimensionKind);
+int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimensionSymbol,baseDimensionKind,innerLabel,innerQty,innerCount);
 
 @override
 String toString() {
-  return 'PackageSpecDTO(label: $label, yieldQty: $yieldQty, baseDimensionSymbol: $baseDimensionSymbol, baseDimensionKind: $baseDimensionKind)';
+  return 'PackageSpecDTO(label: $label, yieldQty: $yieldQty, baseDimensionSymbol: $baseDimensionSymbol, baseDimensionKind: $baseDimensionKind, innerLabel: $innerLabel, innerQty: $innerQty, innerCount: $innerCount)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $PackageSpecDTOCopyWith<$Res>  {
   factory $PackageSpecDTOCopyWith(PackageSpecDTO value, $Res Function(PackageSpecDTO) _then) = _$PackageSpecDTOCopyWithImpl;
 @useResult
 $Res call({
- String label, num? yieldQty, String? baseDimensionSymbol, String? baseDimensionKind
+ String label, num? yieldQty, String? baseDimensionSymbol, String? baseDimensionKind, String? innerLabel, num? innerQty, num? innerCount
 });
 
 
@@ -65,13 +65,16 @@ class _$PackageSpecDTOCopyWithImpl<$Res>
 
 /// Create a copy of PackageSpecDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimensionSymbol = freezed,Object? baseDimensionKind = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimensionSymbol = freezed,Object? baseDimensionKind = freezed,Object? innerLabel = freezed,Object? innerQty = freezed,Object? innerCount = freezed,}) {
   return _then(_self.copyWith(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,yieldQty: freezed == yieldQty ? _self.yieldQty : yieldQty // ignore: cast_nullable_to_non_nullable
 as num?,baseDimensionSymbol: freezed == baseDimensionSymbol ? _self.baseDimensionSymbol : baseDimensionSymbol // ignore: cast_nullable_to_non_nullable
 as String?,baseDimensionKind: freezed == baseDimensionKind ? _self.baseDimensionKind : baseDimensionKind // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,innerLabel: freezed == innerLabel ? _self.innerLabel : innerLabel // ignore: cast_nullable_to_non_nullable
+as String?,innerQty: freezed == innerQty ? _self.innerQty : innerQty // ignore: cast_nullable_to_non_nullable
+as num?,innerCount: freezed == innerCount ? _self.innerCount : innerCount // ignore: cast_nullable_to_non_nullable
+as num?,
   ));
 }
 
@@ -156,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind,  String? innerLabel,  num? innerQty,  num? innerCount)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PackageSpecDTO() when $default != null:
-return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   return orElse();
 
 }
@@ -177,10 +180,10 @@ return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseD
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind,  String? innerLabel,  num? innerQty,  num? innerCount)  $default,) {final _that = this;
 switch (_that) {
 case _PackageSpecDTO():
-return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +200,10 @@ return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseD
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  num? yieldQty,  String? baseDimensionSymbol,  String? baseDimensionKind,  String? innerLabel,  num? innerQty,  num? innerCount)?  $default,) {final _that = this;
 switch (_that) {
 case _PackageSpecDTO() when $default != null:
-return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind);case _:
+return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseDimensionKind,_that.innerLabel,_that.innerQty,_that.innerCount);case _:
   return null;
 
 }
@@ -212,13 +215,16 @@ return $default(_that.label,_that.yieldQty,_that.baseDimensionSymbol,_that.baseD
 @JsonSerializable()
 
 class _PackageSpecDTO extends PackageSpecDTO {
-  const _PackageSpecDTO({required this.label, this.yieldQty, this.baseDimensionSymbol, this.baseDimensionKind}): super._();
+  const _PackageSpecDTO({required this.label, this.yieldQty, this.baseDimensionSymbol, this.baseDimensionKind, this.innerLabel, this.innerQty, this.innerCount}): super._();
   factory _PackageSpecDTO.fromJson(Map<String, dynamic> json) => _$PackageSpecDTOFromJson(json);
 
 @override final  String label;
 @override final  num? yieldQty;
 @override final  String? baseDimensionSymbol;
 @override final  String? baseDimensionKind;
+@override final  String? innerLabel;
+@override final  num? innerQty;
+@override final  num? innerCount;
 
 /// Create a copy of PackageSpecDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +239,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackageSpecDTO&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimensionSymbol, baseDimensionSymbol) || other.baseDimensionSymbol == baseDimensionSymbol)&&(identical(other.baseDimensionKind, baseDimensionKind) || other.baseDimensionKind == baseDimensionKind));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PackageSpecDTO&&(identical(other.label, label) || other.label == label)&&(identical(other.yieldQty, yieldQty) || other.yieldQty == yieldQty)&&(identical(other.baseDimensionSymbol, baseDimensionSymbol) || other.baseDimensionSymbol == baseDimensionSymbol)&&(identical(other.baseDimensionKind, baseDimensionKind) || other.baseDimensionKind == baseDimensionKind)&&(identical(other.innerLabel, innerLabel) || other.innerLabel == innerLabel)&&(identical(other.innerQty, innerQty) || other.innerQty == innerQty)&&(identical(other.innerCount, innerCount) || other.innerCount == innerCount));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimensionSymbol,baseDimensionKind);
+int get hashCode => Object.hash(runtimeType,label,yieldQty,baseDimensionSymbol,baseDimensionKind,innerLabel,innerQty,innerCount);
 
 @override
 String toString() {
-  return 'PackageSpecDTO(label: $label, yieldQty: $yieldQty, baseDimensionSymbol: $baseDimensionSymbol, baseDimensionKind: $baseDimensionKind)';
+  return 'PackageSpecDTO(label: $label, yieldQty: $yieldQty, baseDimensionSymbol: $baseDimensionSymbol, baseDimensionKind: $baseDimensionKind, innerLabel: $innerLabel, innerQty: $innerQty, innerCount: $innerCount)';
 }
 
 
@@ -253,7 +259,7 @@ abstract mixin class _$PackageSpecDTOCopyWith<$Res> implements $PackageSpecDTOCo
   factory _$PackageSpecDTOCopyWith(_PackageSpecDTO value, $Res Function(_PackageSpecDTO) _then) = __$PackageSpecDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String label, num? yieldQty, String? baseDimensionSymbol, String? baseDimensionKind
+ String label, num? yieldQty, String? baseDimensionSymbol, String? baseDimensionKind, String? innerLabel, num? innerQty, num? innerCount
 });
 
 
@@ -270,13 +276,16 @@ class __$PackageSpecDTOCopyWithImpl<$Res>
 
 /// Create a copy of PackageSpecDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimensionSymbol = freezed,Object? baseDimensionKind = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? yieldQty = freezed,Object? baseDimensionSymbol = freezed,Object? baseDimensionKind = freezed,Object? innerLabel = freezed,Object? innerQty = freezed,Object? innerCount = freezed,}) {
   return _then(_PackageSpecDTO(
 label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,yieldQty: freezed == yieldQty ? _self.yieldQty : yieldQty // ignore: cast_nullable_to_non_nullable
 as num?,baseDimensionSymbol: freezed == baseDimensionSymbol ? _self.baseDimensionSymbol : baseDimensionSymbol // ignore: cast_nullable_to_non_nullable
 as String?,baseDimensionKind: freezed == baseDimensionKind ? _self.baseDimensionKind : baseDimensionKind // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,innerLabel: freezed == innerLabel ? _self.innerLabel : innerLabel // ignore: cast_nullable_to_non_nullable
+as String?,innerQty: freezed == innerQty ? _self.innerQty : innerQty // ignore: cast_nullable_to_non_nullable
+as num?,innerCount: freezed == innerCount ? _self.innerCount : innerCount // ignore: cast_nullable_to_non_nullable
+as num?,
   ));
 }
 

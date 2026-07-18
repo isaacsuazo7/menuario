@@ -10,6 +10,7 @@ import 'package:menuario/src/core/error/failure.dart';
 import 'package:menuario/src/features/today/data/repositories/cook_schedule_repository_impl.dart';
 import 'package:menuario/src/features/today/domain/repositories/cook_schedule_repository.dart';
 import 'package:menuario/src/features/today/presentation/providers/now_provider.dart';
+import 'package:menuario/src/features/today/presentation/providers/today_tab_provider.dart';
 import 'package:menuario/src/features/today/presentation/today_screen.dart';
 import 'package:menuario/src/features/week/presentation/providers/today_provider.dart';
 import 'package:menuario/src/shared/shared.dart';
@@ -99,6 +100,74 @@ void main() {
 
     expect(find.text('Nada para cocinar hoy'), findsOneWidget);
     expect(find.text('Nada planeado — planificá en Semana'), findsNothing);
+  });
+
+  group('Cocinar/Comer swipe <-> toggle sync', () {
+    // Lee el container real del árbol para probar la sincronización
+    // bidireccional, no solo el cambio visual.
+    ProviderContainer containerOf(WidgetTester tester) {
+      return ProviderScope.containerOf(
+        tester.element(find.byType(PageView)),
+        listen: false,
+      );
+    }
+
+    double? pageOf(WidgetTester tester) {
+      return tester.widget<PageView>(find.byType(PageView)).controller?.page;
+    }
+
+    testWidgets('swiping left shows Comer and moves the tab provider', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      final container = containerOf(tester);
+      expect(container.read(todayTabProvider), TodayTab.cocinar);
+
+      await tester.drag(find.byType(PageView), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nada planeado — planificá en Semana'), findsOneWidget);
+      expect(find.text('Nada para cocinar hoy'), findsNothing);
+      expect(container.read(todayTabProvider), TodayTab.comer);
+      expect(pageOf(tester), 1.0);
+    });
+
+    testWidgets('swiping back right returns to Cocinar and the tab provider '
+        'follows', (tester) async {
+      await pumpScreen(tester);
+      final container = containerOf(tester);
+
+      await tester.drag(find.byType(PageView), const Offset(-500, 0));
+      await tester.pumpAndSettle();
+      expect(container.read(todayTabProvider), TodayTab.comer);
+
+      await tester.drag(find.byType(PageView), const Offset(500, 0));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nada para cocinar hoy'), findsOneWidget);
+      expect(find.text('Nada planeado — planificá en Semana'), findsNothing);
+      expect(container.read(todayTabProvider), TodayTab.cocinar);
+      expect(pageOf(tester), 0.0);
+    });
+
+    testWidgets('tapping the SegmentedButton moves the PageView (the other '
+        'sync direction)', (tester) async {
+      await pumpScreen(tester);
+      final container = containerOf(tester);
+      expect(pageOf(tester), 0.0);
+
+      await tester.tap(find.text('Comer'));
+      await tester.pumpAndSettle();
+
+      expect(pageOf(tester), 1.0);
+      expect(container.read(todayTabProvider), TodayTab.comer);
+
+      await tester.tap(find.text('Cocinar'));
+      await tester.pumpAndSettle();
+
+      expect(pageOf(tester), 0.0);
+      expect(container.read(todayTabProvider), TodayTab.cocinar);
+    });
   });
 
   testWidgets('shows a loading indicator while the plan is loading', (

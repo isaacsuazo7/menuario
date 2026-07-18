@@ -79,6 +79,18 @@ class Failure {
     );
   }
 
+  /// An ingredient whose measurement mode REQUIRES a pack total carries a
+  /// missing or non-positive one, so no pack count can be derived from it.
+  factory Failure.invalidPackage(String ingredientName) {
+    return Failure(
+      message:
+          'El empaque de "$ingredientName" no tiene un contenido válido '
+          'por paquete.',
+      code: 'invalidPackage',
+      metadata: {'ingredientName': ingredientName},
+    );
+  }
+
   /// An operation attempted to mutate an existing, immutable `BomLine`.
   factory Failure.mutateBom() {
     return const Failure(

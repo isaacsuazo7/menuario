@@ -67,8 +67,10 @@ class MeasurementConverter {
   ///   `mass`/`packageBase`/`packageAbstract` apply theirs (multiplied into
   ///   the canonical unit) — e.g. a count ingredient sized by volume/mass
   ///   (zanahoria: `u` with a `taza`-per-`u` factor). Returns
-  ///   `Left(Failure.unknownUnit)` when [recipeQuantity] is not in
-  ///   [Unit.count] AND no factor is set.
+  ///   `Left(Failure.missingConversionFactor)` when [recipeQuantity] is not
+  ///   in [Unit.count] AND no factor is set — same actionable "needs factor"
+  ///   signal `mass`/`packageBase` raise, so the shopping list classifies it
+  ///   as `needsFactor` rather than the dead-end `other`.
   /// - [MeasurementMode.packageBase]: multiplies by
   ///   [Ingredient.conversionFactor] into the package's base-dimension unit
   ///   (e.g. liters for leche, not always grams).
@@ -101,7 +103,7 @@ class MeasurementConverter {
         }
         final factor = ingredient.conversionFactor;
         if (factor == null) {
-          return Left(Failure.unknownUnit(normalizedQuantity.unit.symbol));
+          return Left(Failure.missingConversionFactor(ingredient.name));
         }
         return Right(
           Quantity(value: normalizedQuantity.value * factor, unit: stockUnit),
