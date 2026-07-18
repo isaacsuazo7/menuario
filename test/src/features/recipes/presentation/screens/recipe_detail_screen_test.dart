@@ -106,6 +106,43 @@ void main() {
     },
   );
 
+  testWidgets('renders "Al gusto" instead of a number for a quantity-less '
+      'BomLine', (tester) async {
+    const oregano = Ingredient(
+      id: 'i4',
+      name: 'Orégano',
+      emoji: '🌿',
+      category: Category.condimento,
+      measurementMode: MeasurementMode.boolean,
+    );
+    const recipeWithAlGusto = Recipe(
+      id: 'r1',
+      name: 'Pollo al horno',
+      bomLines: [
+        BomLine(
+          recipeId: 'r1',
+          ingredientId: 'i1',
+          quantity: Quantity(value: 2, unit: Unit.count),
+        ),
+        BomLine(recipeId: 'r1', ingredientId: 'i4'),
+      ],
+    );
+    when(
+      () => mockRecipeRepository.getById('r1'),
+    ).thenAnswer((_) async => const Right(recipeWithAlGusto));
+    when(
+      () => mockIngredientRepository.list(),
+    ).thenAnswer((_) async => const Right([huevo, oregano]));
+
+    await pumpScreen(tester);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Orégano'), findsOneWidget);
+    expect(find.text('Al gusto'), findsOneWidget);
+    // The measured sibling still shows its number+unit.
+    expect(find.text('2 u'), findsOneWidget);
+  });
+
   testWidgets(
     'renders a graceful fallback row for a BomLine with a missing ingredient',
     (tester) async {

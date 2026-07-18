@@ -36,6 +36,10 @@ class ProvisioningCalculator {
   /// every [Recipe] in [recipes], of each matching `BomLine` quantity
   /// (converted to stock unit) multiplied by how many times that recipe
   /// appears in [weekPlan].
+  ///
+  /// Quantity-less ("al gusto") BOM lines are skipped: they contribute
+  /// nothing, and an ingredient whose every line is quantity-less reports
+  /// `Right(0)` rather than a [Failure].
   Either<Failure, Quantity> weeklyConsumption({
     required Ingredient ingredient,
     required List<Recipe> recipes,
@@ -54,8 +58,14 @@ class ProvisioningCalculator {
       for (final line in recipe.bomLines) {
         if (line.ingredientId != ingredient.id) continue;
 
+        // An "al gusto" line carries no number: it is skipped outright, not
+        // treated as a zero need. Surfacing it is the pantry's `haveIt`
+        // job, never this numeric sum's.
+        final recipeQuantity = line.quantity;
+        if (recipeQuantity == null) continue;
+
         final converted = _converter.toStockUnit(
-          recipeQuantity: line.quantity,
+          recipeQuantity: recipeQuantity,
           ingredient: ingredient,
         );
         if (converted is Left<Failure, Quantity>) {

@@ -15,19 +15,17 @@ class _ShellTab {
   /// phone without ellipsizing.
   final String label;
 
-  /// The long-form [AppBar] title, which has the full width to spell it out.
+  /// The [AppBar] title. Kept identical to [label] so the header and the
+  /// bottom bar always name the active tab the same way; the field stays
+  /// separate so a tab can diverge if one ever needs to.
   final String title;
 }
 
 const _shellTabs = [
   _ShellTab(icon: Icons.today, label: 'Hoy', title: 'Hoy'),
   _ShellTab(icon: Icons.calendar_view_week, label: 'Semana', title: 'Semana'),
-  _ShellTab(
-    icon: Icons.shopping_cart_outlined,
-    label: 'Stock',
-    title: 'Abastecer',
-  ),
-  _ShellTab(icon: Icons.menu_book, label: 'Recetas', title: 'Recetario'),
+  _ShellTab(icon: Icons.shopping_cart_outlined, label: 'Stock', title: 'Stock'),
+  _ShellTab(icon: Icons.menu_book, label: 'Recetas', title: 'Recetas'),
 ];
 
 /// Hosts the four-tab [StatefulShellRoute.indexedStack] behind a Material

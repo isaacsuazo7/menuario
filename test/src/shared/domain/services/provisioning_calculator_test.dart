@@ -114,6 +114,82 @@ void main() {
         );
       });
 
+      test('should skip an "al gusto" (quantity-less) BomLine and count only '
+          'the quantified ones', () {
+        // Arrange — the same ingredient appears twice: once measured, once
+        // "al gusto". Only the measured line may contribute a number.
+        const recipe = Recipe(
+          id: 'recipe-avena',
+          name: 'Avena con leche',
+          bomLines: [
+            BomLine(
+              recipeId: 'recipe-avena',
+              ingredientId: 'ingredient-avena',
+              quantity: Quantity(value: 2, unit: taza),
+            ),
+            BomLine(recipeId: 'recipe-avena', ingredientId: 'ingredient-avena'),
+          ],
+        );
+        const weekPlan = WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'recipe-avena',
+              cooked: false,
+            ),
+          ],
+        );
+
+        // Act
+        final result = calculator.weeklyConsumption(
+          ingredient: avena,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert — 2 taza x 85 g, the "al gusto" line adding nothing.
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 170, unit: Unit.gram)),
+        );
+      });
+
+      test('should report zero — never a Failure — when every BomLine for '
+          'the ingredient is "al gusto"', () {
+        // Arrange
+        const recipe = Recipe(
+          id: 'recipe-avena',
+          name: 'Avena con leche',
+          bomLines: [
+            BomLine(recipeId: 'recipe-avena', ingredientId: 'ingredient-avena'),
+          ],
+        );
+        const weekPlan = WeekPlan(
+          entries: [
+            PlanEntry(
+              day: DayOfWeek.lun,
+              mealSlot: MealSlot.desayuno,
+              recipeId: 'recipe-avena',
+              cooked: false,
+            ),
+          ],
+        );
+
+        // Act
+        final result = calculator.weeklyConsumption(
+          ingredient: avena,
+          recipes: const [recipe],
+          weekPlan: weekPlan,
+        );
+
+        // Assert
+        expect(
+          result,
+          const Right<Failure, Quantity>(Quantity(value: 0, unit: Unit.gram)),
+        );
+      });
+
       test('should ignore recipes that never appear in the WeekPlan (0 '
           'consumption)', () {
         // Arrange

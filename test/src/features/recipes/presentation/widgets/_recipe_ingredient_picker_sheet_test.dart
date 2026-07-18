@@ -121,7 +121,8 @@ void main() {
   });
 
   testWidgets(
-    'boolean-mode ingredients are excluded from the selectable list',
+    'boolean-mode ingredients ARE selectable — a recipe must be able to '
+    'list every condiment it uses, as an "al gusto" line',
     (tester) async {
       when(
         () => mockIngredientRepository.list(),
@@ -131,8 +132,8 @@ void main() {
 
       expect(find.text('Huevo'), findsOneWidget);
       expect(find.text('Leche'), findsOneWidget);
-      expect(find.text('Sal'), findsNothing);
-      expect(find.text(Category.condimento.label), findsNothing);
+      expect(find.text('Sal'), findsOneWidget);
+      expect(find.text(Category.condimento.label), findsOneWidget);
     },
   );
 

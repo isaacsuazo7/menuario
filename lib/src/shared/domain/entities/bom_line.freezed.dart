@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BomLine {
 
- String get recipeId; String get ingredientId; Quantity get quantity;
+ String get recipeId; String get ingredientId; Quantity? get quantity;
 /// Create a copy of BomLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,11 +45,11 @@ abstract mixin class $BomLineCopyWith<$Res>  {
   factory $BomLineCopyWith(BomLine value, $Res Function(BomLine) _then) = _$BomLineCopyWithImpl;
 @useResult
 $Res call({
- String recipeId, String ingredientId, Quantity quantity
+ String recipeId, String ingredientId, Quantity? quantity
 });
 
 
-$QuantityCopyWith<$Res> get quantity;
+$QuantityCopyWith<$Res>? get quantity;
 
 }
 /// @nodoc
@@ -62,21 +62,24 @@ class _$BomLineCopyWithImpl<$Res>
 
 /// Create a copy of BomLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = freezed,}) {
   return _then(_self.copyWith(
 recipeId: null == recipeId ? _self.recipeId : recipeId // ignore: cast_nullable_to_non_nullable
 as String,ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
-as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
-as Quantity,
+as String,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as Quantity?,
   ));
 }
 /// Create a copy of BomLine
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$QuantityCopyWith<$Res> get quantity {
-  
-  return $QuantityCopyWith<$Res>(_self.quantity, (value) {
+$QuantityCopyWith<$Res>? get quantity {
+    if (_self.quantity == null) {
+    return null;
+  }
+
+  return $QuantityCopyWith<$Res>(_self.quantity!, (value) {
     return _then(_self.copyWith(quantity: value));
   });
 }
@@ -161,7 +164,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  Quantity quantity)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  Quantity? quantity)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BomLine() when $default != null:
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -182,7 +185,7 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  Quantity quantity)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  Quantity? quantity)  $default,) {final _that = this;
 switch (_that) {
 case _BomLine():
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -202,7 +205,7 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recipeId,  String ingredientId,  Quantity quantity)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recipeId,  String ingredientId,  Quantity? quantity)?  $default,) {final _that = this;
 switch (_that) {
 case _BomLine() when $default != null:
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -217,12 +220,12 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 
 
 class _BomLine implements BomLine {
-  const _BomLine({required this.recipeId, required this.ingredientId, required this.quantity});
+  const _BomLine({required this.recipeId, required this.ingredientId, this.quantity});
   
 
 @override final  String recipeId;
 @override final  String ingredientId;
-@override final  Quantity quantity;
+@override final  Quantity? quantity;
 
 /// Create a copy of BomLine
 /// with the given fields replaced by the non-null parameter values.
@@ -254,11 +257,11 @@ abstract mixin class _$BomLineCopyWith<$Res> implements $BomLineCopyWith<$Res> {
   factory _$BomLineCopyWith(_BomLine value, $Res Function(_BomLine) _then) = __$BomLineCopyWithImpl;
 @override @useResult
 $Res call({
- String recipeId, String ingredientId, Quantity quantity
+ String recipeId, String ingredientId, Quantity? quantity
 });
 
 
-@override $QuantityCopyWith<$Res> get quantity;
+@override $QuantityCopyWith<$Res>? get quantity;
 
 }
 /// @nodoc
@@ -271,12 +274,12 @@ class __$BomLineCopyWithImpl<$Res>
 
 /// Create a copy of BomLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = freezed,}) {
   return _then(_BomLine(
 recipeId: null == recipeId ? _self.recipeId : recipeId // ignore: cast_nullable_to_non_nullable
 as String,ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
-as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
-as Quantity,
+as String,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as Quantity?,
   ));
 }
 
@@ -284,9 +287,12 @@ as Quantity,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$QuantityCopyWith<$Res> get quantity {
-  
-  return $QuantityCopyWith<$Res>(_self.quantity, (value) {
+$QuantityCopyWith<$Res>? get quantity {
+    if (_self.quantity == null) {
+    return null;
+  }
+
+  return $QuantityCopyWith<$Res>(_self.quantity!, (value) {
     return _then(_self.copyWith(quantity: value));
   });
 }

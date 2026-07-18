@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BomLineDTO {
 
- String get recipeId; String get ingredientId; QuantityDTO get quantity;
+ String get recipeId; String get ingredientId;@JsonKey(readValue: _readQuantity) QuantityDTO? get quantity;
 /// Create a copy of BomLineDTO
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,11 +48,11 @@ abstract mixin class $BomLineDTOCopyWith<$Res>  {
   factory $BomLineDTOCopyWith(BomLineDTO value, $Res Function(BomLineDTO) _then) = _$BomLineDTOCopyWithImpl;
 @useResult
 $Res call({
- String recipeId, String ingredientId, QuantityDTO quantity
+ String recipeId, String ingredientId,@JsonKey(readValue: _readQuantity) QuantityDTO? quantity
 });
 
 
-$QuantityDTOCopyWith<$Res> get quantity;
+$QuantityDTOCopyWith<$Res>? get quantity;
 
 }
 /// @nodoc
@@ -65,21 +65,24 @@ class _$BomLineDTOCopyWithImpl<$Res>
 
 /// Create a copy of BomLineDTO
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = freezed,}) {
   return _then(_self.copyWith(
 recipeId: null == recipeId ? _self.recipeId : recipeId // ignore: cast_nullable_to_non_nullable
 as String,ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
-as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
-as QuantityDTO,
+as String,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityDTO?,
   ));
 }
 /// Create a copy of BomLineDTO
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$QuantityDTOCopyWith<$Res> get quantity {
-  
-  return $QuantityDTOCopyWith<$Res>(_self.quantity, (value) {
+$QuantityDTOCopyWith<$Res>? get quantity {
+    if (_self.quantity == null) {
+    return null;
+  }
+
+  return $QuantityDTOCopyWith<$Res>(_self.quantity!, (value) {
     return _then(_self.copyWith(quantity: value));
   });
 }
@@ -164,7 +167,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  QuantityDTO quantity)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId, @JsonKey(readValue: _readQuantity)  QuantityDTO? quantity)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BomLineDTO() when $default != null:
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -185,7 +188,7 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId,  QuantityDTO quantity)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String recipeId,  String ingredientId, @JsonKey(readValue: _readQuantity)  QuantityDTO? quantity)  $default,) {final _that = this;
 switch (_that) {
 case _BomLineDTO():
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -205,7 +208,7 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recipeId,  String ingredientId,  QuantityDTO quantity)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String recipeId,  String ingredientId, @JsonKey(readValue: _readQuantity)  QuantityDTO? quantity)?  $default,) {final _that = this;
 switch (_that) {
 case _BomLineDTO() when $default != null:
 return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
@@ -220,12 +223,12 @@ return $default(_that.recipeId,_that.ingredientId,_that.quantity);case _:
 @JsonSerializable()
 
 class _BomLineDTO extends BomLineDTO {
-  const _BomLineDTO({required this.recipeId, required this.ingredientId, required this.quantity}): super._();
+  const _BomLineDTO({required this.recipeId, required this.ingredientId, @JsonKey(readValue: _readQuantity) this.quantity}): super._();
   factory _BomLineDTO.fromJson(Map<String, dynamic> json) => _$BomLineDTOFromJson(json);
 
 @override final  String recipeId;
 @override final  String ingredientId;
-@override final  QuantityDTO quantity;
+@override@JsonKey(readValue: _readQuantity) final  QuantityDTO? quantity;
 
 /// Create a copy of BomLineDTO
 /// with the given fields replaced by the non-null parameter values.
@@ -260,11 +263,11 @@ abstract mixin class _$BomLineDTOCopyWith<$Res> implements $BomLineDTOCopyWith<$
   factory _$BomLineDTOCopyWith(_BomLineDTO value, $Res Function(_BomLineDTO) _then) = __$BomLineDTOCopyWithImpl;
 @override @useResult
 $Res call({
- String recipeId, String ingredientId, QuantityDTO quantity
+ String recipeId, String ingredientId,@JsonKey(readValue: _readQuantity) QuantityDTO? quantity
 });
 
 
-@override $QuantityDTOCopyWith<$Res> get quantity;
+@override $QuantityDTOCopyWith<$Res>? get quantity;
 
 }
 /// @nodoc
@@ -277,12 +280,12 @@ class __$BomLineDTOCopyWithImpl<$Res>
 
 /// Create a copy of BomLineDTO
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? recipeId = null,Object? ingredientId = null,Object? quantity = freezed,}) {
   return _then(_BomLineDTO(
 recipeId: null == recipeId ? _self.recipeId : recipeId // ignore: cast_nullable_to_non_nullable
 as String,ingredientId: null == ingredientId ? _self.ingredientId : ingredientId // ignore: cast_nullable_to_non_nullable
-as String,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
-as QuantityDTO,
+as String,quantity: freezed == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityDTO?,
   ));
 }
 
@@ -290,9 +293,12 @@ as QuantityDTO,
 /// with the given fields replaced by the non-null parameter values.
 @override
 @pragma('vm:prefer-inline')
-$QuantityDTOCopyWith<$Res> get quantity {
-  
-  return $QuantityDTOCopyWith<$Res>(_self.quantity, (value) {
+$QuantityDTOCopyWith<$Res>? get quantity {
+    if (_self.quantity == null) {
+    return null;
+  }
+
+  return $QuantityDTOCopyWith<$Res>(_self.quantity!, (value) {
     return _then(_self.copyWith(quantity: value));
   });
 }

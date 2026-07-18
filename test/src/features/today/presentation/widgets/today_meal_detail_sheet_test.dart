@@ -92,6 +92,55 @@ void main() {
     expect(find.text('Harina'), findsOneWidget);
   });
 
+  testWidgets('renders "Al gusto" for a quantity-less ingredient row', (
+    tester,
+  ) async {
+    const cilantro = Ingredient(
+      id: 'i-2',
+      name: 'Cilantro',
+      emoji: '🌿',
+      category: Category.condimento,
+      measurementMode: MeasurementMode.boolean,
+    );
+    const recipeConCilantro = Recipe(
+      id: 'r-2',
+      name: 'Sopa de pollo',
+      emoji: '🍲',
+      mealType: MealType.cena,
+      bomLines: [
+        BomLine(
+          recipeId: 'r-2',
+          ingredientId: 'i-1',
+          quantity: Quantity(value: 2, unit: Unit.count),
+        ),
+        BomLine(recipeId: 'r-2', ingredientId: 'i-2'),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ingredientsByIdProvider.overrideWith(
+            (ref) async => const {'i-1': ingredient, 'i-2': cilantro},
+          ),
+        ],
+        child: const MaterialApp(
+          home: Scaffold(
+            body: TodayMealDetailSheet(
+              recipe: recipeConCilantro,
+              mealSlot: MealSlot.cena,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cilantro'), findsOneWidget);
+    expect(find.text('Al gusto'), findsOneWidget);
+    expect(find.text('2 u'), findsOneWidget);
+  });
+
   testWidgets('renders the meal type as the shared filled tag', (tester) async {
     await pumpSheet(tester);
 

@@ -40,5 +40,19 @@ void main() {
       expect(replaced.quantity, const Quantity(value: 4, unit: taza));
       expect(identical(original, replaced), isFalse);
     });
+
+    test('should allow an omitted quantity — an "al gusto" line for a '
+        'boolean-tracked ingredient carries no number at all', () {
+      // Arrange & Act
+      const line = BomLine(
+        recipeId: 'recipe-pollo',
+        ingredientId: 'ingredient-oregano',
+      );
+
+      // Assert
+      expect(line.recipeId, 'recipe-pollo');
+      expect(line.ingredientId, 'ingredient-oregano');
+      expect(line.quantity, isNull);
+    });
   });
 }

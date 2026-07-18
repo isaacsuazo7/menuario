@@ -53,6 +53,9 @@ class _VideoUrlsValidator extends Validator<dynamic> {
 /// Rejects a [FormControl]`<List<BomDraft>>` when any line is missing its
 /// picked ingredient or carries an empty/non-positive quantity — an empty
 /// list (no lines yet) is always valid.
+///
+/// A [BomDraft.quantityLess] line is exempt from the quantity check: an
+/// "al gusto" condiment is complete with nothing but its ingredient.
 class _BomLinesValidator extends Validator<dynamic> {
   const _BomLinesValidator();
 
@@ -61,6 +64,8 @@ class _BomLinesValidator extends Validator<dynamic> {
     final lines = control.value as List<BomDraft>? ?? const [];
     for (final draft in lines) {
       if (draft.ingredientId == null) return {'invalidBomLine': true};
+      if (draft.quantityLess) continue;
+
       final quantity = num.tryParse(draft.quantityController.text.trim());
       if (quantity == null || quantity <= 0) {
         return {'invalidBomLine': true};
@@ -129,15 +134,17 @@ class RecipeFormController extends Notifier<FormGroup> {
       for (final line in recipe.bomLines)
         BomDraft(
           ingredientId: line.ingredientId,
-          quantity: line.quantity.value,
-          unit: line.quantity.unit,
+          quantity: line.quantity?.value,
+          unit: line.quantity?.unit,
+          quantityLess: line.quantity == null,
         ),
     ];
   }
 
   /// Builds the [Recipe] for [id] from the form's current values — only
   /// meaningful once the form is valid (every video url looks like a url,
-  /// every BOM line has a picked ingredient and a positive quantity).
+  /// every BOM line has a picked ingredient and, unless it is "al gusto",
+  /// a positive quantity).
   Recipe toEntity(String id) {
     final name = (state.control('name').value as String? ?? '').trim();
     final emoji = (state.control('emoji').value as String? ?? '').trim();
@@ -154,10 +161,12 @@ class RecipeFormController extends Notifier<FormGroup> {
         BomLine(
           recipeId: id,
           ingredientId: draft.ingredientId!,
-          quantity: Quantity(
-            value: num.parse(draft.quantityController.text.trim()),
-            unit: draft.unit,
-          ),
+          quantity: draft.quantityLess
+              ? null
+              : Quantity(
+                  value: num.parse(draft.quantityController.text.trim()),
+                  unit: draft.unit,
+                ),
         ),
     ];
 

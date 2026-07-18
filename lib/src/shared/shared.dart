@@ -55,6 +55,7 @@ export 'domain/value_objects/stock_lens.dart';
 export 'domain/value_objects/unit.dart';
 export 'domain/value_objects/video_link.dart';
 export 'domain/value_objects/video_source.dart';
+export 'presentation/bom_quantity_label.dart';
 export 'presentation/widgets/app_async_value_widget.dart';
 export 'presentation/widgets/emoji_avatar.dart';
 export 'presentation/widgets/meal_type_tag.dart';

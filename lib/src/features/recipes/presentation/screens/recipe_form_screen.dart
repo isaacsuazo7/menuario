@@ -109,8 +109,12 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
   }
 
   /// Opens [RecipeIngredientPickerSheet] for the row at [index] and, if the
-  /// user picks (or inline-creates) an ingredient, assigns its id to that
-  /// row.
+  /// user picks an ingredient, assigns its id to that row.
+  ///
+  /// A boolean-tracked pick turns the row "al gusto": [BomDraft.quantityLess]
+  /// is set and any quantity typed for a previously-picked ingredient is
+  /// cleared, so a stale number can never be submitted on a line that no
+  /// longer renders a quantity field.
   Future<void> _pickIngredientForBomRow(int index) async {
     final ingredientId = await showModalBottomSheet<String?>(
       context: context,
@@ -121,7 +125,21 @@ class _RecipeFormScreenState extends ConsumerState<RecipeFormScreen> {
       builder: (_) => const RecipeIngredientPickerSheet(),
     );
     if (ingredientId == null || !mounted) return;
-    _bomLinesControl.value![index].ingredientId = ingredientId;
+
+    final ingredientsById = ref
+        .read(ingredientsByIdProvider)
+        .maybeWhen(
+          data: (map) => map,
+          orElse: () => const <String, Ingredient>{},
+        );
+    final quantityLess =
+        ingredientsById[ingredientId]?.measurementMode ==
+        MeasurementMode.boolean;
+
+    final draft = _bomLinesControl.value![index];
+    draft.ingredientId = ingredientId;
+    draft.quantityLess = quantityLess;
+    if (quantityLess) draft.quantityController.clear();
     _bomLinesControl.updateValueAndValidity();
   }
 

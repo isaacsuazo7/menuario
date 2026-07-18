@@ -62,6 +62,76 @@ void main() {
     );
   });
 
+  group('BomEditorSection — "al gusto" lines', () {
+    const oregano = Ingredient(
+      id: 'ing-oregano',
+      name: 'Orégano',
+      emoji: '🌿',
+      category: Category.condimento,
+      measurementMode: MeasurementMode.boolean,
+    );
+
+    testWidgets('a boolean-tracked ingredient offers no quantity field and '
+        'no unit dropdown — just "Al gusto"', (tester) async {
+      final draft = BomDraft(ingredientId: 'ing-oregano', quantityLess: true);
+      addTearDown(draft.dispose);
+
+      await tester.pumpWidget(
+        wrap(
+          BomEditorSection(
+            lines: [draft],
+            ingredientsById: const {'ing-oregano': oregano},
+            onAddLine: () {},
+            onRemoveLine: (_) {},
+            onPickIngredient: (_) {},
+            onUnitChanged: (_, _) {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('Orégano'), findsOneWidget);
+      expect(find.text('Al gusto'), findsOneWidget);
+      expect(
+        find.byKey(const Key('recipe-bom-quantity-field-0')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('recipe-bom-unit-field-0')), findsNothing);
+      // The row is still removable.
+      expect(find.byKey(const Key('recipe-bom-remove-0')), findsOneWidget);
+    });
+
+    testWidgets('a measured ingredient still shows quantity and unit', (
+      tester,
+    ) async {
+      final draft = BomDraft(
+        ingredientId: 'ing-pollo',
+        quantity: 2,
+        unit: Unit.gram,
+      );
+      addTearDown(draft.dispose);
+
+      await tester.pumpWidget(
+        wrap(
+          BomEditorSection(
+            lines: [draft],
+            ingredientsById: const {'ing-pollo': pollo},
+            onAddLine: () {},
+            onRemoveLine: (_) {},
+            onPickIngredient: (_) {},
+            onUnitChanged: (_, _) {},
+          ),
+        ),
+      );
+
+      expect(find.text('Al gusto'), findsNothing);
+      expect(
+        find.byKey(const Key('recipe-bom-quantity-field-0')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('recipe-bom-unit-field-0')), findsOneWidget);
+    });
+  });
+
   group('BomEditorSection', () {
     testWidgets('renders an existing line: ingredient, quantity and unit', (
       tester,
