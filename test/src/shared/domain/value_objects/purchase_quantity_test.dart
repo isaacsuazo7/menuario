@@ -21,6 +21,30 @@ void main() {
         expect(purchase.display, '6 unidades');
       });
 
+      test('display should render a single unit in singular', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.loosePurchase(units: 1);
+
+        // Assert
+        expect(purchase.display, '1 unidad');
+      });
+
+      test('display should render three units in plural', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.loosePurchase(units: 3);
+
+        // Assert
+        expect(purchase.display, '3 unidades');
+      });
+
+      test('display should render zero units in plural', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.loosePurchase(units: 0);
+
+        // Assert
+        expect(purchase.display, '0 unidades');
+      });
+
       test('should reject negative units', () {
         // Act & Assert
         expect(
@@ -52,6 +76,40 @@ void main() {
 
         // Assert
         expect(purchase.display, '1 cartón (15 u)');
+      });
+
+      test('display should keep a single pack in singular', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.packagePurchase(
+          packs: 1,
+          label: 'caja',
+        );
+
+        // Assert
+        expect(purchase.display, '1 caja');
+      });
+
+      test('display should pluralize the label for several packs', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.packagePurchase(
+          packs: 3,
+          label: 'bolsa',
+        );
+
+        // Assert
+        expect(purchase.display, '3 bolsas');
+      });
+
+      test('display should pluralize only the head noun of a '
+          'compound label', () {
+        // Arrange & Act
+        const purchase = PurchaseQuantity.packagePurchase(
+          packs: 3,
+          label: 'bolsa 1 L',
+        );
+
+        // Assert
+        expect(purchase.display, '3 bolsas 1 L');
       });
 
       test('should reject negative packs', () {

@@ -147,6 +147,32 @@ void main() {
       expect(single.innerBreakdown, '1 bolsa × 3 u');
     });
 
+    test('pluralizes a consonant-ending inner label with es', () {
+      // Arrange & Act
+      const spec = PackageSpec(
+        label: 'caja',
+        innerLabel: 'unidad',
+        innerQty: 2,
+        innerCount: 6,
+      );
+
+      // Assert
+      expect(spec.innerBreakdown, '6 unidades × 2 u');
+    });
+
+    test('pluralizes only the head noun of a compound inner label', () {
+      // Arrange & Act
+      const spec = PackageSpec(
+        label: 'caja',
+        innerLabel: 'bolsa 1 L',
+        innerQty: 1,
+        innerCount: 4,
+      );
+
+      // Assert
+      expect(spec.innerBreakdown, '4 bolsas 1 L × 1 u');
+    });
+
     test('defaults the inner label when only the quantities are known', () {
       // Arrange & Act
       const unlabeled = PackageSpec(label: 'caja', innerQty: 2, innerCount: 10);

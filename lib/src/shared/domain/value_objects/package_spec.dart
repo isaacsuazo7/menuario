@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:menuario/src/shared/domain/value_objects/spanish_plural.dart';
 import 'package:menuario/src/shared/domain/value_objects/unit.dart';
 
 part 'package_spec.freezed.dart';
@@ -53,7 +54,7 @@ abstract class PackageSpec with _$PackageSpec {
     if (qty == null || count == null) return null;
 
     final label = innerLabel ?? 'paquete';
-    final plural = count == 1 ? label : '${label}s';
+    final plural = pluralizeEs(label, count);
     return '${_trim(count)} $plural × ${_trim(qty)} u';
   }
 

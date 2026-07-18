@@ -60,9 +60,11 @@ class ShoppingListBuilder {
         skipped.add(
           SkippedItem(
             name: ingredient.name,
-            reason: failure.code == 'missingConversionFactor'
-                ? SkipReason.needsFactor
-                : SkipReason.other,
+            reason: switch (failure.code) {
+              'missingConversionFactor' => SkipReason.needsFactor,
+              'invalidPackage' => SkipReason.invalidPackage,
+              _ => SkipReason.other,
+            },
           ),
         );
         continue;
@@ -144,9 +146,16 @@ class ShoppingListBuilder {
     }
     final shortfall = (shortfallResult as Right<Failure, Quantity>).value;
 
+    final presentationResult = presentationForPurchase(ingredient);
+    if (presentationResult case Left(value: final failure)) {
+      return Left(failure);
+    }
+    final presentation =
+        (presentationResult as Right<Failure, Presentation>).value;
+
     final purchaseResult = _calculator.purchaseQuantity(
       shortfall: shortfall,
-      presentation: presentationForPurchase(ingredient),
+      presentation: presentation,
     );
     if (purchaseResult case Left(value: final failure)) {
       return Left(failure);
@@ -225,24 +234,32 @@ num? _usableYieldQty(Ingredient ingredient) {
 /// `boolean`-mode ingredients never reach this adapter (they are gathered
 /// via [ProvisioningCalculator.shouldSurfaceBooleanItem] instead), so
 /// `loose` is only a harmless placeholder for that case.
-Presentation presentationForPurchase(Ingredient ingredient) {
+///
+/// `count` degrades to `loose` when the package total is unusable — buying
+/// loose units is a valid reading of a count ingredient. `packageBase`
+/// CANNOT: its whole shape is "N base units per pack", so an unusable total
+/// returns `Left(Failure.invalidPackage)` and the caller skips the row with
+/// a named diagnostic instead of rendering a fabricated pack count.
+Either<Failure, Presentation> presentationForPurchase(Ingredient ingredient) {
+  final label = ingredient.package?.label ?? 'paquete';
+
   return switch (ingredient.measurementMode) {
-    MeasurementMode.mass => const Presentation.counter(),
+    MeasurementMode.mass => const Right(Presentation.counter()),
     MeasurementMode.count => switch (_usableYieldQty(ingredient)) {
-      final num yieldQty => Presentation.package(
-        yieldQty: yieldQty,
-        label: ingredient.package?.label ?? 'paquete',
+      final num yieldQty => Right(
+        Presentation.package(yieldQty: yieldQty, label: label),
       ),
-      null => const Presentation.loose(),
+      null => const Right(Presentation.loose()),
     },
-    MeasurementMode.packageBase => Presentation.package(
-      yieldQty: _usableYieldQty(ingredient) ?? 1,
-      label: ingredient.package?.label ?? 'paquete',
+    MeasurementMode.packageBase => switch (_usableYieldQty(ingredient)) {
+      final num yieldQty => Right(
+        Presentation.package(yieldQty: yieldQty, label: label),
+      ),
+      null => Left(Failure.invalidPackage(ingredient.name)),
+    },
+    MeasurementMode.packageAbstract => Right(
+      Presentation.package(yieldQty: 1, label: label),
     ),
-    MeasurementMode.packageAbstract => Presentation.package(
-      yieldQty: 1,
-      label: ingredient.package?.label ?? 'paquete',
-    ),
-    MeasurementMode.boolean => const Presentation.loose(),
+    MeasurementMode.boolean => const Right(Presentation.loose()),
   };
 }

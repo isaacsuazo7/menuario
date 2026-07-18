@@ -499,6 +499,101 @@ void main() {
       expect(result.skipped, isEmpty);
       expect(result.groups.single.rows.single.quantityDisplay, '3 unidades');
     });
+
+    test('a packageBase ingredient with a zero package total is skipped as '
+        'invalidPackage instead of rendering a wrong pack count, and the '
+        'rest of the list still renders', () {
+      // Arrange — sin total de empaque no hay forma de contar paquetes.
+      const leche = Ingredient(
+        id: 'ing-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: 0,
+          baseDimension: Unit.liter,
+        ),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-leche': Right(Quantity(value: 5, unit: Unit.liter)),
+          'ing-platano': Right(Quantity(value: 2, unit: Unit.count)),
+        },
+        ingredientsById: const {'ing-leche': leche, 'ing-platano': platano},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, hasLength(1));
+      expect(result.skipped.single.name, 'Leche');
+      expect(result.skipped.single.reason, SkipReason.invalidPackage);
+      final rows = [for (final group in result.groups) ...group.rows];
+      expect(rows.map((row) => row.ingredientId), ['ing-platano']);
+      expect(rows.single.quantityDisplay, '2 unidades');
+    });
+
+    test('a packageBase ingredient with a negative package total is skipped '
+        'as invalidPackage, never rendering a negative pack count', () {
+      // Arrange
+      const leche = Ingredient(
+        id: 'ing-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: -2,
+          baseDimension: Unit.liter,
+        ),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-leche': Right(Quantity(value: 5, unit: Unit.liter)),
+        },
+        ingredientsById: const {'ing-leche': leche},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.groups, isEmpty);
+      expect(result.skipped, hasLength(1));
+      expect(result.skipped.single.name, 'Leche');
+      expect(result.skipped.single.reason, SkipReason.invalidPackage);
+    });
+
+    test('a packageBase ingredient with a valid package total is unaffected '
+        'and rounds up to whole packs', () {
+      // Arrange
+      const leche = Ingredient(
+        id: 'ing-leche',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: 2,
+          baseDimension: Unit.liter,
+        ),
+      );
+
+      // Act
+      final result = builder.build(
+        weeklyConsumptionByIngredient: const {
+          'ing-leche': Right(Quantity(value: 5, unit: Unit.liter)),
+        },
+        ingredientsById: const {'ing-leche': leche},
+        pantryByIngredientId: const {},
+      );
+
+      // Assert
+      expect(result.skipped, isEmpty);
+      expect(result.groups.single.rows.single.quantityDisplay, '3 bolsas');
+    });
   });
 
   group('presentationForPurchase adapter', () {
@@ -510,7 +605,10 @@ void main() {
         measurementMode: MeasurementMode.mass,
       );
 
-      expect(presentationForPurchase(ingredient), const Presentation.counter());
+      expect(
+        presentationForPurchase(ingredient),
+        const Right<Failure, Presentation>(Presentation.counter()),
+      );
     });
 
     test('count mode WITHOUT a package maps to a loose presentation', () {
@@ -521,7 +619,10 @@ void main() {
         measurementMode: MeasurementMode.count,
       );
 
-      expect(presentationForPurchase(ingredient), const Presentation.loose());
+      expect(
+        presentationForPurchase(ingredient),
+        const Right<Failure, Presentation>(Presentation.loose()),
+      );
     });
 
     test('count mode WITH a package maps to a package presentation using its '
@@ -536,7 +637,9 @@ void main() {
 
       expect(
         presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 24, label: 'caja'),
+        const Right<Failure, Presentation>(
+          Presentation.package(yieldQty: 24, label: 'caja'),
+        ),
       );
     });
 
@@ -556,7 +659,9 @@ void main() {
 
       expect(
         presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+        const Right<Failure, Presentation>(
+          Presentation.package(yieldQty: 1, label: 'bolsa'),
+        ),
       );
     });
 
@@ -577,7 +682,9 @@ void main() {
 
       expect(
         presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 24, label: 'caja'),
+        const Right<Failure, Presentation>(
+          Presentation.package(yieldQty: 24, label: 'caja'),
+        ),
       );
     });
 
@@ -599,7 +706,9 @@ void main() {
 
       expect(
         presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 20, label: 'caja'),
+        const Right<Failure, Presentation>(
+          Presentation.package(yieldQty: 20, label: 'caja'),
+        ),
       );
     });
 
@@ -620,16 +729,19 @@ void main() {
         package: PackageSpec(label: 'caja', yieldQty: -3),
       );
 
-      expect(presentationForPurchase(zeroYield), const Presentation.loose());
+      expect(
+        presentationForPurchase(zeroYield),
+        const Right<Failure, Presentation>(Presentation.loose()),
+      );
       expect(
         presentationForPurchase(negativeYield),
-        const Presentation.loose(),
+        const Right<Failure, Presentation>(Presentation.loose()),
       );
     });
 
-    test('packageBase mode with a non-positive package total falls back to a '
-        'safe 1-unit pack', () {
-      const ingredient = Ingredient(
+    test('packageBase mode with a non-positive package total fails with '
+        'invalidPackage instead of fabricating a 1-unit pack', () {
+      const zeroYield = Ingredient(
         id: 'ing-leche',
         name: 'Leche',
         category: Category.lacteo,
@@ -640,11 +752,26 @@ void main() {
           baseDimension: Unit.liter,
         ),
       );
-
-      expect(
-        presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+      const negativeYield = Ingredient(
+        id: 'ing-leche-neg',
+        name: 'Leche',
+        category: Category.lacteo,
+        measurementMode: MeasurementMode.packageBase,
+        package: PackageSpec(
+          label: 'bolsa',
+          yieldQty: -2,
+          baseDimension: Unit.liter,
+        ),
       );
+
+      for (final ingredient in [zeroYield, negativeYield]) {
+        final result = presentationForPurchase(ingredient);
+        expect(result.isLeft(), isTrue);
+        expect(
+          result.fold((failure) => failure.code, (_) => null),
+          'invalidPackage',
+        );
+      }
     });
 
     test('packageAbstract mode maps to a single-pack package presentation '
@@ -659,7 +786,9 @@ void main() {
 
       expect(
         presentationForPurchase(ingredient),
-        const Presentation.package(yieldQty: 1, label: 'bolsa'),
+        const Right<Failure, Presentation>(
+          Presentation.package(yieldQty: 1, label: 'bolsa'),
+        ),
       );
     });
   });

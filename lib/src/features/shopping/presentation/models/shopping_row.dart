@@ -59,9 +59,10 @@ class ShoppingCategoryGroup {
 
 /// Why a [SkippedItem] was skipped, distilled from the `Failure.code` that
 /// caused its calculation to fail — [needsFactor] is actionable (backfill
-/// the ingredient's `conversionFactor`), [other] covers every other failure
-/// kind (e.g. `unitMismatch`).
-enum SkipReason { needsFactor, other }
+/// the ingredient's `conversionFactor`), [invalidPackage] is actionable too
+/// (fix the ingredient's package content per pack), [other] covers every
+/// other failure kind (e.g. `unitMismatch`).
+enum SkipReason { needsFactor, invalidPackage, other }
 
 /// A single skipped-calculation diagnostic: the ingredient's name and why
 /// it was skipped, so the Comprar tab can name it instead of folding it

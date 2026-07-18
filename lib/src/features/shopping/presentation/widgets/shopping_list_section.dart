@@ -68,6 +68,10 @@ class _SkippedBadge extends StatelessWidget {
       for (final item in items)
         if (item.reason == SkipReason.needsFactor) item.name,
     ];
+    final invalidPackageNames = [
+      for (final item in items)
+        if (item.reason == SkipReason.invalidPackage) item.name,
+    ];
     final otherNames = [
       for (final item in items)
         if (item.reason == SkipReason.other) item.name,
@@ -76,6 +80,8 @@ class _SkippedBadge extends StatelessWidget {
     final lines = [
       if (needsFactorNames.isNotEmpty)
         'Necesitan factor: ${needsFactorNames.join(', ')}',
+      if (invalidPackageNames.isNotEmpty)
+        'Empaque inválido: ${invalidPackageNames.join(', ')}',
       if (otherNames.isNotEmpty)
         'No se pudieron calcular: ${otherNames.join(', ')}',
     ];

@@ -60,6 +60,31 @@ void main() {
     ],
   );
 
+  // Un doc packageBase con total de empaque inválido (0 por paquete).
+  const leche = Ingredient(
+    id: 'ing-leche',
+    name: 'Leche',
+    emoji: '🥛',
+    category: Category.lacteo,
+    measurementMode: MeasurementMode.packageBase,
+    package: PackageSpec(
+      label: 'bolsa',
+      yieldQty: 0,
+      baseDimension: Unit.liter,
+    ),
+  );
+  const recipeLeche = Recipe(
+    id: 'recipe-leche',
+    name: 'Licuado',
+    bomLines: [
+      BomLine(
+        recipeId: 'recipe-leche',
+        ingredientId: 'ing-leche',
+        quantity: Quantity(value: 5, unit: Unit.liter),
+      ),
+    ],
+  );
+
   setUp(() {
     mockPantryRepository = MockPantryRepository();
     mockIngredientRepository = MockIngredientRepository();
@@ -216,6 +241,42 @@ void main() {
 
       expect(find.textContaining('Arroz'), findsOneWidget);
       expect(find.text('ya tenés todo lo necesario'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'names a packageBase ingredient with a broken package under an '
+    'actionable "Empaque inválido" badge instead of a wrong pack count',
+    (tester) async {
+      when(
+        () => mockPantryRepository.list(),
+      ).thenAnswer((_) async => const Right([]));
+      when(
+        () => mockIngredientRepository.list(),
+      ).thenAnswer((_) async => const Right([leche]));
+      when(() => mockWeekPlanRepository.getActive()).thenAnswer(
+        (_) async => const Right(
+          WeekPlan(
+            entries: [
+              PlanEntry(
+                day: DayOfWeek.lun,
+                mealSlot: MealSlot.desayuno,
+                recipeId: 'recipe-leche',
+                cooked: false,
+              ),
+            ],
+          ),
+        ),
+      );
+      when(
+        () => mockRecipeRepository.list(),
+      ).thenAnswer((_) async => const Right([recipeLeche]));
+
+      await pumpSection(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Empaque inválido: Leche'), findsOneWidget);
+      expect(find.textContaining('bolsa'), findsNothing);
     },
   );
 }
