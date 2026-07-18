@@ -1,39 +1,26 @@
-/// Extracts the first word of [displayName] for the "Bienvenido {first}"
-/// greeting.
-///
-/// Returns an empty string when [displayName] is `null`, empty, or
-/// whitespace-only — the caller (`TodayHeader`) then falls back to a bare
-/// greeting instead of surfacing a null/empty-name fragment.
-String firstNameFrom(String? displayName) {
-  final trimmed = displayName?.trim();
-  if (trimmed == null || trimmed.isEmpty) return '';
-  return trimmed.split(RegExp(r'\s+')).first;
-}
+import 'package:flutter/material.dart';
 
-/// Resolves the name to greet, preferring [displayName] and falling back to
-/// the email local-part when no display name is available.
+/// A time-of-day greeting: the Spanish [label] plus the Material [icon] that
+/// sits beside it.
 ///
-/// - When [displayName] has a non-empty first word, it wins (see
-///   [firstNameFrom]).
-/// - Otherwise, when [email] is present, the local part (before `@`) is split
-///   on `.`, `_`, and `+` — but NOT `-`, so `dev-claude` stays intact and
-///   reads more like a name — and the first token is capitalized
-///   (`isaac.suazo@x.com` → `Isaac`, `dev-claude@cit.hn` → `Dev-claude`).
-/// - Otherwise returns an empty string, so the caller can show a bare
-///   greeting.
-String greetingNameFrom({String? displayName, String? email}) {
-  final fromDisplayName = firstNameFrom(displayName);
-  if (fromDisplayName.isNotEmpty) return fromDisplayName;
-  return _nameFromEmail(email);
-}
+/// The icon is a [IconData] (never an emoji) on purpose: an emoji is a
+/// fixed-color glyph that fights the user-selected seed, while an icon is
+/// tinted from the [ColorScheme] and follows the palette.
+typedef Greeting = ({String label, IconData icon});
 
-String _nameFromEmail(String? email) {
-  final trimmed = email?.trim();
-  if (trimmed == null || trimmed.isEmpty) return '';
-  final localPart = trimmed.split('@').first;
-  final token = localPart.split(RegExp(r'[._+]')).first;
-  if (token.isEmpty) return '';
-  return token[0].toUpperCase() + token.substring(1).toLowerCase();
+/// Resolves the greeting for [time]'s local hour.
+///
+/// Cutoffs: 05:00–11:59 morning, 12:00–18:59 afternoon, 19:00–04:59 night.
+Greeting greetingFor(DateTime time) {
+  final hour = time.hour;
+
+  if (hour >= 5 && hour < 12) {
+    return (label: 'Buenos días', icon: Icons.wb_sunny_outlined);
+  }
+  if (hour >= 12 && hour < 19) {
+    return (label: 'Buenas tardes', icon: Icons.wb_twilight_outlined);
+  }
+  return (label: 'Buenas noches', icon: Icons.dark_mode_outlined);
 }
 
 const _spanishWeekdays = [

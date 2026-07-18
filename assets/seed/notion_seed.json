@@ -1,0 +1,1008 @@
+{
+  "_meta": "Seed extraído de Notion (Nutrición de Isaac) → modelo de dominio menuario. 16 recetas, 34 ingredientes, 39 BOM lines. Factores de Notion v4.1 (memoria #2042). Import de una sola vez, dev-only. NO commitear (data personal, repo público). Emoji añadidos en assets/seed/notion_seed.json (no en el seed base).",
+  "recipes": [
+    {
+      "id": "pancake-avena",
+      "name": "Pancake Avena",
+      "emoji": "🥞",
+      "mealType": "desayuno",
+      "bomLines": [
+        {
+          "ingredientId": "avena",
+          "qty": 0.5,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "huevo",
+          "qty": 1,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "yogurt-griego",
+          "qty": 0.5,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "leche",
+          "qty": 0.5,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "fruta-eleccion",
+          "qty": 1,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "platanito",
+      "name": "Platanito",
+      "emoji": "🍌",
+      "mealType": "desayuno",
+      "bomLines": [
+        {
+          "ingredientId": "huevo",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "zanahoria",
+          "qty": 1,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "platano",
+          "qty": 1,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "avena-trasnochada",
+      "name": "Avena trasnochada",
+      "emoji": "🥣",
+      "mealType": "desayuno",
+      "bomLines": [
+        {
+          "ingredientId": "avena",
+          "qty": 0.333,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "leche",
+          "qty": 1,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "yogurt-griego",
+          "qty": 0.5,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "fruta-eleccion",
+          "qty": 0.5,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "pollo-plancha",
+      "name": "Pollo a la plancha",
+      "emoji": "🍗",
+      "mealType": "almuerzo",
+      "bomLines": [
+        {
+          "ingredientId": "pollo-pechuga",
+          "qty": 170,
+          "unit": "g"
+        },
+        {
+          "ingredientId": "papa",
+          "qty": 1,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "zanahoria",
+          "qty": 2,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "filete-pescado",
+      "name": "Filete de pescado",
+      "emoji": "🐟",
+      "mealType": "almuerzo",
+      "bomLines": [
+        {
+          "ingredientId": "pescado-filete",
+          "qty": 170,
+          "unit": "g"
+        },
+        {
+          "ingredientId": "zanahoria",
+          "qty": 3,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "tortitas-carne",
+      "name": "Tortitas de carne",
+      "emoji": "🍔",
+      "mealType": "almuerzo",
+      "bomLines": [
+        {
+          "ingredientId": "carne-molida",
+          "qty": 170,
+          "unit": "g"
+        },
+        {
+          "ingredientId": "arroz",
+          "qty": 1,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "zanahoria",
+          "qty": 2,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "kiwi",
+      "name": "Kiwi",
+      "emoji": "🥝",
+      "mealType": "merienda",
+      "bomLines": [
+        {
+          "ingredientId": "kiwi",
+          "qty": 1,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "galleta-maria",
+      "name": "Galleta maria",
+      "emoji": "🍪",
+      "mealType": "merienda",
+      "bomLines": [
+        {
+          "ingredientId": "galletas-marias",
+          "qty": 5,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "manzana-verde",
+      "name": "Manzana verde",
+      "emoji": "🍏",
+      "mealType": "merienda",
+      "bomLines": [
+        {
+          "ingredientId": "manzana-verde",
+          "qty": 1,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "yogurt",
+      "name": "Yogurt",
+      "emoji": "🥛",
+      "mealType": "merienda",
+      "bomLines": [
+        {
+          "ingredientId": "yogurt-griego",
+          "qty": 1,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "fresas",
+      "name": "Fresas",
+      "emoji": "🍓",
+      "mealType": "merienda",
+      "bomLines": [
+        {
+          "ingredientId": "fresas",
+          "qty": 1,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "rice-cake",
+      "name": "Rice cake",
+      "emoji": "🍘",
+      "mealType": "cena",
+      "bomLines": [
+        {
+          "ingredientId": "galletas-arroz",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "requeson",
+          "qty": 4,
+          "unit": "cda"
+        },
+        {
+          "ingredientId": "jamon-pavo",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "aguacate",
+          "qty": 0.5,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "platano",
+      "name": "Platano",
+      "emoji": "🍌",
+      "mealType": "cena",
+      "bomLines": [
+        {
+          "ingredientId": "huevo",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "platano",
+          "qty": 1,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "aguacate",
+          "qty": 0.5,
+          "unit": "u"
+        }
+      ]
+    },
+    {
+      "id": "tostadas-pollo",
+      "name": "Tostadas de pollo",
+      "emoji": "🥪",
+      "mealType": "cena",
+      "bomLines": [
+        {
+          "ingredientId": "pollo-pechuga",
+          "qty": 100,
+          "unit": "g"
+        },
+        {
+          "ingredientId": "salmas",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "escarola",
+          "qty": 1,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "tomate",
+          "qty": 1,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "skillette-huevo",
+      "name": "Skillette de huevo",
+      "emoji": "🍳",
+      "mealType": "cena",
+      "bomLines": [
+        {
+          "ingredientId": "huevo",
+          "qty": 3,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "papa",
+          "qty": 1,
+          "unit": "u"
+        },
+        {
+          "ingredientId": "espinaca",
+          "qty": 1,
+          "unit": "taza"
+        }
+      ]
+    },
+    {
+      "id": "aderezo-mostaza-miel",
+      "name": "Aderezo mostaza-miel",
+      "emoji": "🍯",
+      "mealType": "aderezo",
+      "bomLines": [
+        {
+          "ingredientId": "limon",
+          "qty": 2,
+          "unit": "cda"
+        },
+        {
+          "ingredientId": "miel",
+          "qty": 1,
+          "unit": "cda"
+        },
+        {
+          "ingredientId": "mostaza",
+          "qty": 1,
+          "unit": "cda"
+        }
+      ]
+    },
+    {
+      "id": "aderezo-yogurt-cilantro",
+      "name": "Aderezo yogurt-cilantro",
+      "emoji": "🌿",
+      "mealType": "aderezo",
+      "bomLines": [
+        {
+          "ingredientId": "yogurt-natural",
+          "qty": 0.5,
+          "unit": "taza"
+        },
+        {
+          "ingredientId": "mostaza",
+          "qty": 1,
+          "unit": "cda"
+        },
+        {
+          "ingredientId": "limon",
+          "qty": 1,
+          "unit": "cda"
+        },
+        {
+          "ingredientId": "cilantro",
+          "qty": 2,
+          "unit": "cda"
+        }
+      ]
+    }
+  ],
+  "ingredients": [
+    {
+      "id": "avena",
+      "name": "Avena",
+      "emoji": "🌾",
+      "category": "cereal",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 85,
+      "stockUnit": "g",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 454,
+        "label": "bolsa 1 lb"
+      }
+    },
+    {
+      "id": "arroz",
+      "name": "Arroz",
+      "emoji": "🍚",
+      "category": "cereal",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 50,
+      "stockUnit": "g",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 454,
+        "label": "bolsa 1 lb"
+      }
+    },
+    {
+      "id": "leche",
+      "name": "Leche",
+      "emoji": "🥛",
+      "category": "lacteo",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 0.24,
+      "stockUnit": "L",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "bolsa 1 L"
+      }
+    },
+    {
+      "id": "pollo-pechuga",
+      "name": "Pollo (pechuga)",
+      "emoji": "🍗",
+      "category": "proteina",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 1,
+      "stockUnit": "g",
+      "presentation": {
+        "type": "counter"
+      }
+    },
+    {
+      "id": "pescado-filete",
+      "name": "Pescado (filete)",
+      "emoji": "🐟",
+      "category": "proteina",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 1,
+      "stockUnit": "g",
+      "presentation": {
+        "type": "counter"
+      }
+    },
+    {
+      "id": "carne-molida",
+      "name": "Carne molida",
+      "emoji": "🥩",
+      "category": "proteina",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 1,
+      "stockUnit": "g",
+      "presentation": {
+        "type": "counter"
+      }
+    },
+    {
+      "id": "yogurt-griego",
+      "name": "Yogurt griego",
+      "emoji": "🥛",
+      "category": "lacteo",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 2,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "panita 125 g"
+      }
+    },
+    {
+      "id": "zanahoria",
+      "name": "Zanahoria (proxy vegetales)",
+      "emoji": "🥕",
+      "category": "vegetal",
+      "measurementKind": "bulk",
+      "booleanTracked": false,
+      "conversionFactor": 0.25,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "huevo",
+      "name": "Huevo",
+      "emoji": "🥚",
+      "category": "proteina",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 15,
+        "label": "carton"
+      }
+    },
+    {
+      "id": "platano",
+      "name": "Platano",
+      "emoji": "🍌",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "papa",
+      "name": "Papa",
+      "emoji": "🥔",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "kiwi",
+      "name": "Kiwi",
+      "emoji": "🥝",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "manzana-verde",
+      "name": "Manzana verde",
+      "emoji": "🍏",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "aguacate",
+      "name": "Aguacate",
+      "emoji": "🥑",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "banano",
+      "name": "Banano",
+      "emoji": "🍌",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "limon",
+      "name": "Limon",
+      "emoji": "🍋",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "cebolla",
+      "name": "Cebolla",
+      "emoji": "🧅",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "chile",
+      "name": "Chile",
+      "emoji": "🌶️",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "tomate",
+      "name": "Tomate",
+      "emoji": "🍅",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "galletas-arroz",
+      "name": "Galletas de arroz",
+      "emoji": "🍘",
+      "category": "cereal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 20,
+        "label": "caja"
+      }
+    },
+    {
+      "id": "salmas",
+      "name": "Salmas",
+      "emoji": "🍘",
+      "category": "cereal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 24,
+        "label": "caja"
+      }
+    },
+    {
+      "id": "galletas-marias",
+      "name": "Galletas marias",
+      "emoji": "🍪",
+      "category": "cereal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": null,
+        "label": "bolsa"
+      }
+    },
+    {
+      "id": "jamon-pavo",
+      "name": "Jamon de pavo",
+      "emoji": "🍖",
+      "category": "proteina",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 13,
+        "label": "bolsa 13 u"
+      }
+    },
+    {
+      "id": "fresas",
+      "name": "Fresas",
+      "emoji": "🍓",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": null,
+        "label": "bandeja"
+      }
+    },
+    {
+      "id": "espinaca",
+      "name": "Espinaca",
+      "emoji": "🥬",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": null,
+        "label": "bolsa"
+      }
+    },
+    {
+      "id": "escarola",
+      "name": "Escarola",
+      "emoji": "🥬",
+      "category": "vegetal",
+      "measurementKind": "unit",
+      "booleanTracked": false,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": null,
+        "label": "bolsa"
+      }
+    },
+    {
+      "id": "fruta-eleccion",
+      "name": "Fruta a eleccion",
+      "emoji": "🍎",
+      "category": "fruta",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "yogurt-natural",
+      "name": "Yogurt natural",
+      "emoji": "🥛",
+      "category": "lacteo",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "panita"
+      }
+    },
+    {
+      "id": "requeson",
+      "name": "Requeson",
+      "emoji": "🧀",
+      "category": "lacteo",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "pana 500 g"
+      }
+    },
+    {
+      "id": "cilantro",
+      "name": "Cilantro",
+      "emoji": "🌿",
+      "category": "condimento",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "loose"
+      }
+    },
+    {
+      "id": "miel",
+      "name": "Miel",
+      "emoji": "🍯",
+      "category": "condimento",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "bote"
+      }
+    },
+    {
+      "id": "mostaza",
+      "name": "Mostaza",
+      "emoji": "🥫",
+      "category": "condimento",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "bote"
+      }
+    },
+    {
+      "id": "vainilla",
+      "name": "Vainilla",
+      "emoji": "🍦",
+      "category": "condimento",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "bote"
+      }
+    },
+    {
+      "id": "vino-blanco",
+      "name": "Vino blanco",
+      "emoji": "🍷",
+      "category": "condimento",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "botella"
+      }
+    },
+    {
+      "id": "chia",
+      "name": "Chia",
+      "emoji": "🌱",
+      "category": "semilla",
+      "measurementKind": "unit",
+      "booleanTracked": true,
+      "conversionFactor": null,
+      "stockUnit": "u",
+      "presentation": {
+        "type": "package",
+        "yieldQty": 1,
+        "label": "bolsa"
+      }
+    }
+  ],
+  "pantryItems": [
+    {
+      "ingredientId": "avena",
+      "stock": 0
+    },
+    {
+      "ingredientId": "arroz",
+      "stock": 150
+    },
+    {
+      "ingredientId": "leche",
+      "stock": 1
+    },
+    {
+      "ingredientId": "pollo-pechuga",
+      "stock": 170
+    },
+    {
+      "ingredientId": "pescado-filete",
+      "stock": 0
+    },
+    {
+      "ingredientId": "carne-molida",
+      "stock": 150
+    },
+    {
+      "ingredientId": "yogurt-griego",
+      "stock": 0
+    },
+    {
+      "ingredientId": "zanahoria",
+      "stock": 4
+    },
+    {
+      "ingredientId": "huevo",
+      "stock": 4
+    },
+    {
+      "ingredientId": "platano",
+      "stock": 3
+    },
+    {
+      "ingredientId": "papa",
+      "stock": 2
+    },
+    {
+      "ingredientId": "kiwi",
+      "stock": 0
+    },
+    {
+      "ingredientId": "manzana-verde",
+      "stock": 0
+    },
+    {
+      "ingredientId": "aguacate",
+      "stock": 2
+    },
+    {
+      "ingredientId": "banano",
+      "stock": 3
+    },
+    {
+      "ingredientId": "limon",
+      "stock": 1
+    },
+    {
+      "ingredientId": "cebolla",
+      "stock": 2
+    },
+    {
+      "ingredientId": "chile",
+      "stock": 1
+    },
+    {
+      "ingredientId": "tomate",
+      "stock": 2
+    },
+    {
+      "ingredientId": "galletas-arroz",
+      "stock": 8
+    },
+    {
+      "ingredientId": "salmas",
+      "stock": 7
+    },
+    {
+      "ingredientId": "galletas-marias",
+      "stock": 0
+    },
+    {
+      "ingredientId": "jamon-pavo",
+      "stock": 0
+    },
+    {
+      "ingredientId": "fresas",
+      "stock": 0
+    },
+    {
+      "ingredientId": "espinaca",
+      "stock": 0
+    },
+    {
+      "ingredientId": "escarola",
+      "stock": 0
+    },
+    {
+      "ingredientId": "requeson",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "cilantro",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "miel",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "mostaza",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "yogurt-natural",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "fruta-eleccion",
+      "haveIt": true
+    },
+    {
+      "ingredientId": "vainilla",
+      "haveIt": false
+    },
+    {
+      "ingredientId": "vino-blanco",
+      "haveIt": false
+    },
+    {
+      "ingredientId": "chia",
+      "haveIt": false
+    }
+  ]
+}

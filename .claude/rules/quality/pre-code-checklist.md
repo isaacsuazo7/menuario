@@ -12,7 +12,7 @@ paths:
 Antes de crear algo nuevo, verificar si ya existe:
 
 ```
-lib/src/shared/presentation/widgets/   # Widget compartido: AppAsyncValueWidget (el único)
+lib/src/shared/presentation/widgets/   # Widgets compartidos: AppAsyncValueWidget, EmojiAvatar, MealTypeTag
 lib/src/core/theme/                     # MenuarioSpacing, MenuarioTypography, ColorScheme, extensiones
 lib/src/shared/domain/services/         # Lógica de dominio (CoverageCalculator, MeasurementConverter, etc.)
 ```

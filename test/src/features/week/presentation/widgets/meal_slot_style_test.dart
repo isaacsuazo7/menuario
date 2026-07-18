@@ -47,5 +47,26 @@ void main() {
       expect(find.byIcon(Icons.add), findsOneWidget);
       expect(find.text('🥣'), findsNothing);
     });
+
+    testWidgets('builds on the shared EmojiAvatar', (tester) async {
+      await pump(tester, filled: true);
+
+      expect(find.byType(EmojiAvatar), findsOneWidget);
+      expect(tester.getSize(find.byType(EmojiAvatar)), const Size(40, 40));
+    });
+
+    testWidgets('keeps the slot-accent ring only while empty', (tester) async {
+      await pump(tester, filled: false);
+      expect(
+        tester.widget<EmojiAvatar>(find.byType(EmojiAvatar)).border,
+        isNotNull,
+      );
+
+      await pump(tester, filled: true);
+      expect(
+        tester.widget<EmojiAvatar>(find.byType(EmojiAvatar)).border,
+        isNull,
+      );
+    });
   });
 }

@@ -102,9 +102,9 @@ class RecipePickerSheet extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final recipe = recipes[index];
                     return ListTile(
-                      leading: Text(
-                        recipe.emoji ?? '🍽️',
-                        style: const TextStyle(fontSize: 24),
+                      leading: EmojiAvatar(
+                        emoji: recipe.emoji ?? '🍽️',
+                        size: 32,
                       ),
                       title: Text(recipe.name),
                       onTap: () => _handlePick(context, ref, recipe.id),

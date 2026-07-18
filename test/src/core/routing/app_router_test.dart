@@ -134,8 +134,51 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Semana'), findsOneWidget);
-    expect(find.text('Abastecer'), findsOneWidget);
-    expect(find.text('Recetario'), findsOneWidget);
+    // Bottom-bar labels are short; the AppBar keeps the long tab titles.
+    expect(find.text('Stock'), findsOneWidget);
+    expect(find.text('Recetas'), findsOneWidget);
+    expect(find.text('Abastecer'), findsNothing);
+    expect(find.text('Recetario'), findsNothing);
+  });
+
+  testWidgets('bottom bar shows short labels while the AppBar keeps the '
+      'long tab title', (tester) async {
+    final mockUser = MockUser();
+    when(
+      () => mockAuthService.authStateChanges,
+    ).thenAnswer((_) => Stream.value(mockUser));
+
+    await pumpApp(tester);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Stock'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Abastecer'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(NavigationBar),
+        matching: find.text('Stock'),
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Recetas'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text('Recetario'),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -149,7 +192,7 @@ void main() {
       await pumpApp(tester);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Abastecer'));
+      await tester.tap(find.text('Stock'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ProvisioningScreen), findsOneWidget);

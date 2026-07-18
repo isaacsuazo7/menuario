@@ -3,17 +3,31 @@ import 'package:go_router/go_router.dart';
 import 'package:menuario/src/core/routing/widgets/app_drawer.dart';
 
 class _ShellTab {
-  const _ShellTab({required this.icon, required this.label});
+  const _ShellTab({
+    required this.icon,
+    required this.label,
+    required this.title,
+  });
 
   final IconData icon;
+
+  /// The short bottom-bar label — it must survive four-across on a narrow
+  /// phone without ellipsizing.
   final String label;
+
+  /// The long-form [AppBar] title, which has the full width to spell it out.
+  final String title;
 }
 
 const _shellTabs = [
-  _ShellTab(icon: Icons.today, label: 'Hoy'),
-  _ShellTab(icon: Icons.calendar_view_week, label: 'Semana'),
-  _ShellTab(icon: Icons.shopping_cart_outlined, label: 'Abastecer'),
-  _ShellTab(icon: Icons.menu_book, label: 'Recetario'),
+  _ShellTab(icon: Icons.today, label: 'Hoy', title: 'Hoy'),
+  _ShellTab(icon: Icons.calendar_view_week, label: 'Semana', title: 'Semana'),
+  _ShellTab(
+    icon: Icons.shopping_cart_outlined,
+    label: 'Stock',
+    title: 'Abastecer',
+  ),
+  _ShellTab(icon: Icons.menu_book, label: 'Recetas', title: 'Recetario'),
 ];
 
 /// Hosts the four-tab [StatefulShellRoute.indexedStack] behind a Material
@@ -33,7 +47,7 @@ class AppShellScaffold extends StatelessWidget {
     final currentTab = _shellTabs[navigationShell.currentIndex];
 
     return Scaffold(
-      appBar: AppBar(title: Text(currentTab.label)),
+      appBar: AppBar(title: Text(currentTab.title)),
       drawer: const AppDrawer(),
       body: navigationShell,
       bottomNavigationBar: NavigationBar(

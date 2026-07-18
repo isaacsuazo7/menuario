@@ -168,9 +168,9 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
                 children: [
                   Row(
                     children: [
-                      Text(
-                        widget.row.ingredient.emoji ?? '🥫',
-                        style: const TextStyle(fontSize: 24),
+                      EmojiAvatar(
+                        emoji: widget.row.ingredient.emoji ?? '🥫',
+                        size: 40,
                       ),
                       MenuarioSpacing.gapH8,
                       Expanded(
@@ -205,9 +205,7 @@ class _SetStockSheetState extends ConsumerState<SetStockSheet> {
                     ),
                     inputFormatters: [
                       if (selectedLens.allowsDecimal)
-                        FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d*'),
-                        )
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))
                       else
                         FilteringTextInputFormatter.digitsOnly,
                     ],

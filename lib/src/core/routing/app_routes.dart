@@ -54,6 +54,18 @@ abstract final class CookScheduleRoutes {
   static const edit = '/cook-schedule';
 }
 
+/// Route path/name constant for the theme-customization screen.
+///
+/// Top-level (sibling of [SplashRoutes]/[AuthRoutes], NOT nested inside the
+/// shell's [ShellRoutes] branches) — mirrors [CookScheduleRoutes]: the
+/// screen covers the whole screen, no bottom nav, no drawer, just a back
+/// button.
+abstract final class SettingsRoutes {
+  const SettingsRoutes._();
+
+  static const appearance = '/appearance';
+}
+
 /// Route path/name constant for the recipe create/edit form.
 ///
 /// Top-level (sibling of [SplashRoutes]/[AuthRoutes], NOT nested inside the
